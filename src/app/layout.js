@@ -1,17 +1,17 @@
-import { Geist, Fraunces } from "next/font/google";
+import { Geist, Poppins } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-// Sans para el cuerpo; serif display (Fraunces) para títulos: aire artesanal.
+// Tipografía del manual de marca: Poppins para títulos, sans para el cuerpo.
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
-  weight: ["600", "700"],
+  weight: ["600", "700", "800"],
 });
 
 export const metadata = {
@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${poppins.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <Providers>{children}</Providers>

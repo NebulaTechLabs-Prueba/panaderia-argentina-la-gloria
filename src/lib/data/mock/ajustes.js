@@ -12,7 +12,7 @@ export const ajustesMock = {
   mensaje_pedido_template:
     "¡Hola, familia de La Gloria! 🧡🥐\n\nMe encantaría encargarles lo siguiente:\n\n{items}\n\n{personas}🧾 Total: {total}\n\n¿Me confirman si está todo disponible y cómo hacemos con la entrega? ¡Mil gracias y sigan amasando con tanto cariño! 🇦🇷",
   portada_url: null,
-  logo_url: null,
+  logo_url: "/logo.png", // logo oficial (extraído del manual de identidad)
   instagram_url: "https://instagram.com/panaderia.argentina_la.gloria_",
   tiktok_url: "https://www.tiktok.com/@panaderia_la.gloria",
   facebook_url: "https://www.facebook.com/p/Panadería-Argentina-La-Gloria-61552555974825/",

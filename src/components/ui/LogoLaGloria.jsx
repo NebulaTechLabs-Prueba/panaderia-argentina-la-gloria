@@ -16,8 +16,8 @@ export function LogoLaGloria({ src, className = "h-24 w-24", alt = "Panadería A
       </defs>
 
       {/* Anillos */}
-      <circle cx="100" cy="100" r="98" fill="#F5A623" />
-      <circle cx="100" cy="100" r="82" fill="#29ABE2" />
+      <circle cx="100" cy="100" r="98" fill="#FF9900" />
+      <circle cx="100" cy="100" r="82" fill="#63B0DD" />
       <circle cx="100" cy="100" r="82" fill="none" stroke="#ffffff" strokeWidth="2.5" />
 
       {/* Texto en arco superior */}
@@ -35,13 +35,13 @@ export function LogoLaGloria({ src, className = "h-24 w-24", alt = "Panadería A
         <rect x="82" y="88" width="36" height="16" rx="3" />
       </g>
       {/* Espigas de trigo a los lados */}
-      <g stroke="#F5A623" strokeWidth="2.5" strokeLinecap="round">
+      <g stroke="#FF9900" strokeWidth="2.5" strokeLinecap="round">
         <path d="M70 112 q-4 -6 0 -12 M70 112 q4 -6 0 -12 M70 112 v-12" />
         <path d="M130 112 q-4 -6 0 -12 M130 112 q4 -6 0 -12 M130 112 v-12" />
       </g>
 
       {/* Banner inferior */}
-      <rect x="40" y="116" width="120" height="36" rx="7" fill="#F5A623" />
+      <rect x="40" y="116" width="120" height="36" rx="7" fill="#FF9900" />
       <rect x="40" y="116" width="120" height="36" rx="7" fill="none" stroke="#ffffff" strokeWidth="2" />
       <text
         x="100"

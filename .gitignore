@@ -24,6 +24,11 @@
 .DS_Store
 *.pem
 
+# Material crudo de fotos / branding (intake): no commitear. Se procesa y se
+# commitean solo las imágenes finales (1 por producto, optimizadas).
+/public/productos/MATERIAL FAN PAGE*/
+/public/productos/manual de identidad final/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

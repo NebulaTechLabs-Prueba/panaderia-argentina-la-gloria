@@ -17,27 +17,22 @@
 import { categoriasMock } from "./mock/categorias";
 import { productosMock } from "./mock/productos";
 import { ajustesMock } from "./mock/ajustes";
-import { IMAGENES_REF } from "./imagenesRef";
-import { USAR_IMAGENES_REF } from "@/lib/config/constants";
+import { IDS_CON_FOTO } from "./imagenesLocales";
+import { asset } from "@/lib/config/constants";
 
 // Pequeño delay para simular red y poder probar estados de carga/skeletons.
 const SIMULAR_LATENCIA_MS = 250;
 const demora = (valor) =>
   new Promise((resolve) => setTimeout(() => resolve(valor), SIMULAR_LATENCIA_MS));
 
-// ⚠ SOLO DEMO: asigna una foto de referencia (mapa curado por categoría) a los
-// productos sin imagen propia, rotando entre las fotos de su categoría para dar
-// variedad. Con fotos reales en imagen_url, o USAR_IMAGENES_REF=false, no corre.
-function conImagenesRef(productos) {
-  if (!USAR_IMAGENES_REF) return productos;
-  const usadasPorCat = {};
+// Asigna la FOTO REAL (local, en /public/productos/p-<id>.jpg) a los productos
+// que ya la tienen. Los demás quedan con imagen_url null → la UI muestra el
+// placeholder de marca con "Próximamente". Respeta una imagen_url ya cargada.
+function conImagenesLocales(productos) {
   return productos.map((p) => {
     if (p.imagen_url) return p;
-    const fotos = IMAGENES_REF[p.categoria_id];
-    if (!fotos || fotos.length === 0) return p;
-    const n = usadasPorCat[p.categoria_id] ?? 0;
-    usadasPorCat[p.categoria_id] = n + 1;
-    return { ...p, imagen_url: fotos[n % fotos.length] };
+    if (IDS_CON_FOTO.has(p.id)) return { ...p, imagen_url: asset(`/productos/${p.id}.jpg`) };
+    return p;
   });
 }
 
@@ -53,10 +48,16 @@ export async function getCategorias() {
 // mostrarlos como "agotado" (no se ocultan). Ordenados por categoría y orden.
 export async function getProductos() {
   const ordenados = [...productosMock].sort((a, b) => a.orden - b.orden);
-  return demora(conImagenesRef(ordenados));
+  return demora(conImagenesLocales(ordenados));
 }
 
-// Ajustes del negocio (fila única).
+// Ajustes del negocio (fila única). Prefija las rutas de imágenes locales
+// (logo/portada) con el basePath para que carguen en GitHub Pages.
 export async function getAjustes() {
-  return demora(ajustesMock);
+  const ajustes = {
+    ...ajustesMock,
+    logo_url: ajustesMock.logo_url ? asset(ajustesMock.logo_url) : null,
+    portada_url: ajustesMock.portada_url ? asset(ajustesMock.portada_url) : null,
+  };
+  return demora(ajustes);
 }

@@ -22,7 +22,7 @@ export function ProductImage({ src, alt, color = "naranja", icono = "factura", c
 
   const t = tile(color);
   return (
-    <div aria-hidden="true" className={`relative flex h-full w-full items-center justify-center overflow-hidden ${t.bg} ${className}`}>
+    <div className={`relative flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden ${t.bg} ${className}`}>
       {/* patrón de lunares sutil */}
       <svg className={`absolute inset-0 h-full w-full ${t.patron}`} aria-hidden="true">
         <defs>
@@ -32,7 +32,10 @@ export function ProductImage({ src, alt, color = "naranja", icono = "factura", c
         </defs>
         <rect width="100%" height="100%" fill={`url(#dots-${color})`} />
       </svg>
-      <IconoCategoria icono={icono} className={`relative h-14 w-14 ${t.icono}`} />
+      <IconoCategoria icono={icono} className={`relative h-12 w-12 ${t.icono}`} />
+      <span className={`relative rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-cacao`}>
+        Próximamente
+      </span>
     </div>
   );
 }

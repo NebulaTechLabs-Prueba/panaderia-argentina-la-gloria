@@ -4,11 +4,6 @@ export const TIMEZONE = "America/Puerto_Rico";
 // DEMO: los precios son de muestra hasta cargar los reales. Activa el aviso.
 export const ES_DEMO = true;
 
-// DEMO: si un producto no tiene foto propia, se le asigna una foto de REFERENCIA
-// (LoremFlickr) según el keyword de su categoría. Poner en false (o cargar fotos
-// reales en imagen_url) desactiva por completo este comportamiento.
-export const USAR_IMAGENES_REF = true;
-
 // Clave de persistencia del carrito en localStorage.
 export const CART_STORAGE_KEY = "la-gloria:carrito:v1";
 

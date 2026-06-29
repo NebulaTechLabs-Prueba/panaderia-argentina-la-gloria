@@ -8,15 +8,16 @@
   text-corteza, bg-celeste…
 */
 @theme {
-  --color-cream: #f4ead2; /* fondo general, crema del menú */
+  /* Colores OFICIALES del manual de identidad de La Gloria. */
+  --color-cream: #f4ead2; /* fondo general, crema cálida */
   --color-masa: #ecdcbe; /* superficies suaves / hover */
-  --color-corteza: #f5a623; /* NARANJA de marca, acentos y badges */
-  --color-celeste: #29abe2; /* CELESTE argentino, acento secundario */
-  --color-marca: #383838; /* CARBÓN, botones primarios y bloques */
-  --color-cacao: #2e2a26; /* texto principal */
+  --color-corteza: #ff9900; /* NARANJA primario, acentos, CTA y badges */
+  --color-celeste: #63b0dd; /* CELESTE primario, acento secundario */
+  --color-marca: #2f3a7e; /* AZUL MARINO primario, barras y botones */
+  --color-cacao: #2a2a33; /* texto principal */
 
   --font-sans: var(--font-geist-sans);
-  --font-display: var(--font-fraunces);
+  --font-display: var(--font-poppins); /* Poppins (títulos), según el manual */
 }
 
 html {

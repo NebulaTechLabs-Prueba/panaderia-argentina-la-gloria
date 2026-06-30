@@ -385,6 +385,11 @@ export function Experiencia() {
           <source src={asset("/video/asado.mp4")} type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-marca/55 transition-colors duration-500 group-hover:bg-marca/40" />
+        {/* feather inferior: funde el video hacia el fondo del catálogo */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-linear-to-b from-transparent to-cream"
+        />
         <div className="relative flex h-full flex-col items-center justify-center gap-3 px-5 text-center">
           <p className="font-display text-3xl font-extrabold text-cream drop-shadow-lg sm:text-6xl">
             El asado de los domingos 🔥
@@ -438,7 +443,7 @@ export function Experiencia() {
               </div>
 
               {/* Productos: entran atados al scroll (scrub) */}
-              <div className={`grid gap-6 py-8 sm:grid-cols-2 ${tituloDerecha ? "md:order-1" : ""}`}>
+              <div className={`grid items-start gap-6 py-8 sm:grid-cols-2 ${tituloDerecha ? "md:order-1" : ""}`}>
                 {items.map((p) => (
                   <article
                     key={p.id}
@@ -481,12 +486,8 @@ export function Experiencia() {
         );
       })}
 
-      {/* ── DESPEDIDA: NUESTRA HISTORIA ── */}
-      <section className="cine-section relative flex min-h-screen items-center overflow-hidden bg-cream px-5 py-24">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="drift absolute -right-24 top-10 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
-          <div className="drift-2 absolute -left-20 bottom-10 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
-        </div>
+      {/* ── DESPEDIDA: NUESTRA HISTORIA (transparente: mismo fondo fluido) ── */}
+      <section className="cine-section relative flex min-h-screen items-center px-5 py-24">
         <div className="relative mx-auto grid w-full max-w-5xl items-center gap-10 md:grid-cols-[0.85fr_1.15fr]">
           <div className="cine-card overflow-hidden rounded-4xl shadow-2xl ring-1 ring-cacao/10">
             <VideoHistoria
@@ -502,13 +503,16 @@ export function Experiencia() {
               Nuestra historia
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-cacao/75">
-              Todo empezó de madrugada: amasando con la receta de la familia y las ganas de
-              tener, lejos de Argentina, el mismo sabor de siempre. Entrá, que acá te atendemos
-              como en casa — y si es domingo, te hacemos un lugar en la mesa del asado.
+              La Gloria es un cachito de Argentina en Woodbridge: pan, facturas y el asado de
+              los domingos, hechos con las manos y el cariño de siempre. Entrá, que acá te
+              atendemos como en casa.
             </p>
           </div>
         </div>
       </section>
+
+      {/* feather: funde el fondo claro hacia el navy del cierre */}
+      <div aria-hidden="true" className="-mb-px h-28 bg-linear-to-b from-transparent to-marca" />
 
       {/* ── CIERRE: "¿Se te antojó algo?" (después de la historia) ── */}
       <section className="cine-section relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-marca px-5 py-28 text-center text-cream">

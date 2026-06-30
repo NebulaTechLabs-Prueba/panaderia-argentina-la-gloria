@@ -52,20 +52,34 @@ export function CartDrawer() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            drag="x"
+            dragDirectionLock
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.3}
+            onDragEnd={(_, info) => {
+              if (info.offset.x > 90 || info.velocity.x > 600) {
+                playCerrar();
+                cerrarCarrito();
+              }
+            }}
           >
+            {/* manija: deslizá hacia la derecha para cerrar */}
+            <div
+              aria-hidden="true"
+              className="absolute left-1.5 top-1/2 h-14 w-1.5 -translate-y-1/2 rounded-full bg-cacao/15"
+            />
             <header className="flex items-center justify-between border-b border-corteza/20 px-5 py-4">
               <h2 className="font-display text-xl font-semibold text-cacao">Tu pedido</h2>
               <button
                 type="button"
                 onClick={() => {
-              playCerrar();
-              cerrarCarrito();
-            }}
-                aria-label="Minimizar"
-                title="Minimizar"
-                className="rounded-full p-1.5 text-cacao/60 transition hover:bg-masa hover:text-cacao"
+                  playCerrar();
+                  cerrarCarrito();
+                }}
+                aria-label="Seguir eligiendo"
+                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-cacao/70 transition hover:bg-masa hover:text-cacao"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" /> Seguir eligiendo
               </button>
             </header>
 

@@ -36,7 +36,7 @@ export function EscenaModal({ producto, categoria, onCerrar }) {
           <motion.div
             role="dialog"
             aria-label={producto.nombre}
-            className="relative z-10 flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden bg-cacao text-cream shadow-2xl ring-1 ring-white/10 sm:rounded-[2rem] md:flex-row"
+            className="relative z-10 flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden bg-cacao text-cream shadow-2xl ring-1 ring-white/10 sm:rounded-4xl md:flex-row"
             initial={{ y: 50, opacity: 0, scale: 0.97 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 50, opacity: 0 }}
@@ -108,7 +108,7 @@ export function EscenaModal({ producto, categoria, onCerrar }) {
                   <button
                     type="button"
                     onClick={add}
-                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-cream px-5 py-4 font-bold text-cacao shadow-lg transition hover:bg-white active:scale-[0.99]"
+                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-(--d-accent) px-5 py-4 font-bold text-cacao shadow-lg transition hover:brightness-110 active:scale-[0.99]"
                   >
                     <ShoppingBag className="h-5 w-5" strokeWidth={2.2} />
                     Agregar {cant > 1 ? `${cant} ` : ""}· {formatCentavos(producto.precio_centavos * cant, moneda)}

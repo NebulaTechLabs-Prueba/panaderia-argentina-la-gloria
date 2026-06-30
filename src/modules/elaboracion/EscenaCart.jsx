@@ -33,9 +33,9 @@ export function EscenaCartButton() {
           exit={{ scale: 0, opacity: 0 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.94 }}
-          className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-cream px-5 py-3.5 text-cacao shadow-xl ring-1 ring-black/10"
+          className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-(--d-accent) px-5 py-3.5 text-cacao shadow-xl ring-1 ring-black/10"
         >
-          <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-cream/40" />
+          <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-(--d-accent) opacity-40" />
           <ShoppingBag className="h-5 w-5" strokeWidth={2.2} />
           <span className="font-semibold">Mi pedido</span>
           <motion.span

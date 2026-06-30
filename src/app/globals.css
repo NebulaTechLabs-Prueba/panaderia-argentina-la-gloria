@@ -20,12 +20,16 @@
   --font-display: var(--font-poppins); /* Poppins (títulos), según el manual */
 }
 
-/* Propuesta D — tema "marca" alternable por botón: remapea los tokens para pasar
-   de la paleta cinematográfica oscura a los colores de la empresa (crema + azul
-   marino), como en las propuestas anteriores. */
-.tema-marca {
-  --color-cacao: #f4ead2; /* lo que era fondo oscuro → crema */
-  --color-cream: #2f3a7e; /* lo que era claro (texto/botones) → azul marino */
+/* Propuesta D — temas de color. La base se mantiene OSCURA en ambos (para que el
+   video de fondo siempre se vea y todo conserve contraste); lo que cambia es el
+   ACENTO y el color del FOOTER. */
+.d-root {
+  --color-marca: #2a2a33; /* footer oscuro en "cine" (matchea la base) */
+  --d-accent: #f4ead2; /* acento crema en "cine" */
+}
+.d-root.tema-marca {
+  --color-marca: #2f3a7e; /* footer azul marino de la empresa */
+  --d-accent: #ff9900; /* acento NARANJA de la empresa */
 }
 
 html {

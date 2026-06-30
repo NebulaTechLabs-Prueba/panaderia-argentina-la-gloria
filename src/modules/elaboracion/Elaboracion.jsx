@@ -45,7 +45,7 @@ function AddBtn({ producto }) {
         setTimeout(() => setOk(false), 1100);
       }}
       aria-label={`Agregar ${producto.nombre}`}
-      className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-cream text-cacao shadow-lg transition hover:scale-110 active:scale-90"
+      className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-(--d-accent) text-cacao shadow-lg transition hover:scale-110 active:scale-90"
     >
       {ok ? <Check className="h-5 w-5" /> : <Plus className="h-6 w-6" strokeWidth={2.6} />}
     </button>
@@ -241,14 +241,14 @@ export function Elaboracion() {
   );
 
   return (
-    <div ref={root} className={`relative bg-cacao text-cream ${tema === "marca" ? "tema-marca" : ""}`}>
+    <div ref={root} className={`d-root relative bg-cacao text-cream ${tema === "marca" ? "tema-marca" : ""}`}>
       {/* Video de elaboración GLOBAL fijo: corre detrás de las escenas (el hero y
           el cierre lo tapan con su propio fondo). Da vida continua y sin líneas. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
         <VideoSecuencia
           fuentes={fuentesVideo}
           poster={asset("/img/produccion/prod-8.jpg")}
-          className={`h-full w-full object-cover blur-[3px] ${tema === "marca" ? "opacity-15" : ""}`}
+          className="h-full w-full object-cover blur-[3px]"
         />
         <div className="absolute inset-0 bg-cacao/70" />
       </div>
@@ -260,7 +260,7 @@ export function Elaboracion() {
           <VideoSecuencia
             fuentes={fuentesVideo}
             poster={asset("/img/produccion/prod-4.jpg")}
-            className={`h-full w-full object-cover ${tema === "marca" ? "opacity-20" : ""}`}
+            className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-cacao/55" />
           <div className="absolute inset-0 bg-linear-to-t from-cacao via-cacao/30 to-cacao/70" />
@@ -273,7 +273,7 @@ export function Elaboracion() {
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 z-1 h-48 bg-linear-to-t from-cacao via-cacao/80 to-transparent" />
 
         <div className="hero-content relative z-10 px-6 text-center">
-          <p className="hero-kicker font-display text-sm font-bold uppercase tracking-[0.35em] text-cream/60">
+          <p className="hero-kicker font-display text-sm font-bold uppercase tracking-[0.35em] text-(--d-accent)">
             Panadería argentina · {ajustes?.direccion ?? "Woodbridge, VA"}
           </p>
           <h1 className="hero-title mt-4 font-display text-5xl font-extrabold leading-[0.95] sm:text-8xl">
@@ -342,7 +342,7 @@ export function Elaboracion() {
                     </p>
                   )}
                   <div className="escena-rev mt-7 flex items-center gap-5">
-                    <span className="font-display text-3xl font-extrabold text-cream">
+                    <span className="font-display text-3xl font-extrabold text-(--d-accent)">
                       {formatCentavos(p.precio_centavos, moneda)}
                     </span>
                     <AddBtn producto={p} />
@@ -362,14 +362,18 @@ export function Elaboracion() {
             <h2 className="mt-2 font-display text-4xl font-extrabold sm:text-5xl">Nuestros productos</h2>
           </div>
           <div className="space-y-10">
-            {categoriasGaleria.map((c) => (
+            {categoriasGaleria.map((c) => {
+              const items = productosDe(c.id);
+              return (
               <div key={c.id}>
                 <div className="mx-auto mb-3 flex w-full max-w-6xl items-baseline justify-between px-6">
                   <h3 className="font-display text-xl font-bold sm:text-2xl">{c.nombre}</h3>
-                  <span className="text-xs uppercase tracking-wide text-cream/40">Deslizá →</span>
+                  {items.length > 1 && (
+                    <span className="text-xs uppercase tracking-wide text-cream/40">Deslizá →</span>
+                  )}
                 </div>
                 <div className="galeria-track flex snap-x gap-4 overflow-x-auto px-6 pb-3 scrollbar-none">
-                  {productosDe(c.id).map((p) => (
+                  {items.map((p) => (
                     <article
                       key={p.id}
                       className="galeria-card group flex w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur-sm sm:w-60"
@@ -391,7 +395,7 @@ export function Elaboracion() {
                       <div className="flex flex-1 flex-col p-4">
                         <h4 className="font-display font-bold leading-tight">{p.nombre}</h4>
                         <div className="mt-3 flex items-center justify-between gap-2">
-                          <span className="font-display text-lg font-extrabold">
+                          <span className="font-display text-lg font-extrabold text-(--d-accent)">
                             {formatCentavos(p.precio_centavos, moneda)}
                           </span>
                           <AddBtn producto={p} />
@@ -401,7 +405,8 @@ export function Elaboracion() {
                   ))}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
@@ -409,14 +414,8 @@ export function Elaboracion() {
       {/* ── CIERRE ── */}
       <section className="relative flex min-h-[70vh] items-center justify-center overflow-hidden px-6 py-24 text-center">
         <div className="absolute inset-0 -z-10">
-          {tema !== "marca" && (
-            <img src={asset("/img/produccion/prod-1.jpg")} alt="" className="h-full w-full object-cover" />
-          )}
-          <div
-            className={`absolute inset-0 ${
-              tema === "marca" ? "bg-cacao" : "bg-linear-to-b from-cacao via-cacao/65 to-cacao"
-            }`}
-          />
+          <img src={asset("/img/produccion/prod-1.jpg")} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-linear-to-b from-cacao via-cacao/65 to-cacao" />
         </div>
         <div className="relative mx-auto max-w-2xl">
           <h2 className="font-display text-4xl font-extrabold sm:text-6xl">Del horno, a tu mesa</h2>
@@ -424,7 +423,7 @@ export function Elaboracion() {
           <button
             type="button"
             onClick={() => lenisRef.current?.scrollTo(0, { duration: 1.4 })}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-cream px-7 py-4 font-bold text-cacao shadow-xl transition hover:bg-white active:scale-95"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-(--d-accent) px-7 py-4 font-bold text-cacao shadow-xl transition hover:brightness-110 active:scale-95"
           >
             <ShoppingBag className="h-5 w-5" /> Empezá tu pedido
           </button>

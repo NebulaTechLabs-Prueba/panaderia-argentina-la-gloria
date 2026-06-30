@@ -3,8 +3,9 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 
-// Polvillo de harina flotando (WebGL). Da una capa de profundidad viva al hero.
-function Polvo({ count = 1100, color = "#FFB347" }) {
+// Polvillo de harina flotando (WebGL). Da profundidad viva al hero y REACCIONA al
+// mouse (la nube se inclina/desplaza hacia el cursor).
+function Polvo({ count = 1100, color = "#F3EAD6" }) {
   const ref = useRef();
   const positions = useMemo(() => {
     const a = new Float32Array(count * 3);
@@ -18,9 +19,11 @@ function Polvo({ count = 1100, color = "#FFB347" }) {
 
   useFrame((state, dt) => {
     if (!ref.current) return;
-    ref.current.rotation.y += dt * 0.04;
-    // leve deriva vertical (cae como harina)
+    ref.current.rotation.y += dt * 0.035;
     ref.current.position.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.4;
+    // reacción al mouse: parallax suave hacia el puntero
+    ref.current.rotation.x += (state.pointer.y * 0.35 - ref.current.rotation.x) * 0.05;
+    ref.current.position.x += (state.pointer.x * 2 - ref.current.position.x) * 0.04;
   });
 
   return (
@@ -28,7 +31,7 @@ function Polvo({ count = 1100, color = "#FFB347" }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.045} color={color} transparent opacity={0.7} sizeAttenuation depthWrite={false} />
+      <pointsMaterial size={0.05} color={color} transparent opacity={0.75} sizeAttenuation depthWrite={false} />
     </points>
   );
 }

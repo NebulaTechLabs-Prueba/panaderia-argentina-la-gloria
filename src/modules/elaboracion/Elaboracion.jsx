@@ -11,7 +11,7 @@ import { getCategorias, getProductos } from "@/lib/data";
 import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
-import { ProductModal } from "@/modules/catalogo/ProductModal";
+import { EscenaModal } from "./EscenaModal";
 import { CartButton } from "@/modules/carrito/CartButton";
 import { CartDrawer } from "@/modules/carrito/CartDrawer";
 import { SiteFooter } from "@/modules/negocio/SiteFooter";
@@ -40,7 +40,7 @@ function AddBtn({ producto }) {
         setTimeout(() => setOk(false), 1100);
       }}
       aria-label={`Agregar ${producto.nombre}`}
-      className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-corteza text-cacao shadow-lg transition hover:scale-110 active:scale-90"
+      className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-cream text-cacao shadow-lg transition hover:scale-110 active:scale-90"
     >
       {ok ? <Check className="h-5 w-5" /> : <Plus className="h-6 w-6" strokeWidth={2.6} />}
     </button>
@@ -195,7 +195,7 @@ export function Elaboracion() {
         </div>
 
         <div className="hero-content relative z-10 px-6 text-center">
-          <p className="hero-kicker font-display text-sm font-bold uppercase tracking-[0.35em] text-corteza">
+          <p className="hero-kicker font-display text-sm font-bold uppercase tracking-[0.35em] text-cream/60">
             Panadería argentina · {ajustes?.direccion ?? "Woodbridge, VA"}
           </p>
           <h1 className="hero-title mt-4 font-display text-5xl font-extrabold leading-[0.95] sm:text-8xl">
@@ -226,8 +226,9 @@ export function Elaboracion() {
               <div className="escena-bg absolute inset-0 -z-10">
                 <img src={asset(`/img/produccion/${bg}.jpg`)} alt="" className="h-full w-full object-cover" />
               </div>
-              <div className="absolute inset-0 -z-10 bg-cacao/65" />
-              <div className="absolute inset-0 -z-10 bg-linear-to-t from-cacao via-cacao/20 to-cacao/60" />
+              <div className="absolute inset-0 -z-10 bg-cacao/55" />
+              {/* funde arriba y abajo hacia el fondo: sin líneas entre escenas */}
+              <div className="absolute inset-0 -z-10 bg-linear-to-b from-cacao via-transparent to-cacao" />
 
               <div className="relative mx-auto grid w-full max-w-6xl items-center gap-8 px-6 py-20 md:grid-cols-2 md:gap-12">
                 {/* media del producto */}
@@ -249,7 +250,7 @@ export function Elaboracion() {
 
                 {/* texto */}
                 <div className={mediaDer ? "md:order-1" : ""}>
-                  <p className="escena-rev font-display text-sm font-bold uppercase tracking-[0.2em] text-corteza">
+                  <p className="escena-rev font-display text-sm font-bold uppercase tracking-[0.2em] text-cream/50">
                     {String(i + 1).padStart(2, "0")} · {nombreCat(p.categoria_id)}
                   </p>
                   <h2 className="escena-title mt-2 font-display text-4xl font-extrabold leading-[1.02] sm:text-6xl">
@@ -261,7 +262,7 @@ export function Elaboracion() {
                     </p>
                   )}
                   <div className="escena-rev mt-7 flex items-center gap-5">
-                    <span className="font-display text-3xl font-extrabold text-corteza">
+                    <span className="font-display text-3xl font-extrabold text-cream">
                       {formatCentavos(p.precio_centavos, moneda)}
                     </span>
                     <AddBtn producto={p} />
@@ -277,7 +278,7 @@ export function Elaboracion() {
       <section className="relative flex min-h-[70vh] items-center justify-center overflow-hidden px-6 py-24 text-center">
         <div className="absolute inset-0 -z-10">
           <img src={asset("/img/produccion/prod-1.jpg")} alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-cacao/75" />
+          <div className="absolute inset-0 bg-linear-to-b from-cacao via-cacao/65 to-cacao" />
         </div>
         <div className="relative mx-auto max-w-2xl">
           <h2 className="font-display text-4xl font-extrabold sm:text-6xl">Del horno, a tu mesa</h2>
@@ -285,18 +286,21 @@ export function Elaboracion() {
           <button
             type="button"
             onClick={() => lenisRef.current?.scrollTo(0, { duration: 1.4 })}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-corteza px-7 py-4 font-bold text-cacao shadow-xl transition hover:brightness-105 active:scale-95"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-cream px-7 py-4 font-bold text-cacao shadow-xl transition hover:bg-white active:scale-95"
           >
             <ShoppingBag className="h-5 w-5" /> Empezá tu pedido
           </button>
         </div>
       </section>
 
+      {/* feather hacia el footer */}
+      <div aria-hidden="true" className="h-24 bg-linear-to-b from-cacao to-marca" />
+
       <SiteFooter />
 
       <CartButton />
       <CartDrawer />
-      <ProductModal producto={detalle} categoria={catDetalle} onCerrar={() => setDetalle(null)} />
+      <EscenaModal producto={detalle} categoria={catDetalle} onCerrar={() => setDetalle(null)} />
     </div>
   );
 }

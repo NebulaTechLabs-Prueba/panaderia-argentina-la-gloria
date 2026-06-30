@@ -20,6 +20,14 @@
   --font-display: var(--font-poppins); /* Poppins (títulos), según el manual */
 }
 
+/* Propuesta D — tema "marca" alternable por botón: remapea los tokens para pasar
+   de la paleta cinematográfica oscura a los colores de la empresa (crema + azul
+   marino), como en las propuestas anteriores. */
+.tema-marca {
+  --color-cacao: #f4ead2; /* lo que era fondo oscuro → crema */
+  --color-cream: #2f3a7e; /* lo que era claro (texto/botones) → azul marino */
+}
+
 html {
   scroll-behavior: smooth;
 }

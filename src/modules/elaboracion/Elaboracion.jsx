@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import SplitType from "split-type";
-import { Plus, Check, ChevronDown, ShoppingBag } from "lucide-react";
+import { Plus, Check, ChevronDown, ShoppingBag, LayoutGrid, Film } from "lucide-react";
 import { getCategorias, getProductos } from "@/lib/data";
 import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
@@ -62,6 +62,31 @@ export function Elaboracion() {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [detalle, setDetalle] = useState(null);
+  // Preferencias de la propuesta D (controladas desde el desplegable de la opción
+  // C en el navbar): disposición ("cine" | "galeria") y tema ("oscuro" | "marca").
+  // Se leen de localStorage y se escuchan en vivo por evento.
+  const [modo, setModo] = useState("cine");
+  const [tema, setTema] = useState("oscuro");
+
+  useEffect(() => {
+    try {
+      const m = window.localStorage.getItem("la-gloria:d-modo");
+      const t = window.localStorage.getItem("la-gloria:d-tema");
+      if (m === "cine" || m === "galeria") setModo(m);
+      if (t === "oscuro" || t === "marca") setTema(t);
+    } catch {}
+    const onPrefs = (e) => {
+      if (e.detail?.modo) setModo(e.detail.modo);
+      if (e.detail?.tema) setTema(e.detail.tema);
+    };
+    window.addEventListener("la-gloria:d-prefs", onPrefs);
+    return () => window.removeEventListener("la-gloria:d-prefs", onPrefs);
+  }, []);
+
+  // Al cambiar la disposición cambia mucho la altura: volvé arriba.
+  useEffect(() => {
+    lenisRef.current?.scrollTo(0, { immediate: true });
+  }, [modo]);
 
   // Scroll suave (Lenis) sincronizado con ScrollTrigger.
   useEffect(() => {
@@ -120,15 +145,12 @@ export function Elaboracion() {
   const catDetalle = categorias.find((c) => c.id === detalle?.categoria_id);
   const fuentesVideo = VIDEOS.map((v) => asset(v));
 
+  // Hero: no depende del modo de presentación.
   useGSAP(
     () => {
       if (cargando) return;
-      const splits = [];
-
-      // Hero
-      const htl = gsap.timeline({ defaults: { ease: "power3.out" } });
       const hs = new SplitType(".hero-title", { types: "words, chars" });
-      splits.push(hs);
+      const htl = gsap.timeline({ defaults: { ease: "power3.out" } });
       htl
         .from(".hero-kicker", { y: 20, opacity: 0, duration: 0.6 })
         .from(hs.chars, { yPercent: 120, opacity: 0, stagger: 0.025, duration: 0.7 }, "-=0.2")
@@ -143,58 +165,75 @@ export function Elaboracion() {
         scale: 1.25,
         scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true },
       });
-
-      // Escenas
-      gsap.utils.toArray(".escena").forEach((sec) => {
-        // media del producto: aparece y crece atado al scroll
-        const media = sec.querySelector(".escena-media");
-        if (media) {
-          gsap.fromTo(
-            media,
-            { y: 80, opacity: 0, scale: 0.8, rotate: -3 },
-            {
-              y: 0,
-              opacity: 1,
-              scale: 1,
-              rotate: 0,
-              ease: "power2.out",
-              scrollTrigger: { trigger: sec, start: "top 80%", end: "top 35%", scrub: true },
-            }
-          );
-        }
-        // título letra por letra
-        const titulo = sec.querySelector(".escena-title");
-        if (titulo) {
-          const s = new SplitType(titulo, { types: "words, chars" });
-          splits.push(s);
-          gsap.from(s.chars, {
-            yPercent: 110,
-            opacity: 0,
-            stagger: 0.02,
-            duration: 0.6,
-            ease: "power3.out",
-            scrollTrigger: { trigger: sec, start: "top 70%" },
-          });
-        }
-        // textos / acciones
-        gsap.from(sec.querySelectorAll(".escena-rev"), {
-          y: 30,
-          opacity: 0,
-          stagger: 0.12,
-          duration: 0.7,
-          ease: "power3.out",
-          scrollTrigger: { trigger: sec, start: "top 65%" },
-        });
-      });
-
-      ScrollTrigger.refresh();
-      return () => splits.forEach((s) => s.revert());
+      return () => hs.revert();
     },
     { scope: root, dependencies: [cargando] }
   );
 
+  // Productos: animaciones según el modo (cine = escenas / galería = tarjetas).
+  useGSAP(
+    () => {
+      if (cargando) return;
+      const splits = [];
+
+      if (modo === "cine") {
+        gsap.utils.toArray(".escena").forEach((sec) => {
+          const media = sec.querySelector(".escena-media");
+          if (media) {
+            gsap.fromTo(
+              media,
+              { y: 80, opacity: 0, scale: 0.8, rotate: -3 },
+              {
+                y: 0,
+                opacity: 1,
+                scale: 1,
+                rotate: 0,
+                ease: "power2.out",
+                scrollTrigger: { trigger: sec, start: "top 80%", end: "top 35%", scrub: true },
+              }
+            );
+          }
+          const titulo = sec.querySelector(".escena-title");
+          if (titulo) {
+            const s = new SplitType(titulo, { types: "words, chars" });
+            splits.push(s);
+            gsap.from(s.chars, {
+              yPercent: 110,
+              opacity: 0,
+              stagger: 0.02,
+              duration: 0.6,
+              ease: "power3.out",
+              scrollTrigger: { trigger: sec, start: "top 70%" },
+            });
+          }
+          gsap.from(sec.querySelectorAll(".escena-rev"), {
+            y: 30,
+            opacity: 0,
+            stagger: 0.12,
+            duration: 0.7,
+            ease: "power3.out",
+            scrollTrigger: { trigger: sec, start: "top 65%" },
+          });
+        });
+      } else {
+        gsap.from(".galeria-card", {
+          opacity: 0,
+          y: 40,
+          stagger: 0.06,
+          duration: 0.6,
+          ease: "power3.out",
+          scrollTrigger: { trigger: ".galeria-track", start: "top 85%" },
+        });
+      }
+
+      ScrollTrigger.refresh();
+      return () => splits.forEach((s) => s.revert());
+    },
+    { scope: root, dependencies: [cargando, modo] }
+  );
+
   return (
-    <div ref={root} className="relative bg-cacao text-cream">
+    <div ref={root} className={`relative bg-cacao text-cream ${tema === "marca" ? "tema-marca" : ""}`}>
       {/* Video de elaboración GLOBAL fijo: corre detrás de las escenas (el hero y
           el cierre lo tapan con su propio fondo). Da vida continua y sin líneas. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
@@ -244,10 +283,10 @@ export function Elaboracion() {
         </div>
       </section>
 
-      {/* ── ESCENAS (una por producto con foto) ── */}
+      {/* ── PRODUCTOS: modo CINE (escenas verticales) ── */}
       {cargando ? (
         <div className="flex h-[40vh] items-center justify-center text-cream/50">Calentando el horno…</div>
-      ) : (
+      ) : modo === "cine" ? (
         escenas.map((p, i) => {
           const mediaDer = i % 2 === 1;
           return (
@@ -305,6 +344,57 @@ export function Elaboracion() {
             </section>
           );
         })
+      ) : (
+        /* ── PRODUCTOS: modo GALERÍA (flujo horizontal, swipe/scroll lateral) ── */
+        <section className="galeria relative flex min-h-screen flex-col justify-center py-24">
+          <div className="mx-auto mb-8 w-full max-w-6xl px-6">
+            <p className="font-display text-sm font-bold uppercase tracking-[0.2em] text-cream/50">
+              La Gloria · Catálogo
+            </p>
+            <h2 className="mt-2 font-display text-4xl font-extrabold sm:text-6xl">Nuestros productos</h2>
+            <p className="mt-3 flex items-center gap-2 text-cream/70">
+              Deslizá para recorrerlos <span className="animate-pulse">→</span>
+            </p>
+          </div>
+          <div className="galeria-track flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-8 scrollbar-none">
+            {escenas.map((p) => (
+              <article
+                key={p.id}
+                className="galeria-card group flex w-72 shrink-0 snap-center flex-col overflow-hidden rounded-3xl bg-white/5 ring-1 ring-white/10 backdrop-blur-sm sm:w-80"
+              >
+                <button
+                  type="button"
+                  onClick={() => setDetalle(p)}
+                  onMouseEnter={playHover}
+                  className="relative block aspect-4/5 overflow-hidden"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.imagen_url}
+                    alt={p.nombre}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-linear-to-t from-cacao/80 via-transparent to-transparent" />
+                  <span className="absolute left-3 top-3 rounded-full bg-black/40 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-cream/85 backdrop-blur-sm">
+                    {nombreCat(p.categoria_id)}
+                  </span>
+                </button>
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="font-display text-xl font-bold leading-tight">{p.nombre}</h3>
+                  {p.descripcion && (
+                    <p className="mt-1 line-clamp-2 text-sm text-cream/60">{p.descripcion}</p>
+                  )}
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <span className="font-display text-2xl font-extrabold">
+                      {formatCentavos(p.precio_centavos, moneda)}
+                    </span>
+                    <AddBtn producto={p} />
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ── CIERRE ── */}

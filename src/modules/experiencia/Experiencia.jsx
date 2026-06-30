@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -14,6 +13,7 @@ import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { ProductImage } from "@/modules/catalogo/ProductImage";
 import { ProductModal } from "@/modules/catalogo/ProductModal";
+import { asset } from "@/lib/config/constants";
 import { CartButton } from "@/modules/carrito/CartButton";
 import { CartDrawer } from "@/modules/carrito/CartDrawer";
 import { LogoLaGloria } from "@/components/ui/LogoLaGloria";
@@ -21,8 +21,8 @@ import { SiteFooter } from "@/modules/negocio/SiteFooter";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-// Acento 3D diferido (no SSR): no rompe el prerender del export estático.
-const Escena3D = dynamic(() => import("./Escena3D"), { ssr: false, loading: () => null });
+// Fotos reales del local/asado/inicios para el montaje cinemático del hero.
+const AMBIENTE = ["amb-local", "amb-inicios", "amb-asado", "amb-local2", "amb-pizza"];
 
 // Botón "agregar" rápido.
 function AddBtn({ producto }) {
@@ -110,6 +110,9 @@ export function Experiencia() {
       .filter(Boolean);
   }, [categorias, productos]);
 
+  // Productos con foto real para la cinta transportadora.
+  const marquee = useMemo(() => productos.filter((p) => p.imagen_url).slice(0, 16), [productos]);
+
   const catDetalle = categorias.find((c) => c.id === detalle?.categoria_id);
 
   // Animaciones GSAP (se montan cuando los datos están listos).
@@ -192,13 +195,25 @@ export function Experiencia() {
 
       {/* ── INTRO ── */}
       <section className="intro relative flex h-screen items-center justify-center overflow-hidden bg-marca text-cream">
-        <div className="pointer-events-none absolute inset-0 opacity-25">
+        {/* Montaje Ken Burns de fotos reales del local (siempre en movimiento) */}
+        <div className="absolute inset-0">
+          {AMBIENTE.map((a, i) => (
+            <img
+              key={a}
+              src={asset(`/img/ambiente/${a}.jpg`)}
+              alt=""
+              aria-hidden="true"
+              className="kenburns-img absolute inset-0 h-full w-full object-cover"
+              style={{ animationDelay: `${i * 6}s` }}
+            />
+          ))}
+          {/* velos para legibilidad del texto */}
+          <div className="absolute inset-0 bg-marca/60" />
+          <div className="absolute inset-0 bg-linear-to-t from-marca via-marca/35 to-marca/80" />
+        </div>
+        <div className="pointer-events-none absolute inset-0 opacity-30">
           <CintaSVG className="cinta absolute -top-6 left-0 h-40 w-full" color="#FF9900" />
           <CintaSVG className="cinta absolute bottom-0 left-0 h-48 w-full rotate-180" color="#63B0DD" />
-        </div>
-        {/* Acento 3D detrás del título */}
-        <div className="pointer-events-none absolute inset-0 opacity-90">
-          <Escena3D />
         </div>
 
         <div className="intro-content relative z-10 flex flex-col items-center px-5 text-center">
@@ -218,6 +233,28 @@ export function Experiencia() {
           </div>
         </div>
       </section>
+
+      {/* ── CINTA TRANSPORTADORA (movimiento continuo) ── */}
+      {marquee.length > 0 && (
+        <div className="overflow-hidden border-y-4 border-corteza bg-marca py-4">
+          <div className="marquee-track flex items-center gap-10 pr-10">
+            {[...marquee, ...marquee].map((p, i) => (
+              <div key={i} className="flex shrink-0 items-center gap-3">
+                <img
+                  src={p.imagen_url}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-12 w-12 rounded-full object-cover ring-2 ring-corteza"
+                />
+                <span className="whitespace-nowrap font-display text-lg font-bold text-cream">
+                  {p.nombre}
+                </span>
+                <span className="text-corteza">●</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── RECORRIDO ── */}
       {secciones.map(({ cat, items }, i) => (

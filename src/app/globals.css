@@ -30,3 +30,35 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ── Movimiento continuo (Propuesta C: que nunca se sienta estática) ── */
+
+/* Montaje Ken Burns: cada foto entra, hace zoom/paneo y se desvanece en bucle. */
+@keyframes kenburns {
+  0% { opacity: 0; transform: scale(1.08) translate(0, 0); }
+  6% { opacity: 1; }
+  20% { opacity: 1; }
+  26% { opacity: 0; transform: scale(1.16) translate(-1.5%, -1.5%); }
+  100% { opacity: 0; }
+}
+.kenburns-img { opacity: 0; animation: kenburns 30s infinite; will-change: opacity, transform; }
+
+/* Cinta transportadora: desplazamiento horizontal infinito. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track { width: max-content; animation: marquee 38s linear infinite; }
+.marquee-track:hover { animation-play-state: paused; }
+
+/* Flote suave para acentos. */
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.floaty { animation: floaty 5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kenburns-img, .marquee-track, .floaty { animation: none; }
+  .kenburns-img:first-child { opacity: 1; }
+}

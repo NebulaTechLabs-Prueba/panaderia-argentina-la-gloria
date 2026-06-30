@@ -23,4 +23,10 @@ export const IDS_CON_FOTO = new Set([
   "p-parrilla-nino",
   "p-milhojas",
   "p-torta-cumple",
+  // Productos nuevos con foto real
+  "p-rogel",
+  "p-alfajor-santafesino",
+  "p-masitas-finas",
+  "p-super-sandwich-mila",
+  "p-pollo-asador",
 ]);

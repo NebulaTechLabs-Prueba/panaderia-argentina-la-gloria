@@ -88,13 +88,3 @@ body {
   .kenburns-img, .marquee-track, .floaty, .drift, .drift-2, .pulse-soft, .slowzoom { animation: none; }
   .kenburns-img:first-child { opacity: 1; }
 }
-
-/* Scroll-snap "foco por sección" (Propuesta C). Proximidad: cada categoría encaja
-   por arriba, pero las secciones más altas que la pantalla se pueden scrollear. */
-html.snap-exp {
-  scroll-snap-type: y proximity;
-  scroll-behavior: smooth;
-}
-@media (prefers-reduced-motion: reduce) {
-  html.snap-exp { scroll-snap-type: none; scroll-behavior: auto; }
-}

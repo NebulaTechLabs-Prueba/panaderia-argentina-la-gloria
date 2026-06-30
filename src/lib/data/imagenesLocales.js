@@ -30,4 +30,6 @@ export const IDS_CON_FOTO = new Set([
   "p-super-sandwich-mila",
   "p-pollo-asador",
   "p-cremona",
+  "p-super-choripan",
+  "p-lechon-asador",
 ]);

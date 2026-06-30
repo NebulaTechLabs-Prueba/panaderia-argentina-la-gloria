@@ -10,12 +10,21 @@
 //   playTap()   → click genérico de botón (muy sutil)
 //   playHover() → hover sobre un ítem (apenas perceptible)
 let ctx = null;
+let master = null;
+
+// Volumen general de TODOS los sonidos (un solo control). Bajalo/subilo acá.
+const MASTER_VOL = 0.7;
 
 function getCtx() {
   if (typeof window === "undefined") return null;
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return null;
-  ctx = ctx || new AC();
+  if (!ctx) {
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = MASTER_VOL;
+    master.connect(ctx.destination);
+  }
   if (ctx.state === "suspended") ctx.resume();
   return ctx;
 }
@@ -36,7 +45,7 @@ function tocar(notas) {
     gain.gain.exponentialRampToValueAtTime(vol, now + n.t + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + n.t + dur);
     osc.connect(gain);
-    gain.connect(ac.destination);
+    gain.connect(master);
     osc.start(now + n.t);
     osc.stop(now + n.t + dur + 0.02);
   }
@@ -56,7 +65,7 @@ function barrido({ from, to, dur = 0.35, vol = 0.1, type = "sine" }) {
   gain.gain.exponentialRampToValueAtTime(vol, now + 0.01);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
   osc.connect(gain);
-  gain.connect(ac.destination);
+  gain.connect(master);
   osc.start(now);
   osc.stop(now + dur + 0.02);
 }
@@ -111,6 +120,7 @@ export const playCerrar = () => safe(() => barrido({ from: 540, to: 240, dur: 0.
 export const playTap = () =>
   safe(() => tocar([{ f: 600, t: 0, dur: 0.05, vol: 0.04, type: "triangle" }]));
 
-// Hover sobre un ítem: aún más sutil (apenas perceptible).
+// Hover sobre un ítem: aún más sutil (apenas perceptible). Vol algo más alto para
+// compensar el master y que su volumen neto no cambie.
 export const playHover = () =>
-  safe(() => tocar([{ f: 1100, t: 0, dur: 0.035, vol: 0.035, type: "sine" }]));
+  safe(() => tocar([{ f: 1100, t: 0, dur: 0.035, vol: 0.05, type: "sine" }]));

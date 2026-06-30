@@ -242,7 +242,6 @@ export function Experiencia() {
         }
 
         const scrub = { trigger: sec, start: "top bottom", end: "bottom top", scrub: true };
-        gsap.to(sec.querySelectorAll(".cine-bg"), { yPercent: variant === 2 ? -22 : -14, ease: "none", scrollTrigger: scrub });
         gsap.to(sec.querySelectorAll(".cine-parallax"), { yPercent: -10, ease: "none", scrollTrigger: scrub });
       });
 
@@ -364,7 +363,6 @@ export function Experiencia() {
 
       {/* ── RECORRIDO ── */}
       {secciones.map(({ cat, items }, i) => {
-        const bg = items.find((p) => p.imagen_url)?.imagen_url;
         return (
         <section
           key={cat.id}
@@ -374,15 +372,8 @@ export function Experiencia() {
             i % 2 === 0 ? "bg-cream" : "bg-masa"
           }`}
         >
-          {/* imagen de fondo (su propio producto, difuminada) + movimiento */}
+          {/* movimiento ambiental continuo (manchas de color que derivan) */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-            {bg && (
-              <img
-                src={bg}
-                alt=""
-                className="cine-bg absolute inset-0 h-[120%] w-full scale-110 object-cover opacity-[0.28] blur-lg"
-              />
-            )}
             <div className="drift absolute -left-24 top-12 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
             <div className="drift-2 absolute -right-20 bottom-12 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
           </div>

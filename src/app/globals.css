@@ -20,16 +20,25 @@
   --font-display: var(--font-poppins); /* Poppins (títulos), según el manual */
 }
 
-/* Propuesta D — temas de color. La base se mantiene OSCURA en ambos (para que el
-   video de fondo siempre se vea y todo conserve contraste); lo que cambia es el
-   ACENTO y el color del FOOTER. */
+/* Propuesta D — dos temas completos para comparar:
+   · "cine" (default): paleta cinematográfica OSCURA nueva.
+   · "marca": paleta CLARA de la empresa (crema + azul marino + naranja), como en
+     las propuestas anteriores.
+   Se remapean los tokens de color y un set de variables semánticas para que ambos
+   se vean prolijos (superficies, acento, footer). */
 .d-root {
-  --color-marca: #2a2a33; /* footer oscuro en "cine" (matchea la base) */
-  --d-accent: #f4ead2; /* acento crema en "cine" */
+  --color-marca: #2a2a33; /* footer oscuro en "cine" */
+  --d-accent: #f4ead2; /* acento crema */
+  --d-surface: rgba(255, 255, 255, 0.06); /* tarjetas glass sobre oscuro */
+  --d-ring: rgba(255, 255, 255, 0.12);
 }
 .d-root.tema-marca {
-  --color-marca: #2f3a7e; /* footer azul marino de la empresa */
+  --color-cacao: #f4ead2; /* base CLARA (crema), como la propuesta anterior */
+  --color-cream: #2f3a7e; /* texto/elementos en azul marino */
+  --color-marca: #2f3a7e; /* footer azul marino */
   --d-accent: #ff9900; /* acento NARANJA de la empresa */
+  --d-surface: #ffffff; /* tarjetas claras sólidas */
+  --d-ring: rgba(47, 58, 126, 0.15);
 }
 
 html {

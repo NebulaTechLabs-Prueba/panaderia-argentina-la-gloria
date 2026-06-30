@@ -248,7 +248,7 @@ export function Elaboracion() {
         <VideoSecuencia
           fuentes={fuentesVideo}
           poster={asset("/img/produccion/prod-8.jpg")}
-          className="h-full w-full object-cover blur-[3px]"
+          className={`h-full w-full object-cover blur-[3px] ${tema === "marca" ? "opacity-40" : ""}`}
         />
         <div className="absolute inset-0 bg-cacao/70" />
       </div>
@@ -260,7 +260,7 @@ export function Elaboracion() {
           <VideoSecuencia
             fuentes={fuentesVideo}
             poster={asset("/img/produccion/prod-4.jpg")}
-            className="h-full w-full object-cover"
+            className={`h-full w-full object-cover ${tema === "marca" ? "opacity-40" : ""}`}
           />
           <div className="absolute inset-0 bg-cacao/55" />
           <div className="absolute inset-0 bg-linear-to-t from-cacao via-cacao/30 to-cacao/70" />
@@ -376,7 +376,7 @@ export function Elaboracion() {
                   {items.map((p) => (
                     <article
                       key={p.id}
-                      className="galeria-card group flex w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur-sm sm:w-60"
+                      className="galeria-card group flex w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-(--d-surface) shadow-lg ring-1 ring-(--d-ring) backdrop-blur-sm sm:w-60"
                     >
                       <button
                         type="button"
@@ -414,7 +414,9 @@ export function Elaboracion() {
       {/* ── CIERRE ── */}
       <section className="relative flex min-h-[70vh] items-center justify-center overflow-hidden px-6 py-24 text-center">
         <div className="absolute inset-0 -z-10">
-          <img src={asset("/img/produccion/prod-1.jpg")} alt="" className="h-full w-full object-cover" />
+          {tema !== "marca" && (
+            <img src={asset("/img/produccion/prod-1.jpg")} alt="" className="h-full w-full object-cover" />
+          )}
           <div className="absolute inset-0 bg-linear-to-b from-cacao via-cacao/65 to-cacao" />
         </div>
         <div className="relative mx-auto max-w-2xl">

@@ -58,17 +58,18 @@ body {
 }
 .floaty { animation: floaty 5s ease-in-out infinite; }
 
-/* Deriva continua para manchas decorativas (fondo de cada sección). */
+/* Deriva continua para manchas decorativas (fondo de cada sección). Amplitud
+   amplia para que el movimiento se note. */
 @keyframes drift {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-26px, 18px) scale(1.06); }
+  50% { transform: translate(-90px, 60px) scale(1.18); }
 }
-.drift { animation: drift 13s ease-in-out infinite; }
+.drift { animation: drift 11s ease-in-out infinite; }
 @keyframes drift2 {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(22px, -20px) scale(1.08); }
+  50% { transform: translate(80px, -70px) scale(1.2); }
 }
-.drift-2 { animation: drift2 17s ease-in-out infinite; }
+.drift-2 { animation: drift2 14s ease-in-out infinite; }
 
 /* Pulso suave (CTA y acentos). */
 @keyframes pulseSoft {

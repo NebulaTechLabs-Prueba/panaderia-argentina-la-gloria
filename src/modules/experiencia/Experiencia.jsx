@@ -221,6 +221,15 @@ export function Experiencia() {
             scrollTrigger: { trigger: sec, start: "top 75%" },
           });
         }
+        // Ícono del capítulo: rota atado al scroll (reacciona al movimiento).
+        const icono = sec.querySelector(".cap-icono");
+        if (icono) {
+          gsap.to(icono, {
+            rotate: 35,
+            ease: "none",
+            scrollTrigger: { trigger: sec, start: "top bottom", end: "bottom top", scrub: true },
+          });
+        }
         // Cada producto (wrapper .reveal) se revela scrubeado al entrar.
         sec.querySelectorAll(".reveal").forEach((el) => {
           gsap.fromTo(
@@ -360,7 +369,7 @@ export function Experiencia() {
           <section
             key={cat.id}
             id={cat.slug}
-            className={`cine-section relative overflow-hidden px-5 py-12 ${
+            className={`cine-section relative px-5 py-12 ${
               i % 2 === 0 ? "bg-cream" : "bg-masa"
             }`}
           >
@@ -389,9 +398,11 @@ export function Experiencia() {
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  {/* ícono animado */}
-                  <span className="floaty relative inline-grid h-16 w-16 place-items-center rounded-2xl bg-white/20">
-                    <IconoCategoria icono={cat.icono} className="h-8 w-8" />
+                  {/* ícono: flota + reacciona al hover + rota con el scroll */}
+                  <span className="floaty relative inline-block">
+                    <span className="grid h-16 w-16 cursor-pointer place-items-center rounded-2xl bg-white/20 transition-transform duration-300 hover:scale-110 hover:rotate-6">
+                      <IconoCategoria icono={cat.icono} className="cap-icono h-8 w-8" />
+                    </span>
                   </span>
                   <p className="relative mt-5 font-display text-xs font-bold uppercase tracking-[0.18em] opacity-80">
                     {cat.slogan}
@@ -449,36 +460,7 @@ export function Experiencia() {
         );
       })}
 
-      {/* ── NUESTRA HISTORIA ── */}
-      <section className="cine-section relative flex min-h-screen items-center overflow-hidden bg-cream px-5 py-24">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="drift absolute -right-24 top-10 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
-          <div className="drift-2 absolute -left-20 bottom-10 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
-        </div>
-        <div className="relative mx-auto grid w-full max-w-5xl items-center gap-10 md:grid-cols-[0.85fr_1.15fr]">
-          <div className="cine-card overflow-hidden rounded-4xl shadow-2xl ring-1 ring-cacao/10">
-            <VideoHistoria
-              src={asset("/video/historia.mp4")}
-              poster={asset("/img/ambiente/amb-fundadora.jpg")}
-            />
-          </div>
-          <div>
-            <p className="font-display text-sm font-bold uppercase tracking-widest text-corteza">
-              Desde el corazón
-            </p>
-            <h2 className="cine-title mt-1 font-display text-4xl font-extrabold leading-[1.05] text-cacao sm:text-5xl">
-              Nuestra historia
-            </h2>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-cacao/75">
-              Todo empezó de madrugada: amasando con la receta de la familia y las ganas de
-              tener, lejos de Argentina, el mismo sabor de siempre. Entrá, que acá te atendemos
-              como en casa — y si es domingo, te hacemos un lugar en la mesa del asado.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CIERRE ── */}
+      {/* ── CIERRE DEL FOCUS: "¿Se te antojó algo?" (llamado a pedir) ── */}
       <section className="cine-section relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-marca px-5 py-28 text-center text-cream">
         {/* manchas que derivan */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -514,7 +496,7 @@ export function Experiencia() {
           <h2 className="cine-title font-display text-4xl font-extrabold sm:text-6xl">
             ¿Se te antojó algo?
           </h2>
-          <p className="mt-4 text-cream/85">Armá tu pedido y lo coordinamos por WhatsApp.</p>
+          <p className="mt-4 text-cream/85">Armá tu pedido que lo arreglamos por WhatsApp, dale 🧉</p>
           <button
             type="button"
             onClick={() => (estaVacio ? irA(`#${secciones[0]?.cat.slug}`) : abrirCarrito())}
@@ -523,6 +505,35 @@ export function Experiencia() {
             <ShoppingBag className="h-5 w-5" />
             {estaVacio ? "Empezá tu pedido" : "Ver mi pedido"}
           </button>
+        </div>
+      </section>
+
+      {/* ── DESPEDIDA: NUESTRA HISTORIA ── */}
+      <section className="cine-section relative flex min-h-screen items-center overflow-hidden bg-cream px-5 py-24">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="drift absolute -right-24 top-10 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
+          <div className="drift-2 absolute -left-20 bottom-10 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
+        </div>
+        <div className="relative mx-auto grid w-full max-w-5xl items-center gap-10 md:grid-cols-[0.85fr_1.15fr]">
+          <div className="cine-card overflow-hidden rounded-4xl shadow-2xl ring-1 ring-cacao/10">
+            <VideoHistoria
+              src={asset("/video/historia.mp4")}
+              poster={asset("/img/ambiente/amb-fundadora.jpg")}
+            />
+          </div>
+          <div>
+            <p className="font-display text-sm font-bold uppercase tracking-widest text-corteza">
+              Desde el corazón
+            </p>
+            <h2 className="cine-title mt-1 font-display text-4xl font-extrabold leading-[1.05] text-cacao sm:text-5xl">
+              Nuestra historia
+            </h2>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-cacao/75">
+              Todo empezó de madrugada: amasando con la receta de la familia y las ganas de
+              tener, lejos de Argentina, el mismo sabor de siempre. Entrá, que acá te atendemos
+              como en casa — y si es domingo, te hacemos un lugar en la mesa del asado.
+            </p>
+          </div>
         </div>
       </section>
 

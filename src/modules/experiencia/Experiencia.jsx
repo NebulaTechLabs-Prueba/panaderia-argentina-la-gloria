@@ -105,37 +105,23 @@ export function Experiencia() {
   const moneda = useMoneda();
   const { abrirCarrito, estaVacio } = useCarrito();
   const root = useRef(null);
-  const lenisRef = useRef(null);
   const [categorias, setCategorias] = useState([]);
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [detalle, setDetalle] = useState(null);
 
-  // Smooth scroll (Lenis + ScrollTrigger) scoped a esta página.
+  // Scroll-snap "foco por sección": activa el snap a nivel de página SOLO en esta
+  // experiencia (se limpia al salir). Scroll nativo (sin Lenis) para no pelear con
+  // el snap; ScrollTrigger sigue funcionando con el scroll de la ventana.
   useEffect(() => {
-    let lenis;
-    let raf;
-    import("lenis").then(({ default: Lenis }) => {
-      lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
-      lenisRef.current = lenis;
-      lenis.on("scroll", ScrollTrigger.update);
-      raf = (t) => lenis.raf(t * 1000);
-      gsap.ticker.add(raf);
-      gsap.ticker.lagSmoothing(0);
-    });
-    return () => {
-      if (raf) gsap.ticker.remove(raf);
-      if (lenis) lenis.destroy();
-      lenisRef.current = null;
-    };
+    document.documentElement.classList.add("snap-exp");
+    return () => document.documentElement.classList.remove("snap-exp");
   }, []);
 
   // Scroll suave hacia una sección (#slug).
   const irA = (sel) => {
     const el = typeof document !== "undefined" ? document.querySelector(sel) : null;
-    if (!el) return;
-    if (lenisRef.current) lenisRef.current.scrollTo(el, { offset: -8 });
-    else el.scrollIntoView({ behavior: "smooth" });
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   useEffect(() => {
@@ -254,7 +240,7 @@ export function Experiencia() {
   return (
     <div ref={root} className="relative bg-cream">
       {/* ── INTRO ── */}
-      <section className="intro relative flex h-screen items-center justify-center overflow-hidden bg-marca text-cream">
+      <section className="intro relative flex h-screen snap-start items-center justify-center overflow-hidden bg-marca text-cream">
         {/* Montaje Ken Burns de fotos reales del local (siempre en movimiento) */}
         <div className="absolute inset-0">
           {AMBIENTE.map((a, i) => (
@@ -368,7 +354,7 @@ export function Experiencia() {
           key={cat.id}
           id={cat.slug}
           data-variant={i % 4}
-          className={`cine-section relative flex min-h-screen flex-col justify-center overflow-hidden px-5 py-24 ${
+          className={`cine-section relative flex min-h-screen snap-start flex-col justify-center overflow-hidden px-5 py-24 ${
             i % 2 === 0 ? "bg-cream" : "bg-masa"
           }`}
         >
@@ -429,7 +415,7 @@ export function Experiencia() {
       })}
 
       {/* ── NUESTRA HISTORIA ── */}
-      <section className="cine-section relative flex min-h-screen items-center overflow-hidden bg-cream px-5 py-24">
+      <section className="cine-section relative flex min-h-screen snap-start items-center overflow-hidden bg-cream px-5 py-24">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="drift absolute -right-24 top-10 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
           <div className="drift-2 absolute -left-20 bottom-10 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
@@ -458,7 +444,7 @@ export function Experiencia() {
       </section>
 
       {/* ── CIERRE ── */}
-      <section className="relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-marca px-5 py-28 text-center text-cream">
+      <section className="relative flex min-h-[80vh] snap-start items-center justify-center overflow-hidden bg-marca px-5 py-28 text-center text-cream">
         {/* manchas que derivan */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="drift absolute -left-20 top-0 h-80 w-80 rounded-full bg-corteza/25 blur-3xl" />

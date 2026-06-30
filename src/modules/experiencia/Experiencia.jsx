@@ -12,6 +12,8 @@ import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { ProductImage } from "@/modules/catalogo/ProductImage";
 import { ProductModal } from "@/modules/catalogo/ProductModal";
+import { IconoCategoria } from "@/modules/catalogo/IconoCategoria";
+import { header as headerColor } from "@/modules/catalogo/catColors";
 import { asset } from "@/lib/config/constants";
 import { CartButton } from "@/modules/carrito/CartButton";
 import { CartDrawer } from "@/modules/carrito/CartDrawer";
@@ -203,47 +205,36 @@ export function Experiencia() {
         });
       });
 
-      // Cada sección tiene su PROPIA animación (según data-variant) + parallax
-      // de su imagen de fondo. Variantes: 0 sube, 1 entra de la izquierda,
-      // 2 escala/rota, 3 alterna arriba/abajo.
+      // Capítulos fijos: el panel de la categoría queda sticky mientras sus
+      // productos entran "atados al scroll" (scrub) a medida que aparecen.
       gsap.utils.toArray(".cine-section").forEach((sec) => {
-        const variant = Number(sec.dataset.variant || 0);
-        const st = { trigger: sec, start: "top 65%" };
-
         const titulo = sec.querySelector(".cine-title");
         if (titulo) {
           const s = new SplitType(titulo, { types: "chars" });
           splits.push(s);
-          const fromTitle =
-            variant === 1
-              ? { xPercent: -60, opacity: 0 }
-              : variant === 2
-                ? { yPercent: 110, opacity: 0, rotate: 8 }
-                : { yPercent: 110, opacity: 0 };
           gsap.from(s.chars, {
-            ...fromTitle,
-            stagger: variant === 1 ? 0.02 : 0.03,
+            yPercent: 110,
+            opacity: 0,
+            stagger: 0.03,
             duration: 0.6,
             ease: "power3.out",
-            scrollTrigger: { trigger: sec, start: "top 72%" },
+            scrollTrigger: { trigger: sec, start: "top 75%" },
           });
         }
-
-        const cards = sec.querySelectorAll(".cine-card");
-        if (variant === 1) {
-          gsap.from(cards, { x: -90, opacity: 0, stagger: 0.12, duration: 0.8, ease: "power3.out", clearProps: "all", scrollTrigger: st });
-        } else if (variant === 2) {
-          gsap.from(cards, { scale: 0.8, rotate: -5, opacity: 0, stagger: 0.12, duration: 0.8, ease: "back.out(1.5)", clearProps: "all", scrollTrigger: st });
-        } else if (variant === 3) {
-          cards.forEach((c, ci) =>
-            gsap.from(c, { y: ci % 2 ? 110 : -110, opacity: 0, duration: 0.8, ease: "power3.out", clearProps: "all", scrollTrigger: { trigger: sec, start: "top 68%" } })
+        // Cada producto (wrapper .reveal) se revela scrubeado al entrar.
+        sec.querySelectorAll(".reveal").forEach((el) => {
+          gsap.fromTo(
+            el,
+            { y: 80, opacity: 0, scale: 0.96 },
+            {
+              y: 0,
+              opacity: 1,
+              scale: 1,
+              ease: "power2.out",
+              scrollTrigger: { trigger: el, start: "top 92%", end: "top 58%", scrub: true },
+            }
           );
-        } else {
-          gsap.from(cards, { y: 90, opacity: 0, scale: 0.92, stagger: 0.12, duration: 0.8, ease: "power3.out", clearProps: "all", scrollTrigger: st });
-        }
-
-        const scrub = { trigger: sec, start: "top bottom", end: "bottom top", scrub: true };
-        gsap.to(sec.querySelectorAll(".cine-parallax"), { yPercent: -10, ease: "none", scrollTrigger: scrub });
+        });
       });
 
       ScrollTrigger.refresh();
@@ -362,70 +353,83 @@ export function Experiencia() {
         </div>
       </button>
 
-      {/* ── RECORRIDO ── */}
+      {/* ── RECORRIDO: capítulos fijos (panel sticky + productos con scrub) ── */}
       {secciones.map(({ cat, items }, i) => {
+        const tituloDerecha = i % 2 === 1;
         return (
-        <section
-          key={cat.id}
-          id={cat.slug}
-          data-variant={i % 4}
-          className={`cine-section relative flex min-h-screen flex-col justify-center overflow-hidden px-5 py-24 ${
-            i % 2 === 0 ? "bg-cream" : "bg-masa"
-          }`}
-        >
-          {/* movimiento ambiental continuo (manchas de color que derivan) */}
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="drift absolute -left-24 top-12 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
-            <div className="drift-2 absolute -right-20 bottom-12 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
-          </div>
-
-          <div className="relative mx-auto w-full max-w-6xl">
-            <p className="font-display text-sm font-bold uppercase tracking-widest text-corteza">
-              {String(i + 1).padStart(2, "0")} · {cat.slogan}
-            </p>
-            <h2 className="cine-title mt-1 font-display text-5xl font-extrabold leading-tight text-cacao sm:text-7xl">
-              {cat.nombre}
-            </h2>
-
-            <div className="mt-12 grid gap-6 sm:grid-cols-3">
-              {items.map((p) => (
-                <article
-                  key={p.id}
-                  onClick={() => setDetalle(p)}
-                  onMouseEnter={playHover}
-                  className="cine-card group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2"
-                >
-                  <div className="cine-parallax relative aspect-4/3 overflow-hidden rounded-3xl shadow-xl ring-1 ring-cacao/10 transition-all duration-300 group-hover:shadow-2xl group-hover:ring-2 group-hover:ring-corteza">
-                    <ProductImage
-                      src={p.imagen_url}
-                      alt={p.nombre}
-                      color={cat.color}
-                      icono={cat.icono}
-                      className="transition-transform duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
-                    />
-                    {/* overlay que se revela en hover */}
-                    <div className="pointer-events-none absolute inset-0 flex items-end bg-linear-to-t from-marca/85 via-marca/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                      <span className="m-3 inline-flex translate-y-3 items-center gap-1 rounded-full bg-corteza px-3 py-1 text-sm font-bold text-cacao transition-transform duration-300 group-hover:translate-y-0">
-                        Ver +
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="font-display text-lg font-bold text-cacao transition-colors group-hover:text-corteza">
-                        {p.nombre}
-                      </h3>
-                      <span className="font-display text-xl font-extrabold text-corteza">
-                        {formatCentavos(p.precio_centavos, moneda)}
-                      </span>
-                    </div>
-                    <AddBtn producto={p} />
-                  </div>
-                </article>
-              ))}
+          <section
+            key={cat.id}
+            id={cat.slug}
+            className={`cine-section relative overflow-hidden px-5 py-12 ${
+              i % 2 === 0 ? "bg-cream" : "bg-masa"
+            }`}
+          >
+            {/* movimiento ambiental continuo (manchas de color que derivan) */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="drift absolute -left-24 top-12 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
+              <div className="drift-2 absolute -right-20 bottom-12 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
             </div>
-          </div>
-        </section>
+
+            <div className="relative mx-auto grid max-w-6xl gap-6 md:grid-cols-[0.8fr_1.2fr] md:gap-10">
+              {/* Capítulo: panel de categoría que queda fijo (sticky) */}
+              <div
+                className={`md:sticky md:top-0 md:flex md:h-screen md:flex-col md:justify-center md:py-16 ${
+                  tituloDerecha ? "md:order-2" : ""
+                }`}
+              >
+                <span className={`grid h-14 w-14 place-items-center rounded-2xl ${headerColor(cat.color)}`}>
+                  <IconoCategoria icono={cat.icono} className="h-7 w-7" />
+                </span>
+                <p className="mt-4 font-display text-sm font-bold uppercase tracking-widest text-corteza">
+                  {String(i + 1).padStart(2, "0")} · {cat.slogan}
+                </p>
+                <h2 className="cine-title mt-1 font-display text-5xl font-extrabold leading-[0.95] text-cacao sm:text-6xl">
+                  {cat.nombre}
+                </h2>
+                <p className="mt-3 text-sm text-cacao/50">{items.length} para elegir</p>
+              </div>
+
+              {/* Productos: entran atados al scroll (scrub) */}
+              <div className={`grid gap-6 py-8 sm:grid-cols-2 ${tituloDerecha ? "md:order-1" : ""}`}>
+                {items.map((p) => (
+                  <article
+                    key={p.id}
+                    onClick={() => setDetalle(p)}
+                    onMouseEnter={playHover}
+                    className="cine-card group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2"
+                  >
+                    <div className="reveal">
+                      <div className="relative aspect-4/3 overflow-hidden rounded-3xl shadow-xl ring-1 ring-cacao/10 transition-all duration-300 group-hover:shadow-2xl group-hover:ring-2 group-hover:ring-corteza">
+                        <ProductImage
+                          src={p.imagen_url}
+                          alt={p.nombre}
+                          color={cat.color}
+                          icono={cat.icono}
+                          className="transition-transform duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
+                        />
+                        <div className="pointer-events-none absolute inset-0 flex items-end bg-linear-to-t from-marca/85 via-marca/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                          <span className="m-3 inline-flex translate-y-3 items-center gap-1 rounded-full bg-corteza px-3 py-1 text-sm font-bold text-cacao transition-transform duration-300 group-hover:translate-y-0">
+                            Ver +
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="font-display text-lg font-bold text-cacao transition-colors group-hover:text-corteza">
+                            {p.nombre}
+                          </h3>
+                          <span className="font-display text-xl font-extrabold text-corteza">
+                            {formatCentavos(p.precio_centavos, moneda)}
+                          </span>
+                        </div>
+                        <AddBtn producto={p} />
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
         );
       })}
 

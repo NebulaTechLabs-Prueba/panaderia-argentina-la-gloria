@@ -185,7 +185,17 @@ export function Elaboracion() {
       {/* ── HERO ── */}
       <section className="hero relative flex h-screen items-center justify-center overflow-hidden">
         <div className="hero-bg absolute inset-0">
-          <img src={asset("/img/produccion/prod-4.jpg")} alt="" className="h-full w-full object-cover" />
+          {/* Video de elaboración (cuando exista el mp4); si no, muestra el poster */}
+          <video
+            className="h-full w-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster={asset("/img/produccion/prod-4.jpg")}
+          >
+            <source src={asset("/video/elaboracion-hero.mp4")} type="video/mp4" />
+          </video>
           <div className="absolute inset-0 bg-cacao/55" />
           <div className="absolute inset-0 bg-linear-to-t from-cacao via-cacao/30 to-cacao/70" />
         </div>
@@ -236,7 +246,7 @@ export function Elaboracion() {
                   <div
                     onClick={() => setDetalle(p)}
                     onMouseEnter={playHover}
-                    className="group relative aspect-square cursor-pointer overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-white/10"
+                    className="group relative aspect-square cursor-pointer overflow-hidden rounded-4xl shadow-2xl ring-1 ring-white/10"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img

@@ -23,8 +23,13 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 // Partículas de harina en el hero (WebGL), diferido y sin SSR.
 const Particles3D = dynamic(() => import("./Particles3D"), { ssr: false, loading: () => null });
 
-// Videos de elaboración en secuencia lógica (se agregarán más cuando estén listos).
-const VIDEOS = ["/video/elaboracion-hero.mp4", "/video/elaboracion-2.mp4"];
+// Videos de elaboración en secuencia lógica: amasado → pastelería → asado/lechón.
+// El logo real de La Gloria va incrustado en post (esquina) en los videos 1 y 3.
+const VIDEOS = [
+  "/video/elaboracion-hero.mp4",
+  "/video/elaboracion-2.mp4",
+  "/video/elaboracion-3.mp4",
+];
 
 function AddBtn({ producto }) {
   const { agregar } = useCarrito();

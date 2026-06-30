@@ -12,8 +12,7 @@ import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { EscenaModal } from "./EscenaModal";
-import { CartButton } from "@/modules/carrito/CartButton";
-import { CartDrawer } from "@/modules/carrito/CartDrawer";
+import { EscenaCartButton, EscenaCartDrawer } from "./EscenaCart";
 import { SiteFooter } from "@/modules/negocio/SiteFooter";
 import { asset } from "@/lib/config/constants";
 import { playHover } from "@/lib/sound/ding";
@@ -22,9 +21,6 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 // Partículas de harina en el hero (WebGL), diferido y sin SSR.
 const Particles3D = dynamic(() => import("./Particles3D"), { ssr: false, loading: () => null });
-
-// Fondos de producción (amasado, harina, horno, panadería) para las escenas.
-const PROD = ["prod-1", "prod-2", "prod-3", "prod-5", "prod-6", "prod-7", "prod-8", "prod-9"];
 
 function AddBtn({ producto }) {
   const { agregar } = useCarrito();
@@ -91,17 +87,26 @@ export function Elaboracion() {
     };
   }, []);
 
-  // Solo productos CON imagen (cada uno es una escena exclusiva), AGRUPADOS por
-  // categoría (secuencia lógica por tipo: toda la pastelería junta, etc.).
+  // Solo productos CON imagen, en secuencia por INTENSIDAD: de lo dulce/suave a
+  // lo fuerte (cierra con la parrilla/asado).
   const escenas = useMemo(() => {
-    const ordenCat = Object.fromEntries(categorias.map((c) => [c.id, c.orden]));
+    const INTENSIDAD = {
+      "cat-pasteleria": 1,
+      "cat-bebidas": 2,
+      "cat-cafeteria": 3,
+      "cat-pastas": 4,
+      "cat-empanadas": 5,
+      "cat-pizzas": 6,
+      "cat-milanesas": 7,
+      "cat-parrilla": 8,
+    };
     return productos
       .filter((p) => p.imagen_url)
       .sort(
         (a, b) =>
-          (ordenCat[a.categoria_id] ?? 99) - (ordenCat[b.categoria_id] ?? 99) || a.orden - b.orden
+          (INTENSIDAD[a.categoria_id] ?? 99) - (INTENSIDAD[b.categoria_id] ?? 99) || a.orden - b.orden
       );
-  }, [productos, categorias]);
+  }, [productos]);
   const nombreCat = (id) => categorias.find((c) => c.id === id)?.nombre ?? "";
   const catDetalle = categorias.find((c) => c.id === detalle?.categoria_id);
 
@@ -131,17 +136,6 @@ export function Elaboracion() {
 
       // Escenas
       gsap.utils.toArray(".escena").forEach((sec) => {
-        // fondo: parallax + zoom suave
-        gsap.fromTo(
-          sec.querySelector(".escena-bg"),
-          { yPercent: -8, scale: 1.12 },
-          {
-            yPercent: 8,
-            scale: 1.18,
-            ease: "none",
-            scrollTrigger: { trigger: sec, start: "top bottom", end: "bottom top", scrub: true },
-          }
-        );
         // media del producto: aparece y crece atado al scroll
         const media = sec.querySelector(".escena-media");
         if (media) {
@@ -191,6 +185,22 @@ export function Elaboracion() {
 
   return (
     <div ref={root} className="relative bg-cacao text-cream">
+      {/* Video de elaboración GLOBAL fijo: corre detrás de las escenas (el hero y
+          el cierre lo tapan con su propio fondo). Da vida continua y sin líneas. */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
+        <video
+          className="h-full w-full object-cover blur-[3px]"
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster={asset("/img/produccion/prod-8.jpg")}
+        >
+          <source src={asset("/video/elaboracion-hero.mp4")} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-cacao/70" />
+      </div>
+
       {/* ── HERO ── */}
       <section className="hero relative flex h-screen items-center justify-center overflow-hidden">
         <div className="hero-bg absolute inset-0">
@@ -212,6 +222,8 @@ export function Elaboracion() {
         <div className="pointer-events-none absolute inset-0 opacity-80">
           <Particles3D />
         </div>
+        {/* feather al fondo (a nivel de sección: el zoom del hero no lo descubre) */}
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 z-1 h-48 bg-linear-to-t from-cacao via-cacao/80 to-transparent" />
 
         <div className="hero-content relative z-10 px-6 text-center">
           <p className="hero-kicker font-display text-sm font-bold uppercase tracking-[0.35em] text-cream/60">
@@ -238,17 +250,18 @@ export function Elaboracion() {
       ) : (
         escenas.map((p, i) => {
           const mediaDer = i % 2 === 1;
-          const bg = PROD[i % PROD.length];
           return (
             <section key={p.id} className="escena relative flex min-h-screen items-center overflow-hidden">
-              {/* fondo de producción (más alto que la escena: el parallax nunca
-                  deja un borde visible) */}
-              <div className="escena-bg absolute inset-x-0 inset-y-[-16%] -z-10">
-                <img src={asset(`/img/produccion/${bg}.jpg`)} alt="" className="h-full w-full object-cover" />
-              </div>
-              <div className="absolute inset-0 -z-10 bg-cacao/55" />
-              {/* funde arriba y abajo hacia el fondo: sin líneas entre escenas */}
-              <div className="absolute inset-0 -z-10 bg-linear-to-b from-cacao via-transparent to-cacao" />
+              {/* sin fondo propio: detrás corre el video global continuo (sin líneas
+                  entre escenas). Velo del lado del texto para legibilidad. */}
+              <div
+                aria-hidden="true"
+                className={`pointer-events-none absolute inset-0 ${
+                  mediaDer
+                    ? "bg-linear-to-r from-cacao/90 via-cacao/45 to-transparent"
+                    : "bg-linear-to-l from-cacao/90 via-cacao/45 to-transparent"
+                }`}
+              />
 
               <div className="relative mx-auto grid w-full max-w-6xl items-center gap-8 px-6 py-20 md:grid-cols-2 md:gap-12">
                 {/* media del producto */}
@@ -318,8 +331,8 @@ export function Elaboracion() {
 
       <SiteFooter />
 
-      <CartButton />
-      <CartDrawer />
+      <EscenaCartButton />
+      <EscenaCartDrawer />
       <EscenaModal producto={detalle} categoria={catDetalle} onCerrar={() => setDetalle(null)} />
     </div>
   );

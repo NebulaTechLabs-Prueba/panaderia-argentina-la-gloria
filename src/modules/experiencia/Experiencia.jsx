@@ -183,7 +183,7 @@ export function Experiencia() {
       // Intro
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.from(".intro-logo", { scale: 0.6, opacity: 0, duration: 0.8, ease: "back.out(1.6)" });
-      const tSplit = new SplitType(".intro-title", { types: "chars" });
+      const tSplit = new SplitType(".intro-title", { types: "words, chars" });
       splits.push(tSplit);
       tl.from(tSplit.chars, { yPercent: 120, opacity: 0, stagger: 0.04, duration: 0.7 }, "-=0.3");
       tl.from(".intro-sub", { y: 20, opacity: 0, stagger: 0.15 }, "-=0.25");
@@ -210,7 +210,7 @@ export function Experiencia() {
       gsap.utils.toArray(".cine-section").forEach((sec) => {
         const titulo = sec.querySelector(".cine-title");
         if (titulo) {
-          const s = new SplitType(titulo, { types: "chars" });
+          const s = new SplitType(titulo, { types: "words, chars" });
           splits.push(s);
           gsap.from(s.chars, {
             yPercent: 110,
@@ -366,27 +366,43 @@ export function Experiencia() {
           >
             {/* movimiento ambiental continuo (manchas de color que derivan) */}
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="drift absolute -left-24 top-12 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
-              <div className="drift-2 absolute -right-20 bottom-12 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
+              <div className="drift absolute -left-32 top-0 h-96 w-96 rounded-full bg-corteza/25 blur-3xl" />
+              <div className="drift-2 absolute -right-10 top-1/4 h-120 w-120 rounded-full bg-celeste/25 blur-3xl" />
+              <div
+                className="drift absolute -bottom-24 left-1/3 h-80 w-80 rounded-full bg-corteza/20 blur-3xl"
+                style={{ animationDelay: "-6s" }}
+              />
             </div>
 
             <div className="relative mx-auto grid max-w-6xl gap-6 md:grid-cols-[0.8fr_1.2fr] md:gap-10">
-              {/* Capítulo: panel de categoría que queda fijo (sticky) */}
+              {/* Capítulo: tarjeta de categoría que queda fija (sticky) */}
               <div
-                className={`md:sticky md:top-0 md:flex md:h-screen md:flex-col md:justify-center md:py-16 ${
+                className={`md:sticky md:top-0 md:flex md:h-screen md:items-center md:py-12 ${
                   tituloDerecha ? "md:order-2" : ""
                 }`}
               >
-                <span className={`grid h-14 w-14 place-items-center rounded-2xl ${headerColor(cat.color)}`}>
-                  <IconoCategoria icono={cat.icono} className="h-7 w-7" />
-                </span>
-                <p className="mt-4 font-display text-sm font-bold uppercase tracking-widest text-corteza">
-                  {String(i + 1).padStart(2, "0")} · {cat.slogan}
-                </p>
-                <h2 className="cine-title mt-1 font-display text-5xl font-extrabold leading-[0.95] text-cacao sm:text-6xl">
-                  {cat.nombre}
-                </h2>
-                <p className="mt-3 text-sm text-cacao/50">{items.length} para elegir</p>
+                <div className={`relative w-full overflow-hidden rounded-4xl p-8 shadow-xl ${headerColor(cat.color)}`}>
+                  {/* número gigante de fondo */}
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -right-3 -top-12 font-display text-[11rem] font-black leading-none opacity-10"
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  {/* ícono animado */}
+                  <span className="floaty relative inline-grid h-16 w-16 place-items-center rounded-2xl bg-white/20">
+                    <IconoCategoria icono={cat.icono} className="h-8 w-8" />
+                  </span>
+                  <p className="relative mt-5 font-display text-xs font-bold uppercase tracking-[0.18em] opacity-80">
+                    {cat.slogan}
+                  </p>
+                  <h2 className="cine-title relative mt-1 font-display text-4xl font-extrabold leading-[1.05] sm:text-5xl">
+                    {cat.nombre}
+                  </h2>
+                  <p className="relative mt-4 max-w-sm text-base leading-relaxed opacity-90">
+                    {cat.texto}
+                  </p>
+                </div>
               </div>
 
               {/* Productos: entran atados al scroll (scrub) */}
@@ -463,25 +479,32 @@ export function Experiencia() {
       </section>
 
       {/* ── CIERRE ── */}
-      <section className="relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-marca px-5 py-28 text-center text-cream">
+      <section className="cine-section relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-marca px-5 py-28 text-center text-cream">
         {/* manchas que derivan */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="drift absolute -left-20 top-0 h-80 w-80 rounded-full bg-corteza/25 blur-3xl" />
-          <div className="drift-2 absolute -right-16 bottom-0 h-96 w-96 rounded-full bg-celeste/25 blur-3xl" />
+          <div className="drift absolute -left-24 -top-10 h-96 w-96 rounded-full bg-corteza/30 blur-3xl" />
+          <div className="drift-2 absolute -right-20 -bottom-10 h-120 w-120 rounded-full bg-celeste/30 blur-3xl" />
+          <div
+            className="drift absolute left-1/4 top-1/2 h-72 w-72 rounded-full bg-corteza/20 blur-3xl"
+            style={{ animationDelay: "-5s" }}
+          />
           <CintaSVG className="cinta absolute top-0 left-0 h-40 w-full opacity-20" color="#FF9900" />
         </div>
-        {/* miniaturas de producto flotando (en los bordes, sin tapar el centro) */}
+        {/* miniaturas de producto flotando (en los bordes) */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          {marquee.slice(0, 4).map((p, i) => (
+          {marquee.slice(0, 6).map((p, i) => (
             <img
               key={p.id}
               src={p.imagen_url}
               alt=""
-              className="floaty absolute hidden h-20 w-20 rounded-full object-cover opacity-70 ring-2 ring-corteza sm:block"
+              className="floaty absolute hidden rounded-full object-cover opacity-70 ring-2 ring-corteza sm:block"
               style={{
-                top: `${[14, 66, 20, 70][i]}%`,
-                left: `${[7, 13, 83, 88][i]}%`,
-                animationDelay: `${i * 0.8}s`,
+                top: `${[12, 64, 18, 72, 44, 80][i]}%`,
+                left: `${[6, 12, 84, 90, 90, 8][i]}%`,
+                width: `${[80, 64, 72, 88, 56, 60][i]}px`,
+                height: `${[80, 64, 72, 88, 56, 60][i]}px`,
+                animationDelay: `${i * 0.7}s`,
+                animationDuration: `${4 + (i % 3)}s`,
               }}
             />
           ))}

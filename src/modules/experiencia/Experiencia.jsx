@@ -264,7 +264,13 @@ export function Experiencia() {
             i % 2 === 0 ? "bg-cream" : "bg-masa"
           }`}
         >
-          <div className="mx-auto w-full max-w-6xl">
+          {/* movimiento ambiental continuo (no estática) */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="drift absolute -left-24 top-12 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
+            <div className="drift-2 absolute -right-20 bottom-12 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
+          </div>
+
+          <div className="relative mx-auto w-full max-w-6xl">
             <p className="font-display text-sm font-bold uppercase tracking-widest text-corteza">
               {String(i + 1).padStart(2, "0")} · {cat.slogan}
             </p>
@@ -305,10 +311,30 @@ export function Experiencia() {
       ))}
 
       {/* ── CIERRE ── */}
-      <section className="relative overflow-hidden bg-marca px-5 py-28 text-center text-cream">
-        <div className="pointer-events-none absolute inset-0 opacity-20">
-          <CintaSVG className="cinta absolute top-0 left-0 h-40 w-full" color="#FF9900" />
+      <section className="relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-marca px-5 py-28 text-center text-cream">
+        {/* manchas que derivan */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="drift absolute -left-20 top-0 h-80 w-80 rounded-full bg-corteza/25 blur-3xl" />
+          <div className="drift-2 absolute -right-16 bottom-0 h-96 w-96 rounded-full bg-celeste/25 blur-3xl" />
+          <CintaSVG className="cinta absolute top-0 left-0 h-40 w-full opacity-20" color="#FF9900" />
         </div>
+        {/* miniaturas de producto flotando */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          {marquee.slice(0, 5).map((p, i) => (
+            <img
+              key={p.id}
+              src={p.imagen_url}
+              alt=""
+              className="floaty absolute hidden h-20 w-20 rounded-full object-cover opacity-70 ring-2 ring-corteza sm:block"
+              style={{
+                top: `${[18, 62, 28, 70, 45][i]}%`,
+                left: `${[10, 16, 80, 84, 50][i]}%`,
+                animationDelay: `${i * 0.8}s`,
+              }}
+            />
+          ))}
+        </div>
+
         <div className="relative mx-auto max-w-2xl">
           <h2 className="cine-title font-display text-4xl font-extrabold sm:text-6xl">
             ¿Se te antojó algo?
@@ -316,7 +342,7 @@ export function Experiencia() {
           <p className="mt-4 text-cream/85">Armá tu pedido y lo coordinamos por WhatsApp.</p>
           <Link
             href="/menu"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-corteza px-7 py-4 font-bold text-cacao shadow-lg transition hover:brightness-105 active:scale-95"
+            className="pulse-soft mt-8 inline-flex items-center gap-2 rounded-full bg-corteza px-7 py-4 font-bold text-cacao shadow-xl shadow-corteza/30 transition hover:brightness-105 active:scale-95"
           >
             <ShoppingBag className="h-5 w-5" /> Ver el menú completo
           </Link>

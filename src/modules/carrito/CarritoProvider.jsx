@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useState } from "react";
 import { CART_STORAGE_KEY } from "@/lib/config/constants";
 import { totalCentavos } from "@/lib/money/formatCentavos";
+import { playDing } from "@/lib/sound/ding";
 
 // Estado del carrito: lista de líneas. Cada línea guarda lo mínimo para mostrar
 // y para armar el mensaje de WhatsApp, sin depender de que el producto siga
@@ -98,6 +99,7 @@ export function CarritoProvider({ children }) {
         // Al agregar el PRIMER producto, el carrito se abre solo.
         if (state.items.length === 0) setDrawerAbierto(true);
         dispatch({ type: "AGREGAR", producto, cantidad });
+        playDing(); // campanita de mostrador
       },
       fijarCantidad: (id, cantidad) => dispatch({ type: "FIJAR_CANTIDAD", id, cantidad }),
       quitar: (id) => dispatch({ type: "QUITAR", id }),

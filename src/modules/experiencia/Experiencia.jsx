@@ -101,6 +101,37 @@ function CintaSVG({ className, color }) {
   );
 }
 
+// Una onda tileable (empieza y termina a la misma altura → loop sin costura).
+function Onda({ color, opacity }) {
+  return (
+    <svg viewBox="0 0 1000 240" preserveAspectRatio="none" className="h-full w-1/2 shrink-0">
+      <path d="M0,100 C300,20 700,180 1000,100 L1000,240 L0,240 Z" fill={color} fillOpacity={opacity} />
+    </svg>
+  );
+}
+
+// Fondo general FIJO con cintas de marca que fluyen: da vida y energía a todo el
+// sitio, sin costura entre secciones (las secciones del focus son transparentes).
+function FondoAnimado() {
+  return (
+    <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden bg-cream">
+      <div className="absolute inset-0 bg-linear-to-br from-corteza/12 via-cream to-celeste/15" />
+      <div className="flujo absolute left-0 top-[10%] flex h-44 w-[200%]">
+        <Onda color="#FF9900" opacity={0.22} />
+        <Onda color="#FF9900" opacity={0.22} />
+      </div>
+      <div className="flujo-2 absolute left-0 top-[42%] flex h-56 w-[200%]">
+        <Onda color="#63B0DD" opacity={0.22} />
+        <Onda color="#63B0DD" opacity={0.22} />
+      </div>
+      <div className="flujo absolute bottom-[4%] left-0 flex h-40 w-[200%]" style={{ animationDuration: "34s" }}>
+        <Onda color="#FF9900" opacity={0.16} />
+        <Onda color="#FF9900" opacity={0.16} />
+      </div>
+    </div>
+  );
+}
+
 // Propuesta C: experiencia cinemática "Entrar a La Gloria".
 export function Experiencia() {
   const ajustes = useNegocio();
@@ -253,7 +284,9 @@ export function Experiencia() {
   );
 
   return (
-    <div ref={root} className="relative bg-cream">
+    <div ref={root} className="relative">
+      <FondoAnimado />
+
       {/* ── INTRO ── */}
       <section className="intro relative flex h-screen items-center justify-center overflow-hidden bg-marca text-cream">
         {/* Montaje Ken Burns de fotos reales del local (siempre en movimiento) */}
@@ -369,20 +402,8 @@ export function Experiencia() {
           <section
             key={cat.id}
             id={cat.slug}
-            className={`cine-section relative px-5 py-12 ${
-              i % 2 === 0 ? "bg-cream" : "bg-masa"
-            }`}
+            className="cine-section relative px-5 py-12"
           >
-            {/* movimiento ambiental continuo (manchas de color que derivan) */}
-            <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="drift absolute -left-32 top-0 h-96 w-96 rounded-full bg-corteza/25 blur-3xl" />
-              <div className="drift-2 absolute -right-10 top-1/4 h-120 w-120 rounded-full bg-celeste/25 blur-3xl" />
-              <div
-                className="drift absolute -bottom-24 left-1/3 h-80 w-80 rounded-full bg-corteza/20 blur-3xl"
-                style={{ animationDelay: "-6s" }}
-              />
-            </div>
-
             <div className="relative mx-auto grid max-w-6xl gap-6 md:grid-cols-[0.8fr_1.2fr] md:gap-10">
               {/* Capítulo: tarjeta de categoría que queda fija (sticky) */}
               <div
@@ -423,10 +444,10 @@ export function Experiencia() {
                     key={p.id}
                     onClick={() => setDetalle(p)}
                     onMouseEnter={playHover}
-                    className="cine-card group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2"
+                    className="cine-card group cursor-pointer rounded-4xl bg-cream/85 p-3 shadow-lg ring-1 ring-cacao/5 backdrop-blur-sm transition-transform duration-300 ease-out hover:-translate-y-2 hover:shadow-2xl"
                   >
                     <div className="reveal">
-                      <div className="relative aspect-4/3 overflow-hidden rounded-3xl shadow-xl ring-1 ring-cacao/10 transition-all duration-300 group-hover:shadow-2xl group-hover:ring-2 group-hover:ring-corteza">
+                      <div className="relative aspect-4/3 overflow-hidden rounded-3xl shadow-md ring-1 ring-cacao/10 transition-all duration-300 group-hover:ring-2 group-hover:ring-corteza">
                         <ProductImage
                           src={p.imagen_url}
                           alt={p.nombre}

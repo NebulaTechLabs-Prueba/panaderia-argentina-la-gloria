@@ -85,7 +85,15 @@ body {
 }
 .slowzoom { animation: slowzoom 18s ease-in-out infinite alternate; }
 
+/* Cintas de marca que fluyen en horizontal (fondo general con vida). */
+@keyframes flujo {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.flujo { animation: flujo 26s linear infinite; }
+.flujo-2 { animation: flujo 40s linear infinite reverse; }
+
 @media (prefers-reduced-motion: reduce) {
-  .kenburns-img, .marquee-track, .floaty, .drift, .drift-2, .pulse-soft, .slowzoom { animation: none; }
+  .kenburns-img, .marquee-track, .floaty, .drift, .drift-2, .pulse-soft, .slowzoom, .flujo, .flujo-2 { animation: none; }
   .kenburns-img:first-child { opacity: 1; }
 }

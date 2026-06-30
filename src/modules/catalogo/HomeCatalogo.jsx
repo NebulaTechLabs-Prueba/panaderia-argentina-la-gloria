@@ -130,12 +130,20 @@ export function HomeCatalogo() {
             )}
           </div>
 
-          <Link
-            href="/menu"
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-celeste underline-offset-4 transition hover:underline"
-          >
-            Ver Propuesta B · estilo menú <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+            <Link
+              href="/menu"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-celeste underline-offset-4 transition hover:underline"
+            >
+              Propuesta B · estilo menú <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/experiencia"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-corteza underline-offset-4 transition hover:underline"
+            >
+              Propuesta C · experiencia cinemática <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </header>
 

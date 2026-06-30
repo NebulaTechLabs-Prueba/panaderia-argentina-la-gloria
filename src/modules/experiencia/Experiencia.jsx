@@ -496,7 +496,7 @@ export function Experiencia() {
           <h2 className="cine-title font-display text-4xl font-extrabold sm:text-6xl">
             ¿Se te antojó algo?
           </h2>
-          <p className="mt-4 text-cream/85">Armá tu pedido que lo arreglamos por WhatsApp, dale 🧉</p>
+          <p className="mt-4 text-cream/85">Armá tu pedido y mandanos el WhatsApp, que te lo dejamos listo 🧉</p>
           <button
             type="button"
             onClick={() => (estaVacio ? irA(`#${secciones[0]?.cat.slug}`) : abrirCarrito())}

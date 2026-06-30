@@ -21,8 +21,8 @@ import { playHover } from "@/lib/sound/ding";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-// Fotos reales del local/asado/inicios para el montaje cinemático del hero.
-const AMBIENTE = ["amb-local", "amb-inicios", "amb-asado", "amb-local2", "amb-pizza"];
+// Fotos reales del local/gente/asado para el montaje cinemático del hero.
+const AMBIENTE = ["amb-local", "amb-mostrador", "amb-asado", "amb-equipo", "amb-local2", "amb-pizza"];
 
 // Botón "agregar" rápido.
 function AddBtn({ producto }) {
@@ -152,16 +152,16 @@ export function Experiencia() {
     };
   }, []);
 
-  // Secciones: categorías que tienen al menos una foto real, hasta 3 productos
-  // (priorizando los que tienen foto).
+  // Secciones: TODAS las categorías con productos, con TODO el menú. Dentro de
+  // cada una, primero los que tienen foto y al final los "Próximamente".
   const secciones = useMemo(() => {
     return categorias
       .map((cat) => {
         const items = productos.filter((p) => p.categoria_id === cat.id);
+        if (items.length === 0) return null;
         const conFoto = items.filter((p) => p.imagen_url);
-        if (conFoto.length === 0) return null;
-        const elegidos = [...conFoto, ...items.filter((p) => !p.imagen_url)].slice(0, 3);
-        return { cat, items: elegidos };
+        const sinFoto = items.filter((p) => !p.imagen_url);
+        return { cat, items: [...conFoto, ...sinFoto] };
       })
       .filter(Boolean);
   }, [categorias, productos]);
@@ -265,7 +265,7 @@ export function Experiencia() {
               alt=""
               aria-hidden="true"
               className="kenburns-img absolute inset-0 h-full w-full object-cover"
-              style={{ animationDelay: `${i * 6}s` }}
+              style={{ animationDelay: `${((i * 30) / AMBIENTE.length).toFixed(2)}s` }}
             />
           ))}
           {/* video real: entrando a La Gloria (cubre el montaje; este queda de fallback) */}
@@ -380,7 +380,7 @@ export function Experiencia() {
               <img
                 src={bg}
                 alt=""
-                className="cine-bg absolute inset-0 h-[120%] w-full scale-110 object-cover opacity-[0.10] blur-2xl"
+                className="cine-bg absolute inset-0 h-[120%] w-full scale-110 object-cover opacity-[0.28] blur-lg"
               />
             )}
             <div className="drift absolute -left-24 top-12 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
@@ -458,9 +458,9 @@ export function Experiencia() {
               Nuestra historia
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-cacao/75">
-              Todo arrancó como las cosas lindas: amasando de madrugada, con la receta de la
-              familia y unas ganas bárbaras de traerte el sabor de allá. Entrá, que acá te
-              atendemos como de la casa — y los domingos, el asado es sagrado. 🇦🇷🔥
+              Todo empezó de madrugada: amasando con la receta de la familia y las ganas de
+              tener, lejos de Argentina, el mismo sabor de siempre. Entrá, que acá te atendemos
+              como en casa — y si es domingo, te hacemos un lugar en la mesa del asado.
             </p>
           </div>
         </div>

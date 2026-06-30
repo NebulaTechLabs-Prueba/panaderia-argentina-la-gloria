@@ -1,10 +1,14 @@
 // Sonidos de la panadería, sintetizados con Web Audio API (sin archivos externos).
-// Más cálidos y suaves (ondas senoidales, volumen bajo) para que acompañen sin
-// molestar. Se disparan dentro de un gesto del usuario (click) → cumplen autoplay.
-//   playDing()  → campanita suave al AGREGAR
-//   playEnviar()→ arpegio de confirmación al ENVIAR por WhatsApp
+// Cálidos y suaves (senoidales, volumen bajo). Se disparan dentro de un gesto del
+// usuario (click) → cumplen la política de autoplay.
+//   playDing()  → campanita al AGREGAR
+//   playEnviar()→ arpegio de confirmación al ENVIAR
 //   playVaciar()→ barrido descendente al VACIAR
-//   playMas()/playMenos() → blips al subir/bajar comensales
+//   playMas()/playMenos() → blips al subir/bajar cantidad/comensales
+//   playQuitar()→ "tick" al quitar un ítem
+//   playAbrir()/playCerrar() → barridos al abrir/minimizar el carrito
+//   playTap()   → click genérico de botón (muy sutil)
+//   playHover() → hover sobre un ítem (apenas perceptible)
 let ctx = null;
 
 function getCtx() {
@@ -27,7 +31,7 @@ function tocar(notas) {
     osc.type = n.type || "sine";
     osc.frequency.value = n.f;
     const dur = n.dur ?? 0.4;
-    const vol = n.vol ?? 0.16;
+    const vol = n.vol ?? 0.1;
     gain.gain.setValueAtTime(0.0001, now + n.t);
     gain.gain.exponentialRampToValueAtTime(vol, now + n.t + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + n.t + dur);
@@ -39,7 +43,7 @@ function tocar(notas) {
 }
 
 // Barrido de frecuencia (glissando).
-function barrido({ from, to, dur = 0.35, vol = 0.16, type = "sine" }) {
+function barrido({ from, to, dur = 0.35, vol = 0.1, type = "sine" }) {
   const ac = getCtx();
   if (!ac) return;
   const now = ac.currentTime;
@@ -57,15 +61,21 @@ function barrido({ from, to, dur = 0.35, vol = 0.16, type = "sine" }) {
   osc.stop(now + dur + 0.02);
 }
 
-const safe = (fn) => { try { fn(); } catch { /* navegador bloquea audio */ } };
+const safe = (fn) => {
+  try {
+    fn();
+  } catch {
+    /* navegador bloquea audio */
+  }
+};
 
 // Campanita cálida (dos toques con armónico de octava) al agregar.
 export const playDing = () =>
   safe(() =>
     tocar([
-      { f: 880, t: 0, vol: 0.14 },
-      { f: 1760, t: 0, vol: 0.05 },
-      { f: 1175, t: 0.1, vol: 0.14 },
+      { f: 880, t: 0, vol: 0.09 },
+      { f: 1760, t: 0, vol: 0.033 },
+      { f: 1175, t: 0.1, vol: 0.09 },
     ])
   );
 
@@ -76,14 +86,14 @@ export const playEnviar = () =>
       { f: 523.25, t: 0, dur: 0.32 },
       { f: 659.25, t: 0.1, dur: 0.32 },
       { f: 783.99, t: 0.2, dur: 0.36 },
-      { f: 1046.5, t: 0.32, dur: 0.6, vol: 0.18 },
+      { f: 1046.5, t: 0.32, dur: 0.6, vol: 0.12 },
     ])
   );
 
-// Barrido descendente al vaciar (se "barre" el pedido).
+// Barrido descendente al vaciar.
 export const playVaciar = () => safe(() => barrido({ from: 660, to: 180, dur: 0.32 }));
 
-// Blip ascendente / descendente para comensales.
+// Blip ascendente / descendente para cantidad/comensales.
 export const playMas = () =>
   safe(() => tocar([{ f: 740, t: 0, dur: 0.16 }, { f: 988, t: 0.06, dur: 0.18 }]));
 export const playMenos = () =>
@@ -91,15 +101,15 @@ export const playMenos = () =>
 
 // Quitar un ítem (papelera): "tick" corto y seco.
 export const playQuitar = () =>
-  safe(() => tocar([{ f: 392, t: 0, dur: 0.12, vol: 0.13, type: "triangle" }]));
+  safe(() => tocar([{ f: 392, t: 0, dur: 0.12, vol: 0.085, type: "triangle" }]));
 
 // Abrir / cerrar (minimizar) el carrito: barridos suaves opuestos.
-export const playAbrir = () => safe(() => barrido({ from: 240, to: 540, dur: 0.18, vol: 0.12 }));
-export const playCerrar = () => safe(() => barrido({ from: 540, to: 240, dur: 0.18, vol: 0.12 }));
+export const playAbrir = () => safe(() => barrido({ from: 240, to: 540, dur: 0.18, vol: 0.08 }));
+export const playCerrar = () => safe(() => barrido({ from: 540, to: 240, dur: 0.18, vol: 0.08 }));
 
 // Click genérico de botón: "tap" muy corto y sutil.
 export const playTap = () =>
-  safe(() => tocar([{ f: 600, t: 0, dur: 0.05, vol: 0.06, type: "triangle" }]));
+  safe(() => tocar([{ f: 600, t: 0, dur: 0.05, vol: 0.04, type: "triangle" }]));
 
 // Hover sobre un ítem: aún más sutil (apenas perceptible).
 export const playHover = () =>

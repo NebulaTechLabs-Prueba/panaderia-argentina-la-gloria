@@ -83,10 +83,11 @@ export function Elaboracion() {
     return () => window.removeEventListener("la-gloria:d-prefs", onPrefs);
   }, []);
 
-  // Al cambiar la disposición cambia mucho la altura: volvé arriba.
+  // Al cambiar la vista/tema cambia la altura: recalcular el scroll sin saltar.
   useEffect(() => {
-    lenisRef.current?.scrollTo(0, { immediate: true });
-  }, [modo]);
+    const id = setTimeout(() => lenisRef.current?.resize?.(), 80);
+    return () => clearTimeout(id);
+  }, [modo, tema]);
 
   // Scroll suave (Lenis) sincronizado con ScrollTrigger.
   useEffect(() => {
@@ -435,7 +436,9 @@ export function Elaboracion() {
       {/* feather hacia el footer */}
       <div aria-hidden="true" className="h-24 bg-linear-to-b from-cacao to-marca" />
 
-      <SiteFooter />
+      <div className="footer-reset">
+        <SiteFooter />
+      </div>
 
       <EscenaCartButton />
       <EscenaCartDrawer />

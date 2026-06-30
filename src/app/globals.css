@@ -41,6 +41,14 @@
   --d-ring: rgba(47, 58, 126, 0.15);
 }
 
+/* El footer es compartido entre propuestas: lo aislamos del remapeo de tokens de D
+   para que su texto conserve su color (en marca, si no, se volvía azul invisible).
+   El fondo sí sigue al tema vía --color-marca (heredado del root). */
+.footer-reset {
+  --color-cream: #f4ead2;
+  --color-cacao: #2a2a33;
+}
+
 html {
   scroll-behavior: smooth;
 }

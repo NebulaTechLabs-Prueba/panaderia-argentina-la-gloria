@@ -96,3 +96,11 @@ export const playQuitar = () =>
 // Abrir / cerrar (minimizar) el carrito: barridos suaves opuestos.
 export const playAbrir = () => safe(() => barrido({ from: 240, to: 540, dur: 0.18, vol: 0.12 }));
 export const playCerrar = () => safe(() => barrido({ from: 540, to: 240, dur: 0.18, vol: 0.12 }));
+
+// Click genérico de botón: "tap" muy corto y sutil.
+export const playTap = () =>
+  safe(() => tocar([{ f: 600, t: 0, dur: 0.05, vol: 0.06, type: "triangle" }]));
+
+// Hover sobre un ítem: aún más sutil (apenas perceptible).
+export const playHover = () =>
+  safe(() => tocar([{ f: 1100, t: 0, dur: 0.035, vol: 0.035, type: "sine" }]));

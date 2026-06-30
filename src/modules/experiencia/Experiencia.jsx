@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import SplitType from "split-type";
-import { ArrowLeft, ArrowRight, ChevronDown, Plus, Check, ShoppingBag, Play } from "lucide-react";
+import { ArrowRight, ChevronDown, Plus, Check, ShoppingBag, Play } from "lucide-react";
 import { getCategorias, getProductos } from "@/lib/data";
 import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
@@ -18,6 +17,7 @@ import { CartButton } from "@/modules/carrito/CartButton";
 import { CartDrawer } from "@/modules/carrito/CartDrawer";
 import { LogoLaGloria } from "@/components/ui/LogoLaGloria";
 import { SiteFooter } from "@/modules/negocio/SiteFooter";
+import { playHover } from "@/lib/sound/ding";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -202,36 +202,48 @@ export function Experiencia() {
         });
       });
 
-      // Secciones: título letra por letra + cards que entran + parallax de imagen
+      // Cada sección tiene su PROPIA animación (según data-variant) + parallax
+      // de su imagen de fondo. Variantes: 0 sube, 1 entra de la izquierda,
+      // 2 escala/rota, 3 alterna arriba/abajo.
       gsap.utils.toArray(".cine-section").forEach((sec) => {
+        const variant = Number(sec.dataset.variant || 0);
+        const st = { trigger: sec, start: "top 65%" };
+
         const titulo = sec.querySelector(".cine-title");
         if (titulo) {
           const s = new SplitType(titulo, { types: "chars" });
           splits.push(s);
+          const fromTitle =
+            variant === 1
+              ? { xPercent: -60, opacity: 0 }
+              : variant === 2
+                ? { yPercent: 110, opacity: 0, rotate: 8 }
+                : { yPercent: 110, opacity: 0 };
           gsap.from(s.chars, {
-            yPercent: 110,
-            opacity: 0,
-            stagger: 0.03,
+            ...fromTitle,
+            stagger: variant === 1 ? 0.02 : 0.03,
             duration: 0.6,
             ease: "power3.out",
             scrollTrigger: { trigger: sec, start: "top 72%" },
           });
         }
-        gsap.from(sec.querySelectorAll(".cine-card"), {
-          y: 90,
-          opacity: 0,
-          scale: 0.92,
-          stagger: 0.12,
-          duration: 0.8,
-          ease: "power3.out",
-          clearProps: "all", // libera el transform para que el hover CSS funcione
-          scrollTrigger: { trigger: sec, start: "top 65%" },
-        });
-        gsap.to(sec.querySelectorAll(".cine-parallax"), {
-          yPercent: -10,
-          ease: "none",
-          scrollTrigger: { trigger: sec, start: "top bottom", end: "bottom top", scrub: true },
-        });
+
+        const cards = sec.querySelectorAll(".cine-card");
+        if (variant === 1) {
+          gsap.from(cards, { x: -90, opacity: 0, stagger: 0.12, duration: 0.8, ease: "power3.out", clearProps: "all", scrollTrigger: st });
+        } else if (variant === 2) {
+          gsap.from(cards, { scale: 0.8, rotate: -5, opacity: 0, stagger: 0.12, duration: 0.8, ease: "back.out(1.5)", clearProps: "all", scrollTrigger: st });
+        } else if (variant === 3) {
+          cards.forEach((c, ci) =>
+            gsap.from(c, { y: ci % 2 ? 110 : -110, opacity: 0, duration: 0.8, ease: "power3.out", clearProps: "all", scrollTrigger: { trigger: sec, start: "top 68%" } })
+          );
+        } else {
+          gsap.from(cards, { y: 90, opacity: 0, scale: 0.92, stagger: 0.12, duration: 0.8, ease: "power3.out", clearProps: "all", scrollTrigger: st });
+        }
+
+        const scrub = { trigger: sec, start: "top bottom", end: "bottom top", scrub: true };
+        gsap.to(sec.querySelectorAll(".cine-bg"), { yPercent: variant === 2 ? -22 : -14, ease: "none", scrollTrigger: scrub });
+        gsap.to(sec.querySelectorAll(".cine-parallax"), { yPercent: -10, ease: "none", scrollTrigger: scrub });
       });
 
       ScrollTrigger.refresh();
@@ -242,14 +254,6 @@ export function Experiencia() {
 
   return (
     <div ref={root} className="relative bg-cream">
-      {/* Volver */}
-      <Link
-        href="/"
-        className="fixed left-4 top-4 z-50 inline-flex items-center gap-1.5 rounded-full bg-cream/85 px-3 py-1.5 text-xs font-semibold text-cacao/80 shadow ring-1 ring-cacao/10 backdrop-blur transition hover:text-cacao"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Propuestas
-      </Link>
-
       {/* ── INTRO ── */}
       <section className="intro relative flex h-screen items-center justify-center overflow-hidden bg-marca text-cream">
         {/* Montaje Ken Burns de fotos reales del local (siempre en movimiento) */}
@@ -359,16 +363,26 @@ export function Experiencia() {
       </button>
 
       {/* ── RECORRIDO ── */}
-      {secciones.map(({ cat, items }, i) => (
+      {secciones.map(({ cat, items }, i) => {
+        const bg = items.find((p) => p.imagen_url)?.imagen_url;
+        return (
         <section
           key={cat.id}
           id={cat.slug}
+          data-variant={i % 4}
           className={`cine-section relative flex min-h-screen flex-col justify-center overflow-hidden px-5 py-24 ${
             i % 2 === 0 ? "bg-cream" : "bg-masa"
           }`}
         >
-          {/* movimiento ambiental continuo (no estática) */}
+          {/* imagen de fondo (su propio producto, difuminada) + movimiento */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+            {bg && (
+              <img
+                src={bg}
+                alt=""
+                className="cine-bg absolute inset-0 h-[120%] w-full scale-110 object-cover opacity-[0.10] blur-2xl"
+              />
+            )}
             <div className="drift absolute -left-24 top-12 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
             <div className="drift-2 absolute -right-20 bottom-12 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
           </div>
@@ -386,6 +400,7 @@ export function Experiencia() {
                 <article
                   key={p.id}
                   onClick={() => setDetalle(p)}
+                  onMouseEnter={playHover}
                   className="cine-card group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2"
                 >
                   <div className="cine-parallax relative aspect-4/3 overflow-hidden rounded-3xl shadow-xl ring-1 ring-cacao/10 transition-all duration-300 group-hover:shadow-2xl group-hover:ring-2 group-hover:ring-corteza">
@@ -419,7 +434,8 @@ export function Experiencia() {
             </div>
           </div>
         </section>
-      ))}
+        );
+      })}
 
       {/* ── NUESTRA HISTORIA ── */}
       <section className="cine-section relative flex min-h-screen items-center overflow-hidden bg-cream px-5 py-24">
@@ -431,7 +447,7 @@ export function Experiencia() {
           <div className="cine-card overflow-hidden rounded-4xl shadow-2xl ring-1 ring-cacao/10">
             <VideoHistoria
               src={asset("/video/historia.mp4")}
-              poster={asset("/img/ambiente/amb-inicios.jpg")}
+              poster={asset("/img/ambiente/amb-fundadora.jpg")}
             />
           </div>
           <div>

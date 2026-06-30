@@ -7,6 +7,7 @@ import { ProductImage } from "./ProductImage";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { useMoneda } from "@/modules/negocio/NegocioProvider";
+import { playMas, playMenos } from "@/lib/sound/ding";
 
 // Detalle de producto como modal (sin ruta propia: compatible con export estático).
 export function ProductModal({ producto, categoria, onCerrar }) {
@@ -79,7 +80,7 @@ export function ProductModal({ producto, categoria, onCerrar }) {
                 <div className="flex items-center gap-2 rounded-full bg-masa p-1">
                   <button
                     type="button"
-                    onClick={() => setCantidad((c) => Math.max(1, c - 1))}
+                    onClick={() => { playMenos(); setCantidad((c) => Math.max(1, c - 1)); }}
                     aria-label="Quitar uno"
                     className="grid h-9 w-9 place-items-center rounded-full text-cacao transition hover:bg-cream"
                   >
@@ -88,7 +89,7 @@ export function ProductModal({ producto, categoria, onCerrar }) {
                   <span className="w-8 text-center font-semibold text-cacao">{cantidad}</span>
                   <button
                     type="button"
-                    onClick={() => setCantidad((c) => c + 1)}
+                    onClick={() => { playMas(); setCantidad((c) => c + 1); }}
                     aria-label="Agregar uno"
                     className="grid h-9 w-9 place-items-center rounded-full text-cacao transition hover:bg-cream"
                   >

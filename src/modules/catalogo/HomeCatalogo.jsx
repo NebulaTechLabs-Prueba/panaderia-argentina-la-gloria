@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { MapPin, ArrowRight } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { getCategorias, getProductos } from "@/lib/data";
 import { ES_DEMO } from "@/lib/config/constants";
 import { useNegocio } from "@/modules/negocio/NegocioProvider";
@@ -130,20 +129,6 @@ export function HomeCatalogo() {
             )}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-            <Link
-              href="/menu"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-celeste underline-offset-4 transition hover:underline"
-            >
-              Propuesta B · estilo menú <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/experiencia"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-corteza underline-offset-4 transition hover:underline"
-            >
-              Propuesta C · experiencia cinemática <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
         </div>
       </header>
 

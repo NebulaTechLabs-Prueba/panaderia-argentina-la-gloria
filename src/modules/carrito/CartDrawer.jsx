@@ -89,7 +89,7 @@ export function CartDrawer() {
                     <div className="flex items-center gap-1 rounded-full bg-masa p-1">
                       <button
                         type="button"
-                        onClick={() => fijarCantidad(item.id, item.cantidad - 1)}
+                        onClick={() => { playMenos(); fijarCantidad(item.id, item.cantidad - 1); }}
                         aria-label="Quitar uno"
                         className="grid h-7 w-7 place-items-center rounded-full text-cacao transition hover:bg-cream"
                       >
@@ -100,7 +100,7 @@ export function CartDrawer() {
                       </span>
                       <button
                         type="button"
-                        onClick={() => fijarCantidad(item.id, item.cantidad + 1)}
+                        onClick={() => { playMas(); fijarCantidad(item.id, item.cantidad + 1); }}
                         aria-label="Agregar uno"
                         className="grid h-7 w-7 place-items-center rounded-full text-cacao transition hover:bg-cream"
                       >

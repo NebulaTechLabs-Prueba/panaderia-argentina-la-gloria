@@ -1,14 +1,13 @@
 // Procesa las mejores fotos reales del catálogo: recorte inteligente a 1000×750,
-// JPEG optimizado, y las guarda como public/productos/p-<id>.jpg.
+// JPEG optimizado, y las guarda como public/img/productos/p-<id>.jpg.
 // Fuente: carpeta de material crudo (gitignorada). Uso: node scripts/optimizar-fotos.mjs
 import sharp from "sharp";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-const SRC = path.resolve(
-  "public/productos/MATERIAL FAN PAGE-20260629T132148Z-3-001/MATERIAL FAN PAGE"
-);
-const OUT = path.resolve("public/productos");
+// Fuente: material crudo (gitignorado, fuera de /public). Destino: carpeta servida.
+const SRC = path.resolve("material-interno/material-fan-page/MATERIAL FAN PAGE");
+const OUT = path.resolve("public/img/productos");
 
 // id de producto -> archivo fuente (basename) elegido por los clasificadores.
 const MAPA = {

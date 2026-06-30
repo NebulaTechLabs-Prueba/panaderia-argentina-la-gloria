@@ -1,4 +1,4 @@
-// Productos que YA tienen foto real propia en /public/productos/p-<id>.jpg
+// Productos que YA tienen foto real propia en /public/img/productos/p-<id>.jpg
 // (procesadas con scripts/optimizar-fotos.mjs). El resto queda sin foto y la UI
 // muestra el placeholder de marca con "Próximamente".
 export const IDS_CON_FOTO = new Set([

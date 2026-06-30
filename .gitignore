@@ -24,10 +24,10 @@
 .DS_Store
 *.pem
 
-# Material crudo de fotos / branding (intake): no commitear. Se procesa y se
-# commitean solo las imágenes finales (1 por producto, optimizadas).
-/public/productos/MATERIAL FAN PAGE*/
-/public/productos/manual de identidad final/
+# Material crudo / intake (manual, fotos sin procesar, carpetas pesadas +GB):
+# NO se commitea y, al estar fuera de /public, tampoco se copia al export (out/).
+# Se procesa localmente y se commitean solo las imágenes finales en public/img/.
+/material-interno/
 
 # debug
 npm-debug.log*

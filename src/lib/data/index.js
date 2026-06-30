@@ -25,13 +25,13 @@ const SIMULAR_LATENCIA_MS = 250;
 const demora = (valor) =>
   new Promise((resolve) => setTimeout(() => resolve(valor), SIMULAR_LATENCIA_MS));
 
-// Asigna la FOTO REAL (local, en /public/productos/p-<id>.jpg) a los productos
+// Asigna la FOTO REAL (local, en /public/img/productos/p-<id>.jpg) a los productos
 // que ya la tienen. Los demás quedan con imagen_url null → la UI muestra el
 // placeholder de marca con "Próximamente". Respeta una imagen_url ya cargada.
 function conImagenesLocales(productos) {
   return productos.map((p) => {
     if (p.imagen_url) return p;
-    if (IDS_CON_FOTO.has(p.id)) return { ...p, imagen_url: asset(`/productos/${p.id}.jpg`) };
+    if (IDS_CON_FOTO.has(p.id)) return { ...p, imagen_url: asset(`/img/productos/${p.id}.jpg`) };
     return p;
   });
 }

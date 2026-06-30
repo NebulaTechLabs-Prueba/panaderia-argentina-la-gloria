@@ -3,6 +3,7 @@
 import { ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCarrito } from "./CarritoProvider";
+import { playAbrir } from "@/lib/sound/ding";
 
 // Botón flotante del carrito (carrito minimizado). Llamativo: anillo "ping" +
 // pulso continuo. Reaparece cuando el drawer está cerrado y hay productos.
@@ -15,7 +16,10 @@ export function CartButton() {
       {visible && (
         <motion.button
           type="button"
-          onClick={abrirCarrito}
+          onClick={() => {
+            playAbrir();
+            abrirCarrito();
+          }}
           aria-label={`Ver pedido (${cantidadTotal} ítems)`}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

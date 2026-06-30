@@ -8,7 +8,7 @@ import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { buildMensajePedido } from "@/modules/whatsapp/buildMensajePedido";
 import { buildWhatsappUrl } from "@/modules/whatsapp/buildWhatsappUrl";
-import { playEnviar, playVaciar, playMas, playMenos } from "@/lib/sound/ding";
+import { playEnviar, playVaciar, playMas, playMenos, playQuitar, playCerrar } from "@/lib/sound/ding";
 
 // Panel lateral con el detalle del pedido y el botón que redirige a WhatsApp.
 // Estado (abierto/minimizado) controlado desde el contexto del carrito.
@@ -39,7 +39,10 @@ export function CartDrawer() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={cerrarCarrito}
+            onClick={() => {
+              playCerrar();
+              cerrarCarrito();
+            }}
           />
           <motion.aside
             role="dialog"
@@ -54,7 +57,10 @@ export function CartDrawer() {
               <h2 className="font-display text-xl font-semibold text-cacao">Tu pedido</h2>
               <button
                 type="button"
-                onClick={cerrarCarrito}
+                onClick={() => {
+              playCerrar();
+              cerrarCarrito();
+            }}
                 aria-label="Minimizar"
                 title="Minimizar"
                 className="rounded-full p-1.5 text-cacao/60 transition hover:bg-masa hover:text-cacao"
@@ -108,7 +114,10 @@ export function CartDrawer() {
 
                     <button
                       type="button"
-                      onClick={() => quitar(item.id)}
+                      onClick={() => {
+                        playQuitar();
+                        quitar(item.id);
+                      }}
                       aria-label={`Quitar ${item.nombre}`}
                       className="rounded-full p-1.5 text-cacao/40 transition hover:bg-masa hover:text-red-600"
                     >

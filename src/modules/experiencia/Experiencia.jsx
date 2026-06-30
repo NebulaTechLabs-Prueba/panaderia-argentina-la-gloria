@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import SplitType from "split-type";
-import { ArrowLeft, ArrowRight, ChevronDown, Plus, Check, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, Plus, Check, ShoppingBag, Play } from "lucide-react";
 import { getCategorias, getProductos } from "@/lib/data";
 import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
@@ -46,6 +46,50 @@ function AddBtn({ producto }) {
   );
 }
 
+// Video que se reproduce UNA vez; al terminar muestra una imagen con botón de
+// play y, al tocarla, vuelve a reproducirse.
+function VideoHistoria({ src, poster }) {
+  const ref = useRef(null);
+  const [fin, setFin] = useState(false);
+  const replay = () => {
+    const v = ref.current;
+    if (!v) return;
+    v.currentTime = 0;
+    v.play();
+    setFin(false);
+  };
+  return (
+    <div className="relative">
+      <video
+        ref={ref}
+        className="aspect-4/5 h-full w-full object-cover"
+        autoPlay
+        muted
+        playsInline
+        poster={poster}
+        onEnded={() => setFin(true)}
+      >
+        <source src={src} type="video/mp4" />
+      </video>
+      {fin && (
+        <button
+          type="button"
+          onClick={replay}
+          aria-label="Reproducir de nuevo"
+          className="group absolute inset-0"
+        >
+          <img src={poster} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <span className="absolute inset-0 flex items-center justify-center bg-marca/35 transition group-hover:bg-marca/20">
+            <span className="pulse-soft grid h-16 w-16 place-items-center rounded-full bg-corteza/95 text-cacao shadow-xl">
+              <Play className="h-7 w-7" />
+            </span>
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 // Cintas onduladas de marca para el fondo del hero (parallax con scroll).
 function CintaSVG({ className, color }) {
   return (
@@ -59,6 +103,7 @@ function CintaSVG({ className, color }) {
 export function Experiencia() {
   const ajustes = useNegocio();
   const moneda = useMoneda();
+  const { abrirCarrito, estaVacio } = useCarrito();
   const root = useRef(null);
   const lenisRef = useRef(null);
   const [categorias, setCategorias] = useState([]);
@@ -384,16 +429,10 @@ export function Experiencia() {
         </div>
         <div className="relative mx-auto grid w-full max-w-5xl items-center gap-10 md:grid-cols-[0.85fr_1.15fr]">
           <div className="cine-card overflow-hidden rounded-4xl shadow-2xl ring-1 ring-cacao/10">
-            <video
-              className="aspect-4/5 h-full w-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
+            <VideoHistoria
+              src={asset("/video/historia.mp4")}
               poster={asset("/img/ambiente/amb-inicios.jpg")}
-            >
-              <source src={asset("/video/historia.mp4")} type="video/mp4" />
-            </video>
+            />
           </div>
           <div>
             <p className="font-display text-sm font-bold uppercase tracking-widest text-corteza">
@@ -403,9 +442,9 @@ export function Experiencia() {
               Nuestra historia
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-cacao/75">
-              La Gloria nació del amor por la panadería argentina, lejos de casa. Cada
-              medialuna y cada asado de domingo son un cachito de Argentina en Woodbridge,
-              amasado con las manos y el cariño de siempre.
+              Todo arrancó como las cosas lindas: amasando de madrugada, con la receta de la
+              familia y unas ganas bárbaras de traerte el sabor de allá. Entrá, que acá te
+              atendemos como de la casa — y los domingos, el asado es sagrado. 🇦🇷🔥
             </p>
           </div>
         </div>
@@ -419,17 +458,17 @@ export function Experiencia() {
           <div className="drift-2 absolute -right-16 bottom-0 h-96 w-96 rounded-full bg-celeste/25 blur-3xl" />
           <CintaSVG className="cinta absolute top-0 left-0 h-40 w-full opacity-20" color="#FF9900" />
         </div>
-        {/* miniaturas de producto flotando */}
+        {/* miniaturas de producto flotando (en los bordes, sin tapar el centro) */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          {marquee.slice(0, 5).map((p, i) => (
+          {marquee.slice(0, 4).map((p, i) => (
             <img
               key={p.id}
               src={p.imagen_url}
               alt=""
               className="floaty absolute hidden h-20 w-20 rounded-full object-cover opacity-70 ring-2 ring-corteza sm:block"
               style={{
-                top: `${[18, 62, 28, 70, 45][i]}%`,
-                left: `${[10, 16, 80, 84, 50][i]}%`,
+                top: `${[14, 66, 20, 70][i]}%`,
+                left: `${[7, 13, 83, 88][i]}%`,
                 animationDelay: `${i * 0.8}s`,
               }}
             />
@@ -441,12 +480,14 @@ export function Experiencia() {
             ¿Se te antojó algo?
           </h2>
           <p className="mt-4 text-cream/85">Armá tu pedido y lo coordinamos por WhatsApp.</p>
-          <Link
-            href="/menu"
+          <button
+            type="button"
+            onClick={() => (estaVacio ? irA(`#${secciones[0]?.cat.slug}`) : abrirCarrito())}
             className="pulse-soft mt-8 inline-flex items-center gap-2 rounded-full bg-corteza px-7 py-4 font-bold text-cacao shadow-xl shadow-corteza/30 transition hover:brightness-105 active:scale-95"
           >
-            <ShoppingBag className="h-5 w-5" /> Ver el menú completo
-          </Link>
+            <ShoppingBag className="h-5 w-5" />
+            {estaVacio ? "Empezá tu pedido" : "Ver mi pedido"}
+          </button>
         </div>
       </section>
 

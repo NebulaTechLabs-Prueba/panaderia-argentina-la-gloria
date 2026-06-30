@@ -88,3 +88,11 @@ export const playMas = () =>
   safe(() => tocar([{ f: 740, t: 0, dur: 0.16 }, { f: 988, t: 0.06, dur: 0.18 }]));
 export const playMenos = () =>
   safe(() => tocar([{ f: 660, t: 0, dur: 0.16 }, { f: 494, t: 0.06, dur: 0.18 }]));
+
+// Quitar un ítem (papelera): "tick" corto y seco.
+export const playQuitar = () =>
+  safe(() => tocar([{ f: 392, t: 0, dur: 0.12, vol: 0.13, type: "triangle" }]));
+
+// Abrir / cerrar (minimizar) el carrito: barridos suaves opuestos.
+export const playAbrir = () => safe(() => barrido({ from: 240, to: 540, dur: 0.18, vol: 0.12 }));
+export const playCerrar = () => safe(() => barrido({ from: 540, to: 240, dur: 0.18, vol: 0.12 }));

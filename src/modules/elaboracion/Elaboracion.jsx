@@ -13,6 +13,7 @@ import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { EscenaModal } from "./EscenaModal";
 import { EscenaCartButton, EscenaCartDrawer } from "./EscenaCart";
+import { VideoSecuencia } from "./VideoSecuencia";
 import { SiteFooter } from "@/modules/negocio/SiteFooter";
 import { asset } from "@/lib/config/constants";
 import { playHover } from "@/lib/sound/ding";
@@ -21,6 +22,9 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 // Partículas de harina en el hero (WebGL), diferido y sin SSR.
 const Particles3D = dynamic(() => import("./Particles3D"), { ssr: false, loading: () => null });
+
+// Videos de elaboración en secuencia lógica (se agregarán más cuando estén listos).
+const VIDEOS = ["/video/elaboracion-hero.mp4", "/video/elaboracion-2.mp4"];
 
 function AddBtn({ producto }) {
   const { agregar } = useCarrito();
@@ -109,6 +113,7 @@ export function Elaboracion() {
   }, [productos]);
   const nombreCat = (id) => categorias.find((c) => c.id === id)?.nombre ?? "";
   const catDetalle = categorias.find((c) => c.id === detalle?.categoria_id);
+  const fuentesVideo = VIDEOS.map((v) => asset(v));
 
   useGSAP(
     () => {
@@ -188,33 +193,23 @@ export function Elaboracion() {
       {/* Video de elaboración GLOBAL fijo: corre detrás de las escenas (el hero y
           el cierre lo tapan con su propio fondo). Da vida continua y sin líneas. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
-        <video
-          className="h-full w-full object-cover blur-[3px]"
-          autoPlay
-          muted
-          loop
-          playsInline
+        <VideoSecuencia
+          fuentes={fuentesVideo}
           poster={asset("/img/produccion/prod-8.jpg")}
-        >
-          <source src={asset("/video/elaboracion-hero.mp4")} type="video/mp4" />
-        </video>
+          className="h-full w-full object-cover blur-[3px]"
+        />
         <div className="absolute inset-0 bg-cacao/70" />
       </div>
 
       {/* ── HERO ── */}
       <section className="hero relative flex h-screen items-center justify-center overflow-hidden">
         <div className="hero-bg absolute inset-0">
-          {/* Video de elaboración (cuando exista el mp4); si no, muestra el poster */}
-          <video
-            className="h-full w-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
+          {/* Secuencia de videos de elaboración */}
+          <VideoSecuencia
+            fuentes={fuentesVideo}
             poster={asset("/img/produccion/prod-4.jpg")}
-          >
-            <source src={asset("/video/elaboracion-hero.mp4")} type="video/mp4" />
-          </video>
+            className="h-full w-full object-cover"
+          />
           <div className="absolute inset-0 bg-cacao/55" />
           <div className="absolute inset-0 bg-linear-to-t from-cacao via-cacao/30 to-cacao/70" />
         </div>

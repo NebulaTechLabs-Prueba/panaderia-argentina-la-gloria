@@ -67,7 +67,6 @@ export function Elaboracion() {
   // Se leen de localStorage y se escuchan en vivo por evento.
   const [modo, setModo] = useState("cine");
   const [tema, setTema] = useState("oscuro");
-  const [catSel, setCatSel] = useState(""); // categoría activa en la galería
 
   useEffect(() => {
     try {
@@ -146,14 +145,14 @@ export function Elaboracion() {
   const catDetalle = categorias.find((c) => c.id === detalle?.categoria_id);
   const fuentesVideo = VIDEOS.map((v) => asset(v));
 
-  // Galería filtrada por categoría: solo las categorías que tienen productos con
-  // imagen, en el orden de intensidad. Arranca en la primera (no abruma).
+  // Galería en rieles: una fila por categoría con productos con imagen (en el orden
+  // de intensidad). Cada riel se desliza en horizontal; se scrollea vertical entre
+  // categorías (estilo Netflix), sin abrumar.
   const categoriasGaleria = useMemo(() => {
     const ids = [...new Set(escenas.map((p) => p.categoria_id))];
     return ids.map((id) => categorias.find((c) => c.id === id)).filter(Boolean);
   }, [escenas, categorias]);
-  const catActiva = catSel || categoriasGaleria[0]?.id;
-  const productosGaleria = escenas.filter((p) => p.categoria_id === catActiva);
+  const productosDe = (id) => escenas.filter((p) => p.categoria_id === id);
 
   // Hero: no depende del modo de presentación.
   useGSAP(
@@ -226,20 +225,19 @@ export function Elaboracion() {
           });
         });
       } else {
-        gsap.from(".galeria-card", {
-          opacity: 0,
-          y: 40,
-          stagger: 0.06,
-          duration: 0.6,
-          ease: "power3.out",
-          scrollTrigger: { trigger: ".galeria-track", start: "top 85%" },
+        // Rieles: cada tarjeta entra al hacerse visible su fila.
+        gsap.set(".galeria-card", { opacity: 0, y: 30 });
+        ScrollTrigger.batch(".galeria-card", {
+          start: "top 92%",
+          onEnter: (els) =>
+            gsap.to(els, { opacity: 1, y: 0, stagger: 0.05, duration: 0.5, ease: "power3.out" }),
         });
       }
 
       ScrollTrigger.refresh();
       return () => splits.forEach((s) => s.revert());
     },
-    { scope: root, dependencies: [cargando, modo, catActiva] }
+    { scope: root, dependencies: [cargando, modo] }
   );
 
   return (
@@ -355,77 +353,56 @@ export function Elaboracion() {
           );
         })
       ) : (
-        /* ── PRODUCTOS: modo GALERÍA (por categoría, flujo horizontal) ── */
-        <section className="galeria relative py-20">
-          <div className="mx-auto mb-5 w-full max-w-6xl px-6">
+        /* ── PRODUCTOS: modo GALERÍA — rieles por categoría (estilo Netflix) ── */
+        <section className="galeria relative py-16">
+          <div className="mx-auto mb-8 w-full max-w-6xl px-6">
             <p className="font-display text-sm font-bold uppercase tracking-[0.2em] text-cream/50">
               La Gloria · Catálogo
             </p>
-            <h2 className="mt-2 font-display text-4xl font-extrabold sm:text-5xl">Elegí una categoría</h2>
+            <h2 className="mt-2 font-display text-4xl font-extrabold sm:text-5xl">Nuestros productos</h2>
           </div>
-          {/* chips de categoría */}
-          <div className="mx-auto mb-7 flex w-full max-w-6xl flex-wrap gap-2 px-6">
-            {categoriasGaleria.map((c) => {
-              const on = c.id === catActiva;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setCatSel(c.id)}
-                  aria-pressed={on}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                    on ? "bg-cream text-cacao shadow-lg" : "bg-white/10 text-cream/80 hover:bg-white/20"
-                  }`}
-                >
-                  {c.nombre}
-                </button>
-              );
-            })}
-          </div>
-          <div
-            key={catActiva}
-            className="galeria-track flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-6 scrollbar-none"
-          >
-            {productosGaleria.map((p) => (
-              <article
-                key={p.id}
-                className="galeria-card group flex w-72 shrink-0 snap-center flex-col overflow-hidden rounded-3xl bg-white/5 ring-1 ring-white/10 backdrop-blur-sm sm:w-80"
-              >
-                <button
-                  type="button"
-                  onClick={() => setDetalle(p)}
-                  onMouseEnter={playHover}
-                  className="relative block aspect-4/5 overflow-hidden"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={p.imagen_url}
-                    alt={p.nombre}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-linear-to-t from-cacao/80 via-transparent to-transparent" />
-                  <span className="absolute left-3 top-3 rounded-full bg-black/40 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-cream/85 backdrop-blur-sm">
-                    {nombreCat(p.categoria_id)}
-                  </span>
-                </button>
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="font-display text-xl font-bold leading-tight">{p.nombre}</h3>
-                  {p.descripcion && (
-                    <p className="mt-1 line-clamp-2 text-sm text-cream/60">{p.descripcion}</p>
-                  )}
-                  <div className="mt-4 flex items-center justify-between gap-3">
-                    <span className="font-display text-2xl font-extrabold">
-                      {formatCentavos(p.precio_centavos, moneda)}
-                    </span>
-                    <AddBtn producto={p} />
-                  </div>
+          <div className="space-y-10">
+            {categoriasGaleria.map((c) => (
+              <div key={c.id}>
+                <div className="mx-auto mb-3 flex w-full max-w-6xl items-baseline justify-between px-6">
+                  <h3 className="font-display text-xl font-bold sm:text-2xl">{c.nombre}</h3>
+                  <span className="text-xs uppercase tracking-wide text-cream/40">Deslizá →</span>
                 </div>
-              </article>
+                <div className="galeria-track flex snap-x gap-4 overflow-x-auto px-6 pb-3 scrollbar-none">
+                  {productosDe(c.id).map((p) => (
+                    <article
+                      key={p.id}
+                      className="galeria-card group flex w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur-sm sm:w-60"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setDetalle(p)}
+                        onMouseEnter={playHover}
+                        className="relative block aspect-square overflow-hidden"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={p.imagen_url}
+                          alt={p.nombre}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-linear-to-t from-cacao/70 via-transparent to-transparent" />
+                      </button>
+                      <div className="flex flex-1 flex-col p-4">
+                        <h4 className="font-display font-bold leading-tight">{p.nombre}</h4>
+                        <div className="mt-3 flex items-center justify-between gap-2">
+                          <span className="font-display text-lg font-extrabold">
+                            {formatCentavos(p.precio_centavos, moneda)}
+                          </span>
+                          <AddBtn producto={p} />
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
-          {productosGaleria.length > 2 && (
-            <p className="mx-auto mt-2 w-full max-w-6xl px-6 text-sm text-cream/55">Deslizá para ver más →</p>
-          )}
         </section>
       )}
 

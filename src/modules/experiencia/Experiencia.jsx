@@ -481,54 +481,6 @@ export function Experiencia() {
         );
       })}
 
-      {/* ── CIERRE DEL FOCUS: "¿Se te antojó algo?" (llamado a pedir) ── */}
-      <section className="cine-section relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-marca px-5 py-28 text-center text-cream">
-        {/* manchas que derivan */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="drift absolute -left-24 -top-10 h-96 w-96 rounded-full bg-corteza/30 blur-3xl" />
-          <div className="drift-2 absolute -right-20 -bottom-10 h-120 w-120 rounded-full bg-celeste/30 blur-3xl" />
-          <div
-            className="drift absolute left-1/4 top-1/2 h-72 w-72 rounded-full bg-corteza/20 blur-3xl"
-            style={{ animationDelay: "-5s" }}
-          />
-          <CintaSVG className="cinta absolute top-0 left-0 h-40 w-full opacity-20" color="#FF9900" />
-        </div>
-        {/* miniaturas de producto flotando (en los bordes) */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          {marquee.slice(0, 6).map((p, i) => (
-            <img
-              key={p.id}
-              src={p.imagen_url}
-              alt=""
-              className="floaty absolute hidden rounded-full object-cover opacity-70 ring-2 ring-corteza sm:block"
-              style={{
-                top: `${[12, 64, 18, 72, 44, 80][i]}%`,
-                left: `${[6, 12, 84, 90, 90, 8][i]}%`,
-                width: `${[80, 64, 72, 88, 56, 60][i]}px`,
-                height: `${[80, 64, 72, 88, 56, 60][i]}px`,
-                animationDelay: `${i * 0.7}s`,
-                animationDuration: `${4 + (i % 3)}s`,
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="relative mx-auto max-w-2xl">
-          <h2 className="cine-title font-display text-4xl font-extrabold sm:text-6xl">
-            ¿Se te antojó algo?
-          </h2>
-          <p className="mt-4 text-cream/85">Armá tu pedido y mandanos el WhatsApp, que te lo dejamos listo 🧉</p>
-          <button
-            type="button"
-            onClick={() => (estaVacio ? irA(`#${secciones[0]?.cat.slug}`) : abrirCarrito())}
-            className="pulse-soft mt-8 inline-flex items-center gap-2 rounded-full bg-corteza px-7 py-4 font-bold text-cacao shadow-xl shadow-corteza/30 transition hover:brightness-105 active:scale-95"
-          >
-            <ShoppingBag className="h-5 w-5" />
-            {estaVacio ? "Empezá tu pedido" : "Ver mi pedido"}
-          </button>
-        </div>
-      </section>
-
       {/* ── DESPEDIDA: NUESTRA HISTORIA ── */}
       <section className="cine-section relative flex min-h-screen items-center overflow-hidden bg-cream px-5 py-24">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -555,6 +507,49 @@ export function Experiencia() {
               como en casa — y si es domingo, te hacemos un lugar en la mesa del asado.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* ── CIERRE: "¿Se te antojó algo?" (después de la historia) ── */}
+      <section className="cine-section relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-marca px-5 py-28 text-center text-cream">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="drift absolute -left-24 -top-10 h-96 w-96 rounded-full bg-corteza/30 blur-3xl" />
+          <div className="drift-2 absolute -right-20 -bottom-10 h-120 w-120 rounded-full bg-celeste/30 blur-3xl" />
+          <CintaSVG className="cinta absolute top-0 left-0 h-40 w-full opacity-20" color="#FF9900" />
+        </div>
+        <div className="pointer-events-none absolute inset-0">
+          {marquee.slice(0, 6).map((p, i) => (
+            <img
+              key={p.id}
+              src={p.imagen_url}
+              alt=""
+              aria-hidden="true"
+              className="floaty absolute hidden rounded-full object-cover opacity-70 ring-2 ring-corteza sm:block"
+              style={{
+                top: `${[12, 64, 18, 72, 44, 80][i]}%`,
+                left: `${[6, 12, 84, 90, 90, 8][i]}%`,
+                width: `${[80, 64, 72, 88, 56, 60][i]}px`,
+                height: `${[80, 64, 72, 88, 56, 60][i]}px`,
+                animationDelay: `${i * 0.7}s`,
+                animationDuration: `${4 + (i % 3)}s`,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative mx-auto max-w-2xl">
+          <h2 className="cine-title font-display text-4xl font-extrabold sm:text-6xl">
+            ¿Se te antojó algo?
+          </h2>
+          <p className="mt-4 text-cream/85">Armá tu pedido y mandanos el WhatsApp, que te lo dejamos listo 🧉</p>
+          <button
+            type="button"
+            onClick={() => (estaVacio ? irA(`#${secciones[0]?.cat.slug}`) : abrirCarrito())}
+            className="pulse-soft mt-8 inline-flex items-center gap-2 rounded-full bg-corteza px-7 py-4 font-bold text-cacao shadow-xl shadow-corteza/30 transition hover:brightness-105 active:scale-95"
+          >
+            <ShoppingBag className="h-5 w-5" />
+            {estaVacio ? "Empezá tu pedido" : "Ver mi pedido"}
+          </button>
         </div>
       </section>
 

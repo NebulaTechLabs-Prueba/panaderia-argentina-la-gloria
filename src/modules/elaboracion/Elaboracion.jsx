@@ -91,8 +91,17 @@ export function Elaboracion() {
     };
   }, []);
 
-  // Solo productos CON imagen (cada uno es una escena exclusiva).
-  const escenas = useMemo(() => productos.filter((p) => p.imagen_url), [productos]);
+  // Solo productos CON imagen (cada uno es una escena exclusiva), AGRUPADOS por
+  // categoría (secuencia lógica por tipo: toda la pastelería junta, etc.).
+  const escenas = useMemo(() => {
+    const ordenCat = Object.fromEntries(categorias.map((c) => [c.id, c.orden]));
+    return productos
+      .filter((p) => p.imagen_url)
+      .sort(
+        (a, b) =>
+          (ordenCat[a.categoria_id] ?? 99) - (ordenCat[b.categoria_id] ?? 99) || a.orden - b.orden
+      );
+  }, [productos, categorias]);
   const nombreCat = (id) => categorias.find((c) => c.id === id)?.nombre ?? "";
   const catDetalle = categorias.find((c) => c.id === detalle?.categoria_id);
 
@@ -232,8 +241,9 @@ export function Elaboracion() {
           const bg = PROD[i % PROD.length];
           return (
             <section key={p.id} className="escena relative flex min-h-screen items-center overflow-hidden">
-              {/* fondo de producción */}
-              <div className="escena-bg absolute inset-0 -z-10">
+              {/* fondo de producción (más alto que la escena: el parallax nunca
+                  deja un borde visible) */}
+              <div className="escena-bg absolute inset-x-0 inset-y-[-16%] -z-10">
                 <img src={asset(`/img/produccion/${bg}.jpg`)} alt="" className="h-full w-full object-cover" />
               </div>
               <div className="absolute inset-0 -z-10 bg-cacao/55" />

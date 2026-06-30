@@ -1,7 +1,7 @@
-import { HomeCatalogo } from "@/modules/catalogo/HomeCatalogo";
+import { Experiencia } from "@/modules/experiencia/Experiencia";
 
-// Home = catálogo público. El componente cliente trae los datos (mock hoy,
-// Supabase en el navegador después) y maneja carrito, modal y WhatsApp.
+// Propuesta A: ahora la ocupa la experiencia cinemática (antes era la C). La
+// antigua Propuesta A (catálogo) se eliminó por similitud y por ser superada.
 export default function Page() {
-  return <HomeCatalogo />;
+  return <Experiencia />;
 }

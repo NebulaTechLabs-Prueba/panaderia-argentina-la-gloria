@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import { ChevronLeft, Layers } from "lucide-react";
 
 const PROPS = [
-  { href: "/", label: "A", title: "Catálogo" },
+  { href: "/", label: "A", title: "Experiencia" },
   { href: "/menu", label: "B", title: "Menú" },
-  { href: "/experiencia", label: "C", title: "Experiencia" },
+  { href: "/experiencia", label: "C", title: "Elaboración" },
 ];
 
 const KEY = "la-gloria:nav-min";

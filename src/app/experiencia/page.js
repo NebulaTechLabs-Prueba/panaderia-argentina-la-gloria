@@ -1,7 +1,7 @@
-import { Experiencia } from "@/modules/experiencia/Experiencia";
+import { Elaboracion } from "@/modules/elaboracion/Elaboracion";
 
-// Propuesta C: experiencia cinemática "Entrar a La Gloria" (Lenis + GSAP + 3D).
-// Reutiliza datos, carrito y flujo de WhatsApp de la app.
+// Propuesta C (slot): nueva propuesta cinematográfica "La Elaboración" —
+// cada producto en su escena, con fondos de producción y animaciones intensas.
 export default function ExperienciaPage() {
-  return <Experiencia />;
+  return <Elaboracion />;
 }

@@ -67,6 +67,7 @@ export function Elaboracion() {
   // Se leen de localStorage y se escuchan en vivo por evento.
   const [modo, setModo] = useState("cine");
   const [tema, setTema] = useState("oscuro");
+  const [catSel, setCatSel] = useState(""); // categoría activa en la galería
 
   useEffect(() => {
     try {
@@ -144,6 +145,15 @@ export function Elaboracion() {
   const nombreCat = (id) => categorias.find((c) => c.id === id)?.nombre ?? "";
   const catDetalle = categorias.find((c) => c.id === detalle?.categoria_id);
   const fuentesVideo = VIDEOS.map((v) => asset(v));
+
+  // Galería filtrada por categoría: solo las categorías que tienen productos con
+  // imagen, en el orden de intensidad. Arranca en la primera (no abruma).
+  const categoriasGaleria = useMemo(() => {
+    const ids = [...new Set(escenas.map((p) => p.categoria_id))];
+    return ids.map((id) => categorias.find((c) => c.id === id)).filter(Boolean);
+  }, [escenas, categorias]);
+  const catActiva = catSel || categoriasGaleria[0]?.id;
+  const productosGaleria = escenas.filter((p) => p.categoria_id === catActiva);
 
   // Hero: no depende del modo de presentación.
   useGSAP(
@@ -229,7 +239,7 @@ export function Elaboracion() {
       ScrollTrigger.refresh();
       return () => splits.forEach((s) => s.revert());
     },
-    { scope: root, dependencies: [cargando, modo] }
+    { scope: root, dependencies: [cargando, modo, catActiva] }
   );
 
   return (
@@ -240,7 +250,7 @@ export function Elaboracion() {
         <VideoSecuencia
           fuentes={fuentesVideo}
           poster={asset("/img/produccion/prod-8.jpg")}
-          className="h-full w-full object-cover blur-[3px]"
+          className={`h-full w-full object-cover blur-[3px] ${tema === "marca" ? "opacity-15" : ""}`}
         />
         <div className="absolute inset-0 bg-cacao/70" />
       </div>
@@ -252,7 +262,7 @@ export function Elaboracion() {
           <VideoSecuencia
             fuentes={fuentesVideo}
             poster={asset("/img/produccion/prod-4.jpg")}
-            className="h-full w-full object-cover"
+            className={`h-full w-full object-cover ${tema === "marca" ? "opacity-20" : ""}`}
           />
           <div className="absolute inset-0 bg-cacao/55" />
           <div className="absolute inset-0 bg-linear-to-t from-cacao via-cacao/30 to-cacao/70" />
@@ -345,19 +355,38 @@ export function Elaboracion() {
           );
         })
       ) : (
-        /* ── PRODUCTOS: modo GALERÍA (flujo horizontal, swipe/scroll lateral) ── */
-        <section className="galeria relative flex min-h-screen flex-col justify-center py-24">
-          <div className="mx-auto mb-8 w-full max-w-6xl px-6">
+        /* ── PRODUCTOS: modo GALERÍA (por categoría, flujo horizontal) ── */
+        <section className="galeria relative py-20">
+          <div className="mx-auto mb-5 w-full max-w-6xl px-6">
             <p className="font-display text-sm font-bold uppercase tracking-[0.2em] text-cream/50">
               La Gloria · Catálogo
             </p>
-            <h2 className="mt-2 font-display text-4xl font-extrabold sm:text-6xl">Nuestros productos</h2>
-            <p className="mt-3 flex items-center gap-2 text-cream/70">
-              Deslizá para recorrerlos <span className="animate-pulse">→</span>
-            </p>
+            <h2 className="mt-2 font-display text-4xl font-extrabold sm:text-5xl">Elegí una categoría</h2>
           </div>
-          <div className="galeria-track flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-8 scrollbar-none">
-            {escenas.map((p) => (
+          {/* chips de categoría */}
+          <div className="mx-auto mb-7 flex w-full max-w-6xl flex-wrap gap-2 px-6">
+            {categoriasGaleria.map((c) => {
+              const on = c.id === catActiva;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setCatSel(c.id)}
+                  aria-pressed={on}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    on ? "bg-cream text-cacao shadow-lg" : "bg-white/10 text-cream/80 hover:bg-white/20"
+                  }`}
+                >
+                  {c.nombre}
+                </button>
+              );
+            })}
+          </div>
+          <div
+            key={catActiva}
+            className="galeria-track flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-6 scrollbar-none"
+          >
+            {productosGaleria.map((p) => (
               <article
                 key={p.id}
                 className="galeria-card group flex w-72 shrink-0 snap-center flex-col overflow-hidden rounded-3xl bg-white/5 ring-1 ring-white/10 backdrop-blur-sm sm:w-80"
@@ -394,14 +423,23 @@ export function Elaboracion() {
               </article>
             ))}
           </div>
+          {productosGaleria.length > 2 && (
+            <p className="mx-auto mt-2 w-full max-w-6xl px-6 text-sm text-cream/55">Deslizá para ver más →</p>
+          )}
         </section>
       )}
 
       {/* ── CIERRE ── */}
       <section className="relative flex min-h-[70vh] items-center justify-center overflow-hidden px-6 py-24 text-center">
         <div className="absolute inset-0 -z-10">
-          <img src={asset("/img/produccion/prod-1.jpg")} alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-linear-to-b from-cacao via-cacao/65 to-cacao" />
+          {tema !== "marca" && (
+            <img src={asset("/img/produccion/prod-1.jpg")} alt="" className="h-full w-full object-cover" />
+          )}
+          <div
+            className={`absolute inset-0 ${
+              tema === "marca" ? "bg-cacao" : "bg-linear-to-b from-cacao via-cacao/65 to-cacao"
+            }`}
+          />
         </div>
         <div className="relative mx-auto max-w-2xl">
           <h2 className="font-display text-4xl font-extrabold sm:text-6xl">Del horno, a tu mesa</h2>

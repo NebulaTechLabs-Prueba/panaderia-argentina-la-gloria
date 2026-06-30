@@ -207,6 +207,17 @@ export function Experiencia() {
               style={{ animationDelay: `${i * 6}s` }}
             />
           ))}
+          {/* video real: entrando a La Gloria (cubre el montaje; este queda de fallback) */}
+          <video
+            className="absolute inset-0 h-full w-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster={asset("/img/ambiente/amb-local.jpg")}
+          >
+            <source src={asset("/video/hero.mp4")} type="video/mp4" />
+          </video>
           {/* velos para legibilidad del texto */}
           <div className="absolute inset-0 bg-marca/60" />
           <div className="absolute inset-0 bg-linear-to-t from-marca via-marca/35 to-marca/80" />
@@ -255,6 +266,26 @@ export function Experiencia() {
           </div>
         </div>
       )}
+
+      {/* ── FRANJA CINEMÁTICA: el asado (video real) ── */}
+      <div className="relative h-72 overflow-hidden sm:h-80">
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster={asset("/img/ambiente/amb-asado.jpg")}
+        >
+          <source src={asset("/video/asado.mp4")} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-marca/45" />
+        <div className="relative flex h-full items-center justify-center px-5 text-center">
+          <p className="font-display text-3xl font-extrabold text-cream drop-shadow-lg sm:text-5xl">
+            El asado de los domingos 🔥
+          </p>
+        </div>
+      </div>
 
       {/* ── RECORRIDO ── */}
       {secciones.map(({ cat, items }, i) => (
@@ -309,6 +340,37 @@ export function Experiencia() {
           </div>
         </section>
       ))}
+
+      {/* ── NUESTRA HISTORIA ── */}
+      <section className="cine-section relative flex min-h-screen items-center overflow-hidden bg-cream px-5 py-24">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="drift absolute -right-24 top-10 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
+          <div className="drift-2 absolute -left-20 bottom-10 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
+        </div>
+        <div className="relative mx-auto grid w-full max-w-5xl items-center gap-10 sm:grid-cols-2">
+          <div className="cine-card overflow-hidden rounded-4xl shadow-2xl ring-1 ring-cacao/10">
+            <img
+              src={asset("/img/ambiente/amb-inicios.jpg")}
+              alt="Los inicios de Panadería La Gloria"
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div>
+            <p className="font-display text-sm font-bold uppercase tracking-widest text-corteza">
+              Desde el corazón
+            </p>
+            <h2 className="cine-title mt-1 font-display text-4xl font-extrabold leading-tight text-cacao sm:text-6xl">
+              Nuestra historia
+            </h2>
+            <p className="mt-5 text-lg leading-relaxed text-cacao/75">
+              La Gloria nació del amor por la panadería argentina, lejos de casa. Cada
+              medialuna y cada asado de domingo son un cachito de Argentina en Woodbridge,
+              amasado con las manos y el cariño de siempre.
+            </p>
+            <p className="mt-3 text-sm italic text-cacao/50">* Texto de muestra — ajustamos con la historia real del cliente.</p>
+          </div>
+        </div>
+      </section>
 
       {/* ── CIERRE ── */}
       <section className="relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-marca px-5 py-28 text-center text-cream">

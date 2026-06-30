@@ -50,7 +50,6 @@ export function HomeCatalogo() {
 
   const [catActiva, setCatActiva] = useState("todo");
   const [productoDetalle, setProductoDetalle] = useState(null);
-  const [carritoAbierto, setCarritoAbierto] = useState(false);
 
   useEffect(() => {
     let activo = true;
@@ -157,8 +156,8 @@ export function HomeCatalogo() {
 
       <SiteFooter />
 
-      <CartButton onAbrir={() => setCarritoAbierto(true)} />
-      <CartDrawer abierto={carritoAbierto} onCerrar={() => setCarritoAbierto(false)} />
+      <CartButton />
+      <CartDrawer />
       <ProductModal
         producto={productoDetalle}
         categoria={categoriaDetalle}

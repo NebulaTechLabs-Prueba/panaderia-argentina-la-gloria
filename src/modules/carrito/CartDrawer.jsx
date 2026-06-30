@@ -10,8 +10,12 @@ import { buildMensajePedido } from "@/modules/whatsapp/buildMensajePedido";
 import { buildWhatsappUrl } from "@/modules/whatsapp/buildWhatsappUrl";
 
 // Panel lateral con el detalle del pedido y el botón que redirige a WhatsApp.
-export function CartDrawer({ abierto, onCerrar }) {
-  const { items, totalCentavos, estaVacio, fijarCantidad, quitar, vaciar } = useCarrito();
+// Estado (abierto/minimizado) controlado desde el contexto del carrito.
+export function CartDrawer() {
+  const {
+    items, totalCentavos, estaVacio, fijarCantidad, quitar, vaciar,
+    drawerAbierto, cerrarCarrito,
+  } = useCarrito();
   const ajustes = useNegocio();
   const moneda = useMoneda();
   // Comensales: opcional, default 1. Sólo se incluye en el mensaje si es 2+.
@@ -26,14 +30,14 @@ export function CartDrawer({ abierto, onCerrar }) {
 
   return (
     <AnimatePresence>
-      {abierto && (
+      {drawerAbierto && (
         <>
           <motion.div
             className="fixed inset-0 z-50 bg-cacao/40 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onCerrar}
+            onClick={cerrarCarrito}
           />
           <motion.aside
             role="dialog"
@@ -48,8 +52,9 @@ export function CartDrawer({ abierto, onCerrar }) {
               <h2 className="font-display text-xl font-semibold text-cacao">Tu pedido</h2>
               <button
                 type="button"
-                onClick={onCerrar}
-                aria-label="Cerrar"
+                onClick={cerrarCarrito}
+                aria-label="Minimizar"
+                title="Minimizar"
                 className="rounded-full p-1.5 text-cacao/60 transition hover:bg-masa hover:text-cacao"
               >
                 <X className="h-5 w-5" />

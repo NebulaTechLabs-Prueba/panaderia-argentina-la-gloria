@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useReducer } from "react";
+import { createContext, useContext, useEffect, useMemo, useReducer, useState } from "react";
 import { CART_STORAGE_KEY } from "@/lib/config/constants";
 import { totalCentavos } from "@/lib/money/formatCentavos";
 
@@ -65,6 +65,8 @@ function reducer(state, action) {
 
 export function CarritoProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, estadoInicial);
+  // Estado de UI del drawer (carrito desplegado o minimizado).
+  const [drawerAbierto, setDrawerAbierto] = useState(false);
 
   // Hidratar desde localStorage al montar (solo en navegador).
   useEffect(() => {
@@ -92,12 +94,20 @@ export function CarritoProvider({ children }) {
       cantidadTotal,
       totalCentavos: totalCentavos(state.items),
       estaVacio: state.items.length === 0,
-      agregar: (producto, cantidad) => dispatch({ type: "AGREGAR", producto, cantidad }),
+      agregar: (producto, cantidad) => {
+        // Al agregar el PRIMER producto, el carrito se abre solo.
+        if (state.items.length === 0) setDrawerAbierto(true);
+        dispatch({ type: "AGREGAR", producto, cantidad });
+      },
       fijarCantidad: (id, cantidad) => dispatch({ type: "FIJAR_CANTIDAD", id, cantidad }),
       quitar: (id) => dispatch({ type: "QUITAR", id }),
       vaciar: () => dispatch({ type: "VACIAR" }),
+      // UI del drawer: abrir (desplegar) / cerrar (minimizar).
+      drawerAbierto,
+      abrirCarrito: () => setDrawerAbierto(true),
+      cerrarCarrito: () => setDrawerAbierto(false),
     };
-  }, [state.items]);
+  }, [state.items, drawerAbierto]);
 
   return <CarritoContext.Provider value={value}>{children}</CarritoContext.Provider>;
 }

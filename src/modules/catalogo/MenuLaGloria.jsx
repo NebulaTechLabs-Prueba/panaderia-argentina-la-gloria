@@ -128,7 +128,6 @@ export function MenuLaGloria() {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [detalle, setDetalle] = useState(null);
-  const [carrito, setCarrito] = useState(false);
 
   useEffect(() => {
     let activo = true;
@@ -256,8 +255,8 @@ export function MenuLaGloria() {
 
       <SiteFooter />
 
-      <CartButton onAbrir={() => setCarrito(true)} />
-      <CartDrawer abierto={carrito} onCerrar={() => setCarrito(false)} />
+      <CartButton />
+      <CartDrawer />
       <ProductModal producto={detalle} categoria={catDetalle} onCerrar={() => setDetalle(null)} />
     </div>
   );

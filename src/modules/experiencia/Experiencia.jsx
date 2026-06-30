@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import SplitType from "split-type";
-import { ArrowLeft, ChevronDown, Plus, Check, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, Plus, Check, ShoppingBag } from "lucide-react";
 import { getCategorias, getProductos } from "@/lib/data";
 import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
@@ -60,6 +60,7 @@ export function Experiencia() {
   const ajustes = useNegocio();
   const moneda = useMoneda();
   const root = useRef(null);
+  const lenisRef = useRef(null);
   const [categorias, setCategorias] = useState([]);
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -71,6 +72,7 @@ export function Experiencia() {
     let raf;
     import("lenis").then(({ default: Lenis }) => {
       lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+      lenisRef.current = lenis;
       lenis.on("scroll", ScrollTrigger.update);
       raf = (t) => lenis.raf(t * 1000);
       gsap.ticker.add(raf);
@@ -79,8 +81,17 @@ export function Experiencia() {
     return () => {
       if (raf) gsap.ticker.remove(raf);
       if (lenis) lenis.destroy();
+      lenisRef.current = null;
     };
   }, []);
+
+  // Scroll suave hacia una sección (#slug).
+  const irA = (sel) => {
+    const el = typeof document !== "undefined" ? document.querySelector(sel) : null;
+    if (!el) return;
+    if (lenisRef.current) lenisRef.current.scrollTo(el, { offset: -8 });
+    else el.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     let activo = true;
@@ -168,6 +179,7 @@ export function Experiencia() {
           stagger: 0.12,
           duration: 0.8,
           ease: "power3.out",
+          clearProps: "all", // libera el transform para que el hover CSS funcione
           scrollTrigger: { trigger: sec, start: "top 65%" },
         });
         gsap.to(sec.querySelectorAll(".cine-parallax"), {
@@ -250,27 +262,38 @@ export function Experiencia() {
         <div className="overflow-hidden border-y-4 border-corteza bg-marca py-4">
           <div className="marquee-track flex items-center gap-10 pr-10">
             {[...marquee, ...marquee].map((p, i) => (
-              <div key={i} className="flex shrink-0 items-center gap-3">
+              <button
+                key={i}
+                type="button"
+                onClick={() => setDetalle(p)}
+                className="group flex shrink-0 items-center gap-3"
+                aria-label={`Ver ${p.nombre}`}
+              >
                 <img
                   src={p.imagen_url}
                   alt=""
                   aria-hidden="true"
-                  className="h-12 w-12 rounded-full object-cover ring-2 ring-corteza"
+                  className="h-12 w-12 rounded-full object-cover ring-2 ring-corteza transition group-hover:scale-110"
                 />
-                <span className="whitespace-nowrap font-display text-lg font-bold text-cream">
+                <span className="whitespace-nowrap font-display text-lg font-bold text-cream underline-offset-4 group-hover:text-corteza group-hover:underline">
                   {p.nombre}
                 </span>
                 <span className="text-corteza">●</span>
-              </div>
+              </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* ── FRANJA CINEMÁTICA: el asado (video real) ── */}
-      <div className="relative h-72 overflow-hidden sm:h-80">
+      {/* ── FRANJA CINEMÁTICA: el asado (video real, clickeable) ── */}
+      <button
+        type="button"
+        onClick={() => irA("#parrilla-libre")}
+        aria-label="Ver la Parrilla Libre de los domingos"
+        className="group relative block h-72 w-full overflow-hidden sm:h-96"
+      >
         <video
-          className="absolute inset-0 h-full w-full object-cover"
+          className="slowzoom absolute inset-0 h-full w-full object-cover"
           autoPlay
           muted
           loop
@@ -279,18 +302,22 @@ export function Experiencia() {
         >
           <source src={asset("/video/asado.mp4")} type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-marca/45" />
-        <div className="relative flex h-full items-center justify-center px-5 text-center">
-          <p className="font-display text-3xl font-extrabold text-cream drop-shadow-lg sm:text-5xl">
+        <div className="absolute inset-0 bg-marca/55 transition-colors duration-500 group-hover:bg-marca/40" />
+        <div className="relative flex h-full flex-col items-center justify-center gap-3 px-5 text-center">
+          <p className="font-display text-3xl font-extrabold text-cream drop-shadow-lg sm:text-6xl">
             El asado de los domingos 🔥
           </p>
+          <span className="inline-flex items-center gap-2 rounded-full bg-corteza px-5 py-2 font-bold text-cacao shadow-lg transition-all group-hover:gap-3.5">
+            Ver la Parrilla Libre <ArrowRight className="h-4 w-4" />
+          </span>
         </div>
-      </div>
+      </button>
 
       {/* ── RECORRIDO ── */}
       {secciones.map(({ cat, items }, i) => (
         <section
           key={cat.id}
+          id={cat.slug}
           className={`cine-section relative flex min-h-screen flex-col justify-center overflow-hidden px-5 py-24 ${
             i % 2 === 0 ? "bg-cream" : "bg-masa"
           }`}
@@ -314,20 +341,28 @@ export function Experiencia() {
                 <article
                   key={p.id}
                   onClick={() => setDetalle(p)}
-                  className="cine-card group cursor-pointer"
+                  className="cine-card group cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-2"
                 >
-                  <div className="cine-parallax aspect-4/3 overflow-hidden rounded-3xl shadow-xl ring-1 ring-cacao/10">
+                  <div className="cine-parallax relative aspect-4/3 overflow-hidden rounded-3xl shadow-xl ring-1 ring-cacao/10 transition-all duration-300 group-hover:shadow-2xl group-hover:ring-2 group-hover:ring-corteza">
                     <ProductImage
                       src={p.imagen_url}
                       alt={p.nombre}
                       color={cat.color}
                       icono={cat.icono}
-                      className="transition-transform duration-700 group-hover:scale-110"
+                      className="transition-transform duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
                     />
+                    {/* overlay que se revela en hover */}
+                    <div className="pointer-events-none absolute inset-0 flex items-end bg-linear-to-t from-marca/85 via-marca/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      <span className="m-3 inline-flex translate-y-3 items-center gap-1 rounded-full bg-corteza px-3 py-1 text-sm font-bold text-cacao transition-transform duration-300 group-hover:translate-y-0">
+                        Ver +
+                      </span>
+                    </div>
                   </div>
                   <div className="mt-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h3 className="font-display text-lg font-bold text-cacao">{p.nombre}</h3>
+                      <h3 className="font-display text-lg font-bold text-cacao transition-colors group-hover:text-corteza">
+                        {p.nombre}
+                      </h3>
                       <span className="font-display text-xl font-extrabold text-corteza">
                         {formatCentavos(p.precio_centavos, moneda)}
                       </span>
@@ -347,27 +382,31 @@ export function Experiencia() {
           <div className="drift absolute -right-24 top-10 h-80 w-80 rounded-full bg-celeste/15 blur-3xl" />
           <div className="drift-2 absolute -left-20 bottom-10 h-72 w-72 rounded-full bg-corteza/15 blur-3xl" />
         </div>
-        <div className="relative mx-auto grid w-full max-w-5xl items-center gap-10 sm:grid-cols-2">
+        <div className="relative mx-auto grid w-full max-w-5xl items-center gap-10 md:grid-cols-[0.85fr_1.15fr]">
           <div className="cine-card overflow-hidden rounded-4xl shadow-2xl ring-1 ring-cacao/10">
-            <img
-              src={asset("/img/ambiente/amb-inicios.jpg")}
-              alt="Los inicios de Panadería La Gloria"
-              className="h-full w-full object-cover"
-            />
+            <video
+              className="aspect-4/5 h-full w-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster={asset("/img/ambiente/amb-inicios.jpg")}
+            >
+              <source src={asset("/video/historia.mp4")} type="video/mp4" />
+            </video>
           </div>
           <div>
             <p className="font-display text-sm font-bold uppercase tracking-widest text-corteza">
               Desde el corazón
             </p>
-            <h2 className="cine-title mt-1 font-display text-4xl font-extrabold leading-tight text-cacao sm:text-6xl">
+            <h2 className="cine-title mt-1 font-display text-4xl font-extrabold leading-[1.05] text-cacao sm:text-5xl">
               Nuestra historia
             </h2>
-            <p className="mt-5 text-lg leading-relaxed text-cacao/75">
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-cacao/75">
               La Gloria nació del amor por la panadería argentina, lejos de casa. Cada
               medialuna y cada asado de domingo son un cachito de Argentina en Woodbridge,
               amasado con las manos y el cariño de siempre.
             </p>
-            <p className="mt-3 text-sm italic text-cacao/50">* Texto de muestra — ajustamos con la historia real del cliente.</p>
           </div>
         </div>
       </section>

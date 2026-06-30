@@ -1,8 +1,10 @@
-// Sonidos de la panadería, sintetizados con Web Audio API (sin archivos).
-// Se disparan dentro de un gesto del usuario (click), así pasan la política de
-// autoplay del navegador.
-//   playDing()   → campanita de mostrador al AGREGAR al pedido.
-//   playEnviar() → arpegio ascendente de confirmación al ENVIAR por WhatsApp.
+// Sonidos de la panadería, sintetizados con Web Audio API (sin archivos externos).
+// Más cálidos y suaves (ondas senoidales, volumen bajo) para que acompañen sin
+// molestar. Se disparan dentro de un gesto del usuario (click) → cumplen autoplay.
+//   playDing()  → campanita suave al AGREGAR
+//   playEnviar()→ arpegio de confirmación al ENVIAR por WhatsApp
+//   playVaciar()→ barrido descendente al VACIAR
+//   playMas()/playMenos() → blips al subir/bajar comensales
 let ctx = null;
 
 function getCtx() {
@@ -14,7 +16,7 @@ function getCtx() {
   return ctx;
 }
 
-// Reproduce una secuencia de tonos [{ f, t, dur, vol, type }].
+// Tonos discretos: [{ f, t, dur, vol, type }]
 function tocar(notas) {
   const ac = getCtx();
   if (!ac) return;
@@ -22,12 +24,12 @@ function tocar(notas) {
   for (const n of notas) {
     const osc = ac.createOscillator();
     const gain = ac.createGain();
-    osc.type = n.type || "triangle";
+    osc.type = n.type || "sine";
     osc.frequency.value = n.f;
-    const dur = n.dur ?? 0.38;
-    const vol = n.vol ?? 0.22;
+    const dur = n.dur ?? 0.4;
+    const vol = n.vol ?? 0.16;
     gain.gain.setValueAtTime(0.0001, now + n.t);
-    gain.gain.exponentialRampToValueAtTime(vol, now + n.t + 0.008);
+    gain.gain.exponentialRampToValueAtTime(vol, now + n.t + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + n.t + dur);
     osc.connect(gain);
     gain.connect(ac.destination);
@@ -36,28 +38,53 @@ function tocar(notas) {
   }
 }
 
-// Campanita de mostrador (ding-ding) al agregar.
-export function playDing() {
-  try {
-    tocar([
-      { f: 988, t: 0 },
-      { f: 1319, t: 0.085 },
-    ]);
-  } catch {
-    /* sin sonido si el navegador lo bloquea */
-  }
+// Barrido de frecuencia (glissando).
+function barrido({ from, to, dur = 0.35, vol = 0.16, type = "sine" }) {
+  const ac = getCtx();
+  if (!ac) return;
+  const now = ac.currentTime;
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(from, now);
+  osc.frequency.exponentialRampToValueAtTime(to, now + dur);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(vol, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+  osc.connect(gain);
+  gain.connect(ac.destination);
+  osc.start(now);
+  osc.stop(now + dur + 0.02);
 }
 
-// Arpegio ascendente de confirmación (Do-Mi-Sol-Do) al enviar el pedido.
-export function playEnviar() {
-  try {
+const safe = (fn) => { try { fn(); } catch { /* navegador bloquea audio */ } };
+
+// Campanita cálida (dos toques con armónico de octava) al agregar.
+export const playDing = () =>
+  safe(() =>
     tocar([
-      { f: 523.25, t: 0, type: "sine", dur: 0.3 },
-      { f: 659.25, t: 0.1, type: "sine", dur: 0.3 },
-      { f: 783.99, t: 0.2, type: "sine", dur: 0.35 },
-      { f: 1046.5, t: 0.32, type: "sine", dur: 0.55, vol: 0.26 },
-    ]);
-  } catch {
-    /* sin sonido si el navegador lo bloquea */
-  }
-}
+      { f: 880, t: 0, vol: 0.14 },
+      { f: 1760, t: 0, vol: 0.05 },
+      { f: 1175, t: 0.1, vol: 0.14 },
+    ])
+  );
+
+// Arpegio ascendente de confirmación (Do-Mi-Sol-Do) al enviar.
+export const playEnviar = () =>
+  safe(() =>
+    tocar([
+      { f: 523.25, t: 0, dur: 0.32 },
+      { f: 659.25, t: 0.1, dur: 0.32 },
+      { f: 783.99, t: 0.2, dur: 0.36 },
+      { f: 1046.5, t: 0.32, dur: 0.6, vol: 0.18 },
+    ])
+  );
+
+// Barrido descendente al vaciar (se "barre" el pedido).
+export const playVaciar = () => safe(() => barrido({ from: 660, to: 180, dur: 0.32 }));
+
+// Blip ascendente / descendente para comensales.
+export const playMas = () =>
+  safe(() => tocar([{ f: 740, t: 0, dur: 0.16 }, { f: 988, t: 0.06, dur: 0.18 }]));
+export const playMenos = () =>
+  safe(() => tocar([{ f: 660, t: 0, dur: 0.16 }, { f: 494, t: 0.06, dur: 0.18 }]));

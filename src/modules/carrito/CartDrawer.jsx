@@ -8,7 +8,7 @@ import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { buildMensajePedido } from "@/modules/whatsapp/buildMensajePedido";
 import { buildWhatsappUrl } from "@/modules/whatsapp/buildWhatsappUrl";
-import { playEnviar } from "@/lib/sound/ding";
+import { playEnviar, playVaciar, playMas, playMenos } from "@/lib/sound/ding";
 
 // Panel lateral con el detalle del pedido y el botón que redirige a WhatsApp.
 // Estado (abierto/minimizado) controlado desde el contexto del carrito.
@@ -124,7 +124,10 @@ export function CartDrawer() {
                 <div className="flex items-center justify-between">
                   <button
                     type="button"
-                    onClick={vaciar}
+                    onClick={() => {
+                      playVaciar();
+                      vaciar();
+                    }}
                     className="text-sm text-cacao/50 underline-offset-2 transition hover:text-cacao hover:underline"
                   >
                     Vaciar
@@ -149,7 +152,7 @@ export function CartDrawer() {
                   <div className="flex items-center gap-1 rounded-full bg-white p-1 ring-1 ring-cacao/10">
                     <button
                       type="button"
-                      onClick={() => setPersonas((n) => Math.max(1, n - 1))}
+                      onClick={() => { if (personas > 1) { playMenos(); setPersonas(personas - 1); } }}
                       aria-label="Menos personas"
                       disabled={personas <= 1}
                       className="grid h-7 w-7 place-items-center rounded-full text-cacao transition hover:bg-masa disabled:opacity-30"
@@ -161,7 +164,7 @@ export function CartDrawer() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => setPersonas((n) => Math.min(50, n + 1))}
+                      onClick={() => { playMas(); setPersonas(Math.min(50, personas + 1)); }}
                       aria-label="Más personas"
                       className="grid h-7 w-7 place-items-center rounded-full text-cacao transition hover:bg-masa"
                     >

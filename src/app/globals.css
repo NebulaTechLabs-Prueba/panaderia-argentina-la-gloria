@@ -77,7 +77,14 @@ body {
 }
 .pulse-soft { animation: pulseSoft 2.4s ease-in-out infinite; }
 
+/* Zoom lento de video/imagen (cine). */
+@keyframes slowzoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.14); }
+}
+.slowzoom { animation: slowzoom 18s ease-in-out infinite alternate; }
+
 @media (prefers-reduced-motion: reduce) {
-  .kenburns-img, .marquee-track, .floaty, .drift, .drift-2, .pulse-soft { animation: none; }
+  .kenburns-img, .marquee-track, .floaty, .drift, .drift-2, .pulse-soft, .slowzoom { animation: none; }
   .kenburns-img:first-child { opacity: 1; }
 }

@@ -7,6 +7,7 @@ import { categoriasMock } from "@/lib/data/mock/categorias";
 import { IDS_CON_FOTO } from "@/lib/data/imagenesLocales";
 import { asset } from "@/lib/config/constants";
 import { formatCentavos } from "@/lib/money/formatCentavos";
+import { estiloBadge } from "@/lib/badges";
 
 // Imagen que el producto muestra HOY en el sitio público (misma lógica que getProductos).
 const imagenActual = (p) =>
@@ -117,7 +118,7 @@ export function Catalogo() {
                   <td className="p-3 font-medium text-cacao/85">
                     {p.nombre}
                     {p.etiqueta && (
-                      <span className="ml-2 align-middle rounded-full bg-corteza/20 px-2 py-0.5 text-[10px] font-bold text-corteza ring-1 ring-corteza/30">
+                      <span className={`ml-2 align-middle rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${estiloBadge(p.etiqueta).suave}`}>
                         {p.etiqueta}
                       </span>
                     )}
@@ -261,8 +262,8 @@ export function Catalogo() {
                         key={b}
                         type="button"
                         onClick={() => setCampo("etiqueta", b)}
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
-                          form.data.etiqueta === b ? "bg-corteza text-cacao" : "bg-masa/60 text-cacao/70 hover:bg-masa"
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition ${estiloBadge(b).suave} ${
+                          form.data.etiqueta === b ? "ring-2 ring-offset-1" : ""
                         }`}
                       >
                         {b}

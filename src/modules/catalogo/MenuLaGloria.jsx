@@ -9,6 +9,7 @@ import { ES_DEMO } from "@/lib/config/constants";
 import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
+import { estiloBadge } from "@/lib/badges";
 import { ProductImage } from "./ProductImage";
 import { IconoCategoria } from "./IconoCategoria";
 import { header as headerColor } from "./catColors";
@@ -81,7 +82,11 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
           className="transition-transform duration-500 group-hover:scale-110"
         />
         {producto.etiqueta && disp && (
-          <span className="absolute left-1 top-1 rounded-full bg-corteza px-1.5 py-0.5 text-[10px] font-bold text-cacao">
+          <span
+            className={`absolute left-1 top-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold shadow ${
+              estiloBadge(producto.etiqueta).solido
+            }`}
+          >
             {producto.etiqueta}
           </span>
         )}
@@ -199,7 +204,7 @@ export function MenuLaGloria() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className={`${script.className} mt-4 text-5xl text-marca sm:text-6xl`}
+          className={`${script.className} mt-4 text-4xl text-marca sm:text-6xl`}
         >
           Nuestro Menú
         </motion.h1>
@@ -261,7 +266,7 @@ export function MenuLaGloria() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-80px" }}
                   transition={{ type: "spring", damping: 20, stiffness: 200 }}
-                  className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-[1.75rem] px-6 py-3 shadow-md ${headerColor(cat.color)}`}
+                  className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-4xl px-4 py-3 shadow-md sm:px-6 ${headerColor(cat.color)}`}
                 >
                   <h2 className={`${script.className} text-3xl leading-tight sm:text-4xl`}>
                     {cat.nombre}

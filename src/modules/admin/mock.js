@@ -49,6 +49,14 @@ export const dispositivos = [
   { label: "Tablet", valor: 3, color: "#63b0dd" },
 ];
 
+export const paises = [
+  { label: "🇺🇸 Estados Unidos", valor: 82 },
+  { label: "🇦🇷 Argentina", valor: 9 },
+  { label: "🇲🇽 México", valor: 3 },
+  { label: "🇪🇸 España", valor: 2 },
+  { label: "🌎 Otros", valor: 4 },
+];
+
 export const ciudades = [
   { label: "Woodbridge, VA", valor: 512 },
   { label: "Manassas, VA", valor: 143 },

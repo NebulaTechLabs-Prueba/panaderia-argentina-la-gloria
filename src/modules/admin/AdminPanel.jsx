@@ -239,13 +239,22 @@ function Trafico() {
         <LineChart data={M.serieVisitas} previa={M.serieVisitasPrev} color="#2f3a7e" />
       </Card>
       <div className="grid gap-5 lg:grid-cols-2">
-        <Card title="Fuentes"><BarList items={M.fuentes} unit="%" /></Card>
-        <Card title="Dispositivos"><Donut segments={M.dispositivos} /></Card>
-        <Card title="Nuevos vs. recurrentes" subtitle="Fidelización">
-          <Donut segments={M.nuevosRecurrentes} />
+        <Card title="Fuentes" subtitle="De qué red o buscador llegan">
+          <BarList items={M.fuentes} unit="%" />
+          <p className="mt-3 text-xs text-cacao/45">
+            Se detecta por el referente. Para separar bien cada red, etiquetá los links con UTMs
+            (ej. <code>?utm_source=instagram</code>).
+          </p>
+        </Card>
+        <Card title="Países" subtitle="De qué país entran">
+          <BarList items={M.paises} unit="%" color="#2f3a7e" />
         </Card>
         <Card title="Ciudades" subtitle="Dónde están los visitantes">
           <BarList items={M.ciudades} color="#63b0dd" />
+        </Card>
+        <Card title="Dispositivos"><Donut segments={M.dispositivos} /></Card>
+        <Card title="Nuevos vs. recurrentes" subtitle="Fidelización">
+          <Donut segments={M.nuevosRecurrentes} />
         </Card>
       </div>
     </div>

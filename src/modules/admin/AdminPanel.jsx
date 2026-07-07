@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   LayoutDashboard, TrendingUp, Filter, Search, Package, Users, Wrench,
-  MessageCircle, MapPin, Smartphone, ExternalLink, Circle, Menu, X,
+  MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays,
 } from "lucide-react";
 import { asset } from "@/lib/config/constants";
 import { formatCentavos } from "@/lib/money/formatCentavos";
@@ -11,7 +11,7 @@ import { productosMock } from "@/lib/data/mock/productos";
 import { categoriasMock } from "@/lib/data/mock/categorias";
 import { IDS_CON_FOTO } from "@/lib/data/imagenesLocales";
 import {
-  Card, Kpi, Delta, LineChart, BarList, Donut, Funnel, EstadoPill, Sparkline,
+  Card, Kpi, LineChart, BarList, Donut, Funnel, Columnas, Impacto, EstadoPill,
 } from "./widgets";
 import * as M from "./mock";
 
@@ -19,6 +19,7 @@ const NAV = [
   { id: "resumen", label: "Resumen", icon: LayoutDashboard },
   { id: "trafico", label: "Tráfico", icon: TrendingUp },
   { id: "conversiones", label: "Conversiones", icon: Filter },
+  { id: "consumidor", label: "Consumidor", icon: ShoppingCart },
   { id: "seo", label: "SEO", icon: Search },
   { id: "productos", label: "Productos", icon: Package },
   { id: "equipo", label: "Equipo", icon: Users },
@@ -116,6 +117,7 @@ export function AdminPanel() {
           {sec === "resumen" && <Resumen />}
           {sec === "trafico" && <Trafico />}
           {sec === "conversiones" && <Conversiones />}
+          {sec === "consumidor" && <Consumidor />}
           {sec === "seo" && <Seo />}
           {sec === "productos" && <Productos />}
           {sec === "equipo" && <Equipo />}
@@ -189,6 +191,94 @@ function Conversiones() {
           <BarList items={M.conversionesPorProducto} color="#16a34a" />
         </Card>
       </div>
+    </div>
+  );
+}
+
+function Consumidor() {
+  const { armaron, enviaron } = M.abandono;
+  const abandonoPct = (((armaron - enviaron) / armaron) * 100).toFixed(1);
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {M.consumidorKpis.map((k) => (
+          <Kpi key={k.id} {...k} />
+        ))}
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card title="Abandono de carrito" subtitle="Armaron el carrito pero no enviaron">
+          <Funnel
+            steps={[
+              { label: "Armaron el carrito", valor: armaron },
+              { label: "Enviaron por WhatsApp", valor: enviaron },
+            ]}
+          />
+          <p className="mt-3 rounded-lg bg-masa/50 p-3 text-xs text-cacao/60">
+            {armaron - enviaron} de {armaron} carritos ({abandonoPct}%) no llegaron a WhatsApp — oportunidad de
+            recuperar (recordatorio, oferta, simplificar el paso).
+          </p>
+        </Card>
+        <Card title="Tamaño de las órdenes" subtitle="Chicas, medianas y grandes">
+          <Donut segments={M.tamanoOrdenes} />
+        </Card>
+
+        <Card title="Más agregados al carrito">
+          <BarList items={M.masAgregado} />
+        </Card>
+        <Card title="Se piden en mayor cantidad" subtitle="Unidades promedio por pedido">
+          <BarList items={M.cantidadPorPedido} color="#63b0dd" />
+        </Card>
+
+        <Card title="Ingresos por producto" subtitle="Estimado — el pedido no es venta confirmada">
+          <BarList items={M.ingresosPorProducto} color="#16a34a" />
+        </Card>
+        <Card title="Los que menos se piden" subtitle="Candidatos a promo o a revisar">
+          <BarList items={M.menosVendido} color="#dc2626" />
+        </Card>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card title="Interacción por día de la semana" subtitle={`Pico: ${M.diaPico}`}>
+          <Columnas data={M.porDiaSemana} color="#2f3a7e" />
+        </Card>
+        <Card title="Interacción por mes" subtitle="Estacionalidad del año">
+          <Columnas data={M.porMes} color="#ff9900" />
+        </Card>
+      </div>
+
+      <Card title="Fechas clave (Argentina + EE. UU.)" subtitle="Feriados que pueden mover la demanda">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-cacao/10 text-left text-xs uppercase tracking-wide text-cacao/45">
+                <th className="pb-2 pr-2 font-semibold">Fecha</th>
+                <th className="pb-2 pr-2 font-semibold">Fecha clave</th>
+                <th className="pb-2 pr-2 font-semibold">País</th>
+                <th className="pb-2 pr-2 font-semibold">Impacto</th>
+                <th className="pb-2 font-semibold">Por qué</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-cacao/5">
+              {M.feriados.map((f, i) => (
+                <tr key={`${f.fecha}-${i}`}>
+                  <td className="whitespace-nowrap py-2.5 pr-2 font-semibold text-marca">{f.fecha}</td>
+                  <td className="py-2.5 pr-2 font-medium text-cacao/85">{f.nombre}</td>
+                  <td className="py-2.5 pr-2">{f.pais}</td>
+                  <td className="py-2.5 pr-2">
+                    <Impacto nivel={f.impacto} />
+                  </td>
+                  <td className="py-2.5 text-cacao/60">{f.nota}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 flex items-center gap-2 text-xs text-cacao/50">
+          <CalendarDays className="h-4 w-4" /> A futuro estas fechas se superponen a los gráficos para explicar los
+          picos de demanda.
+        </p>
+      </Card>
     </div>
   );
 }

@@ -207,6 +207,40 @@ export function Funnel({ steps }) {
   );
 }
 
+export function Columnas({ data, color = "#2f3a7e", height = 150 }) {
+  const max = Math.max(...data.map((d) => d.valor)) || 1;
+  return (
+    <div className="flex items-end gap-1.5" style={{ height }}>
+      {data.map((d) => (
+        <div key={d.label} className="flex h-full flex-1 flex-col items-center">
+          <div className="flex w-full flex-1 items-end">
+            <div
+              className="w-full rounded-t-md transition-all"
+              style={{ height: `${(d.valor / max) * 100}%`, backgroundColor: color }}
+              title={`${d.label}: ${d.valor}`}
+            />
+          </div>
+          <span className="mt-1 text-[10px] text-cacao/50">{d.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const IMPACTO_STYLE = {
+  alto: "bg-orange-100 text-orange-700",
+  medio: "bg-amber-100 text-amber-700",
+  bajo: "bg-cacao/10 text-cacao/50",
+};
+
+export function Impacto({ nivel }) {
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-xs font-bold capitalize ${IMPACTO_STYLE[nivel]}`}>
+      {nivel}
+    </span>
+  );
+}
+
 const ESTADO_STYLE = {
   ok: "bg-green-100 text-green-700",
   pendiente: "bg-amber-100 text-amber-700",

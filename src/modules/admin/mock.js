@@ -94,6 +94,92 @@ export const equipo = [
   { nombre: "La Gloria (dueños)", rol: "Solo lectura", inicial: "G", color: "#16a34a" },
 ];
 
+// ── Comportamiento del consumidor (todo simulado) ──
+
+export const consumidorKpis = [
+  { id: "ticket", label: "Ticket promedio", value: "$28,40", delta: 4.7 },
+  { id: "persona", label: "Gasto por persona", value: "$9,16", delta: 2.1 },
+  { id: "abandono", label: "Carritos sin enviar", value: "64,5%", delta: -3.4 },
+  { id: "maxpers", label: "Orden más grande", value: "12 pers.", delta: 0 },
+];
+
+// Carritos armados vs. pedidos enviados por WhatsApp (abandono de carrito).
+export const abandono = { armaron: 214, enviaron: 76 };
+
+export const masAgregado = [
+  { label: "Milanesa Napolitana", valor: 168 },
+  { label: "Empanadas de carne", valor: 152 },
+  { label: "Facturas (docena)", valor: 139 },
+  { label: "Choripán", valor: 96 },
+  { label: "Pastafrola", valor: 71 },
+];
+
+export const menosVendido = [
+  { label: "Torta de cumpleaños", valor: 6 },
+  { label: "Tarta de verdura", valor: 9 },
+  { label: "Milhojas", valor: 12 },
+];
+
+// Ingresos estimados por producto (precio × cantidad de los pedidos). Estimado:
+// el pedido es una intención, la venta real ocurre en el local.
+export const ingresosPorProducto = [
+  { label: "Parrilla Libre (Dom)", valor: 1240 },
+  { label: "Lechón al asador", valor: 880 },
+  { label: "Milanesa Napolitana", valor: 610 },
+  { label: "Torta de cumpleaños", valor: 430 },
+  { label: "Facturas (docena)", valor: 360 },
+];
+
+// Producto que se pide en mayor CANTIDAD por pedido (unidades promedio).
+export const cantidadPorPedido = [
+  { label: "Facturas (unidad)", valor: 14 },
+  { label: "Empanadas", valor: 12 },
+  { label: "Alfajores", valor: 8 },
+  { label: "Pan francés", valor: 4 },
+];
+
+// Tamaño de las órdenes (por total / comensales).
+export const tamanoOrdenes = [
+  { label: "Pequeñas (1–2 ítems)", valor: 44, color: "#63b0dd" },
+  { label: "Medianas (3–4)", valor: 25, color: "#2f3a7e" },
+  { label: "Grandes (5+ o grupo)", valor: 9, color: "#ff9900" },
+];
+
+// Interacción por día de la semana y por mes (visitas promedio).
+export const porDiaSemana = [
+  { label: "Lun", valor: 120 },
+  { label: "Mar", valor: 108 },
+  { label: "Mié", valor: 118 },
+  { label: "Jue", valor: 136 },
+  { label: "Vie", valor: 182 },
+  { label: "Sáb", valor: 224 },
+  { label: "Dom", valor: 261 },
+];
+
+export const porMes = [
+  { label: "Ene", valor: 62 }, { label: "Feb", valor: 58 }, { label: "Mar", valor: 71 },
+  { label: "Abr", valor: 76 }, { label: "May", valor: 92 }, { label: "Jun", valor: 96 },
+  { label: "Jul", valor: 131 }, { label: "Ago", valor: 101 }, { label: "Sep", valor: 93 },
+  { label: "Oct", valor: 99 }, { label: "Nov", valor: 121 }, { label: "Dic", valor: 168 },
+];
+
+export const diaPico = "Domingo 6 de diciembre";
+
+// Calendario de fechas clave: feriados 🇦🇷 (comunidad) y 🇺🇸 (local Woodbridge, VA)
+// que pueden mover la demanda. Simulado / curado, no viene de una API todavía.
+export const feriados = [
+  { fecha: "1 Ene", nombre: "Año Nuevo", pais: "🇺🇸🇦🇷", impacto: "alto", nota: "Roscas y mesa dulce de fin de año." },
+  { fecha: "25 May", nombre: "Revolución de Mayo", pais: "🇦🇷", impacto: "medio", nota: "Empanadas, locro y pastelitos." },
+  { fecha: "25 May", nombre: "Memorial Day", pais: "🇺🇸", impacto: "medio", nota: "Fin de semana largo → asados." },
+  { fecha: "4 Jul", nombre: "Independence Day", pais: "🇺🇸", impacto: "alto", nota: "Parrilla y reuniones." },
+  { fecha: "9 Jul", nombre: "Día de la Independencia", pais: "🇦🇷", impacto: "alto", nota: "Locro, empanadas, pastelitos." },
+  { fecha: "20 Jul", nombre: "Día del Amigo", pais: "🇦🇷", impacto: "medio", nota: "Muchas reuniones → pedidos grupales." },
+  { fecha: "7 Sep", nombre: "Labor Day", pais: "🇺🇸", impacto: "medio", nota: "Fin de semana largo → asados." },
+  { fecha: "26 Nov", nombre: "Thanksgiving", pais: "🇺🇸", impacto: "medio", nota: "Postres y encargos." },
+  { fecha: "25 Dic", nombre: "Navidad", pais: "🇺🇸🇦🇷", impacto: "alto", nota: "Pan dulce y mesa dulce." },
+  { fecha: "31 Dic", nombre: "Fin de Año", pais: "🇺🇸🇦🇷", impacto: "alto", nota: "Pico anual de pedidos." },
+];
+
 export const herramientas = [
   {
     nombre: "Google Analytics 4",

@@ -94,6 +94,28 @@ export const equipo = [
   { nombre: "La Gloria (dueños)", rol: "Solo lectura", inicial: "G", color: "#16a34a" },
 ];
 
+// Métricas de calidad de visita (para explicar "tiempo en página" y "rebote").
+export const traficoKpis = [
+  { id: "sesiones", label: "Sesiones", value: "1.240", delta: 12.4 },
+  { id: "tiempo", label: "Tiempo promedio", value: "1m 48s", delta: 6.0 },
+  { id: "rebote", label: "Tasa de rebote", value: "38%", delta: -4.2 },
+  { id: "pxs", label: "Páginas por sesión", value: "3,4", delta: 2.1 },
+];
+
+export const nuevosRecurrentes = [
+  { label: "Nuevos", valor: 62, color: "#ff9900" },
+  { label: "Recurrentes", valor: 38, color: "#2f3a7e" },
+];
+
+// Productos que se ven en la misma visita (afinidad → combos / cross-sell).
+export const vistosJuntos = [
+  { a: "Milanesa Napolitana", b: "Choripán", veces: 64 },
+  { a: "Facturas", b: "Alfajores de maicena", veces: 52 },
+  { a: "Empanadas de carne", b: "Empanadas de J y Q", veces: 47 },
+  { a: "Parrilla Libre", b: "Lechón al asador", veces: 33 },
+  { a: "Pastafrola", b: "Pan francés", veces: 26 },
+];
+
 // ── Comportamiento del consumidor (todo simulado) ──
 
 export const consumidorKpis = [

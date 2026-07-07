@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, TrendingUp, Filter, Search, Package, Users, Wrench,
   MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays, LogOut,
+  Download, Printer,
 } from "lucide-react";
 import { asset } from "@/lib/config/constants";
 import { Catalogo } from "./Catalogo";
@@ -44,13 +45,42 @@ export function AdminPanel() {
     router.replace("/admin/login");
   };
 
+  const descargarCSV = () => {
+    const filas = [
+      ["Panel La Gloria — resumen (datos simulados)"],
+      [],
+      ["KPI", "Valor", "Δ%"],
+      ...M.kpis.map((k) => [k.label, k.value, k.delta]),
+      [],
+      ["Fuente de tráfico", "%"],
+      ...M.fuentes.map((f) => [f.label, f.valor]),
+      [],
+      ["Producto más visto", "Vistas"],
+      ...M.topProductos.map((p) => [p.label, p.valor]),
+      [],
+      ["Embudo", "Cantidad"],
+      ...M.embudo.map((e) => [e.label, e.valor]),
+      [],
+      ["Keyword", "Impresiones", "Clics", "CTR", "Posición"],
+      ...M.keywords.map((k) => [k.q, k.imp, k.clics, k.ctr, k.pos]),
+    ];
+    const csv = filas.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "la-gloria-metricas.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (!listo) return <div className="grid min-h-screen place-items-center bg-masa/40 text-cacao/40">Cargando…</div>;
 
   return (
     <div className="min-h-screen bg-masa/40 text-cacao">
       {/* ── Sidebar ── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-marca text-cream transition-transform lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-marca text-cream transition-transform print:hidden lg:translate-x-0 ${
           menu ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -104,7 +134,7 @@ export function AdminPanel() {
       {menu && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMenu(false)} />}
 
       {/* ── Contenido ── */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 print:pl-0">
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-cacao/10 bg-white/80 px-5 py-3 backdrop-blur">
           <button type="button" className="lg:hidden" onClick={() => setMenu(true)} aria-label="Menú">
             <Menu className="h-5 w-5" />
@@ -113,7 +143,7 @@ export function AdminPanel() {
             {actual && <actual.icon className="h-5 w-5 text-marca" />}
             <h1 className="font-display text-lg font-bold">{actual?.label}</h1>
           </div>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2 print:hidden sm:gap-3">
             <div className="hidden items-center gap-1 rounded-full bg-masa/70 p-1 sm:flex">
               {M.RANGOS.map((r) => (
                 <button
@@ -128,6 +158,20 @@ export function AdminPanel() {
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={descargarCSV}
+              className="flex items-center gap-1.5 rounded-full bg-masa/70 px-3 py-1.5 text-xs font-semibold text-cacao/70 transition hover:bg-masa"
+            >
+              <Download className="h-3.5 w-3.5" /> CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="hidden items-center gap-1.5 rounded-full bg-masa/70 px-3 py-1.5 text-xs font-semibold text-cacao/70 transition hover:bg-masa sm:flex"
+            >
+              <Printer className="h-3.5 w-3.5" /> PDF
+            </button>
             <div className="grid h-9 w-9 place-items-center rounded-full bg-marca text-sm font-bold text-cream">
               M
             </div>
@@ -178,12 +222,24 @@ function Resumen() {
 function Trafico() {
   return (
     <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {M.traficoKpis.map((k) => (
+          <Kpi key={k.id} {...k} />
+        ))}
+      </div>
+      <p className="rounded-lg bg-marca/5 px-3 py-2 text-xs text-cacao/60 ring-1 ring-marca/10">
+        <b>Tiempo promedio</b>: cuánto se queda la gente en el sitio. <b>Tasa de rebote</b>: % que entra y se va sin
+        interactuar (sin mirar productos ni agregar). Más bajo es mejor.
+      </p>
       <Card title="Visitas por día" subtitle="Últimos 30 días">
         <LineChart data={M.serieVisitas} color="#2f3a7e" />
       </Card>
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Fuentes"><BarList items={M.fuentes} unit="%" /></Card>
         <Card title="Dispositivos"><Donut segments={M.dispositivos} /></Card>
+        <Card title="Nuevos vs. recurrentes" subtitle="Fidelización">
+          <Donut segments={M.nuevosRecurrentes} />
+        </Card>
         <Card title="Ciudades" subtitle="Dónde están los visitantes">
           <BarList items={M.ciudades} color="#63b0dd" />
         </Card>
@@ -292,6 +348,22 @@ function Consumidor() {
           <BarList items={M.menosVendido} color="#dc2626" />
         </Card>
       </div>
+
+      <Card title="Productos vistos juntos" subtitle="Se ven en la misma visita → ideas de combos / cross-sell">
+        <ul className="divide-y divide-cacao/5">
+          {M.vistosJuntos.map((v, i) => (
+            <li key={i} className="flex items-center justify-between py-2.5 text-sm">
+              <span className="text-cacao/70">
+                <b className="text-cacao">{v.a}</b> <span className="text-cacao/40">+</span>{" "}
+                <b className="text-cacao">{v.b}</b>
+              </span>
+              <span className="rounded-full bg-masa/60 px-2.5 py-0.5 text-xs font-semibold text-cacao/60">
+                {v.veces} veces
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Card>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Interacción por día de la semana" subtitle={`Pico: ${M.diaPico}`}>

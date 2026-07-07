@@ -133,14 +133,14 @@ export function AdminPanel() {
       {menu && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMenu(false)} />}
 
       {/* ── Contenido ── */}
-      <div className="lg:pl-64 print:pl-0">
+      <div className="overflow-x-clip lg:pl-64 print:pl-0">
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-cacao/10 bg-white/80 px-5 py-3 backdrop-blur">
           <button type="button" className="lg:hidden" onClick={() => setMenu(true)} aria-label="Menú">
             <Menu className="h-5 w-5" />
           </button>
-          <div className="flex items-center gap-2">
-            {actual && <actual.icon className="h-5 w-5 text-marca" />}
-            <h1 className="font-display text-lg font-bold">{actual?.label}</h1>
+          <div className="flex min-w-0 items-center gap-2">
+            {actual && <actual.icon className="h-5 w-5 shrink-0 text-marca" />}
+            <h1 className="truncate font-display text-lg font-bold">{actual?.label}</h1>
           </div>
           <div className="ml-auto flex items-center gap-2 print:hidden sm:gap-3">
             <div className="hidden items-center gap-1 rounded-full bg-masa/70 p-1 sm:flex">

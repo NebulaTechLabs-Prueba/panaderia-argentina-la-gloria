@@ -167,8 +167,8 @@ export function Donut({ segments, size = 160, thickness = 22 }) {
   const c = 2 * Math.PI * r;
   let offset = 0;
   return (
-    <div className="flex items-center gap-5">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+    <div className="flex flex-wrap items-center gap-4">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="h-auto w-32 shrink-0 sm:w-36">
         <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
           {segments.map((s) => {
             const len = (s.valor / total) * c;
@@ -190,12 +190,12 @@ export function Donut({ segments, size = 160, thickness = 22 }) {
           })}
         </g>
       </svg>
-      <ul className="space-y-1.5 text-sm">
+      <ul className="min-w-0 flex-1 space-y-1.5 text-sm">
         {segments.map((s) => (
           <li key={s.label} className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-            <span className="text-cacao/70">{s.label}</span>
-            <span className="ml-auto font-semibold text-cacao">{s.valor}%</span>
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
+            <span className="truncate text-cacao/70">{s.label}</span>
+            <span className="ml-auto shrink-0 font-semibold text-cacao">{s.valor}%</span>
           </li>
         ))}
       </ul>

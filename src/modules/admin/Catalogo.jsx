@@ -12,7 +12,9 @@ import { formatCentavos } from "@/lib/money/formatCentavos";
 const imagenActual = (p) =>
   p.imagen_url || (IDS_CON_FOTO.has(p.id) ? asset(`/img/productos/${p.id}.jpg`) : "");
 
-const nuevoProducto = () => ({ id: "", nombre: "", categoria_id: "", precio_centavos: 0, descripcion: "", disponible: true, imagen_url: "" });
+const nuevoProducto = () => ({ id: "", nombre: "", categoria_id: "", precio_centavos: 0, descripcion: "", disponible: true, imagen_url: "", etiqueta: "" });
+
+const BADGES = ["Nuevo", "Promo", "2x1", "Destacado", "Más pedido", "Recomendado"];
 const nuevaCategoria = () => ({ id: "", nombre: "", slug: "", orden: 99, activa: true });
 
 // CRUD de catálogo (SIMULADO): opera sobre estado local. Los cambios no persisten
@@ -112,7 +114,14 @@ export function Catalogo() {
                       <span className="grid h-10 w-10 place-items-center rounded-lg bg-masa/50 text-[10px] text-cacao/40">—</span>
                     )}
                   </td>
-                  <td className="p-3 font-medium text-cacao/85">{p.nombre}</td>
+                  <td className="p-3 font-medium text-cacao/85">
+                    {p.nombre}
+                    {p.etiqueta && (
+                      <span className="ml-2 align-middle rounded-full bg-corteza/20 px-2 py-0.5 text-[10px] font-bold text-corteza ring-1 ring-corteza/30">
+                        {p.etiqueta}
+                      </span>
+                    )}
+                  </td>
                   <td className="p-3 text-cacao/60">{nombreCat(p.categoria_id)}</td>
                   <td className="p-3 text-right tabular-nums text-cacao/80">{formatCentavos(p.precio_centavos)}</td>
                   <td className="p-3 text-center">
@@ -237,6 +246,35 @@ export function Catalogo() {
                         />
                       </label>
                     </div>
+                  </div>
+                </Campo>
+                <Campo label="Etiqueta / badge (para destacar o promocionar)">
+                  <input
+                    value={form.data.etiqueta || ""}
+                    onChange={(e) => setCampo("etiqueta", e.target.value)}
+                    placeholder="Ej: Promo, Nuevo, 2x1…"
+                    className={INPUT}
+                  />
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {BADGES.map((b) => (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => setCampo("etiqueta", b)}
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                          form.data.etiqueta === b ? "bg-corteza text-cacao" : "bg-masa/60 text-cacao/70 hover:bg-masa"
+                        }`}
+                      >
+                        {b}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setCampo("etiqueta", "")}
+                      className="rounded-full bg-masa/60 px-2.5 py-1 text-xs font-semibold text-cacao/50 hover:bg-masa"
+                    >
+                      Sin badge
+                    </button>
                   </div>
                 </Campo>
                 <label className="flex items-center gap-2 text-sm text-cacao/75">

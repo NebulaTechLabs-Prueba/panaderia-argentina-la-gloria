@@ -196,14 +196,18 @@ export function AdminPanel() {
 function Resumen() {
   return (
     <div className="space-y-5">
+      <p className="text-xs text-cacao/45">
+        Cada <span className="font-semibold text-green-700">▲</span> /{" "}
+        <span className="font-semibold text-red-600">▼</span> compara con el <b>período anterior</b> equivalente.
+      </p>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {M.kpis.map((k) => (
           <Kpi key={k.id} {...k} />
         ))}
       </div>
       <div className="grid gap-5 lg:grid-cols-3">
-        <Card title="Visitas" subtitle="Últimos 30 días" className="lg:col-span-2">
-          <LineChart data={M.serieVisitas} />
+        <Card title="Visitas" subtitle="Este período vs. anterior" className="lg:col-span-2">
+          <LineChart data={M.serieVisitas} previa={M.serieVisitasPrev} />
         </Card>
         <Card title="Fuentes de tráfico">
           <Donut segments={M.fuentes} />
@@ -231,8 +235,8 @@ function Trafico() {
         <b>Tiempo promedio</b>: cuánto se queda la gente en el sitio. <b>Tasa de rebote</b>: % que entra y se va sin
         interactuar (sin mirar productos ni agregar). Más bajo es mejor.
       </p>
-      <Card title="Visitas por día" subtitle="Últimos 30 días">
-        <LineChart data={M.serieVisitas} color="#2f3a7e" />
+      <Card title="Visitas por día" subtitle="Este período vs. anterior">
+        <LineChart data={M.serieVisitas} previa={M.serieVisitasPrev} color="#2f3a7e" />
       </Card>
       <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Fuentes"><BarList items={M.fuentes} unit="%" /></Card>

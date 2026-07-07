@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Kaushan_Script } from "next/font/google";
 import { motion } from "framer-motion";
-import { Plus, Check, MapPin, ArrowLeft } from "lucide-react";
+import { Plus, Check, MapPin } from "lucide-react";
 import { getCategorias, getProductos } from "@/lib/data";
 import { ES_DEMO } from "@/lib/config/constants";
 import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
@@ -110,9 +109,9 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
           onClick={add}
           disabled={!disp}
           aria-label={`Agregar ${producto.nombre}`}
-          className="grid h-9 w-9 place-items-center rounded-full bg-marca text-cream shadow transition hover:bg-corteza hover:text-cacao active:scale-90 disabled:opacity-40"
+          className="grid h-10 w-10 place-items-center rounded-full bg-marca text-cream shadow transition hover:bg-corteza hover:text-cacao active:scale-90 disabled:opacity-40"
         >
-          {ok ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" strokeWidth={2.6} />}
+          {ok ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" strokeWidth={2.6} />}
         </button>
       </div>
     </motion.li>
@@ -151,19 +150,39 @@ export function MenuLaGloria() {
 
   const catDetalle = categorias.find((c) => c.id === detalle?.categoria_id);
 
+  // Navegación por categorías (clave en móvil): chips fijos que saltan a cada
+  // sección y se resaltan según lo que estás viendo.
+  const catsConItems = useMemo(
+    () => categorias.filter((c) => (porCategoria[c.id]?.length ?? 0) > 0),
+    [categorias, porCategoria]
+  );
+  const [activa, setActiva] = useState(null);
+  const navRef = useRef(null);
+
+  useEffect(() => {
+    if (!catsConItems.length) return;
+    const secs = catsConItems.map((c) => document.getElementById(`sec-${c.id}`)).filter(Boolean);
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && setActiva(e.target.id.replace("sec-", ""))),
+      { rootMargin: "-45% 0px -50% 0px" }
+    );
+    secs.forEach((s) => obs.observe(s));
+    return () => obs.disconnect();
+  }, [catsConItems]);
+
+  useEffect(() => {
+    if (!activa || !navRef.current) return;
+    navRef.current
+      .querySelector(`[data-cat="${activa}"]`)
+      ?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [activa]);
+
+  const irACategoria = (id) =>
+    document.getElementById(`sec-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+
   return (
     <div className="relative min-h-full bg-cream">
       <Cintas />
-
-      {/* Cambiar de propuesta */}
-      <div className="mx-auto max-w-4xl px-5 pt-5">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-cacao/70 ring-1 ring-cacao/10 backdrop-blur transition hover:text-cacao"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Propuesta A (catálogo)
-        </Link>
-      </div>
 
       {/* Encabezado / portada del menú */}
       <header className="mx-auto max-w-4xl px-5 pb-6 pt-8 text-center">
@@ -202,8 +221,32 @@ export function MenuLaGloria() {
         )}
       </header>
 
+      {/* Navegación por categorías (fija al hacer scroll) */}
+      {!cargando && catsConItems.length > 0 && (
+        <nav className="sticky top-0 z-30 border-b border-cacao/10 bg-cream/95 backdrop-blur">
+          <div ref={navRef} className="mx-auto flex max-w-4xl gap-2 overflow-x-auto px-5 py-2.5 scrollbar-none">
+            {catsConItems.map((c) => {
+              const on = activa === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  data-cat={c.id}
+                  onClick={() => irACategoria(c.id)}
+                  className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
+                    on ? "bg-marca text-cream shadow" : "bg-white/80 text-cacao/70 ring-1 ring-cacao/10 hover:text-cacao"
+                  }`}
+                >
+                  {c.nombre}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      )}
+
       {/* Secciones del menú */}
-      <main className="mx-auto max-w-4xl space-y-12 px-5 pb-16">
+      <main className="mx-auto max-w-4xl space-y-12 px-5 pb-16 pt-6">
         {cargando ? (
           <p className="py-20 text-center text-cacao/50">Calentando el horno…</p>
         ) : (
@@ -211,7 +254,7 @@ export function MenuLaGloria() {
             const items = porCategoria[cat.id] ?? [];
             if (items.length === 0) return null;
             return (
-              <section key={cat.id} className="scroll-mt-6">
+              <section key={cat.id} id={`sec-${cat.id}`} className="scroll-mt-24">
                 {/* Barra de título estilo menú (manuscrita + slogan) */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}

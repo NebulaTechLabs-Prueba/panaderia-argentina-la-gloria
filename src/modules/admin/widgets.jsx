@@ -75,36 +75,63 @@ export function Kpi({ label, value, delta, spark }) {
   );
 }
 
-export function LineChart({ data, color = "#2f3a7e", height = 220 }) {
-  const max = Math.max(...data);
-  const min = Math.min(...data);
+export function LineChart({ data, previa, color = "#2f3a7e", height = 220 }) {
+  const hayPrevia = Array.isArray(previa) && previa.length === data.length;
+  const pool = hayPrevia ? data.concat(previa) : data;
+  const max = Math.max(...pool);
+  const min = Math.min(...pool);
   const span = max - min || 1;
   const y = (v) => 100 - ((v - min) / span) * 88 - 6;
-  const line = data.map((v, i) => `${(i / (data.length - 1)) * 100},${y(v)}`).join(" ");
+  const toLine = (arr) => arr.map((v, i) => `${(i / (arr.length - 1)) * 100},${y(v)}`).join(" ");
+  const line = toLine(data);
   const area = `0,100 ${line} 100,100`;
   return (
-    <div style={{ height }}>
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
-        <defs>
-          <linearGradient id="lc-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.22" />
-            <stop offset="100%" stopColor={color} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {[25, 50, 75].map((g) => (
-          <line key={g} x1="0" y1={g} x2="100" y2={g} stroke="#2a2a33" strokeOpacity="0.06" strokeWidth="0.4" />
-        ))}
-        <polygon points={area} fill="url(#lc-fill)" />
-        <polyline
-          points={line}
-          fill="none"
-          stroke={color}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
+    <div>
+      {hayPrevia && (
+        <div className="mb-2 flex items-center gap-4 text-xs text-cacao/50">
+          <span className="flex items-center gap-1.5">
+            <span className="h-0.5 w-4 rounded" style={{ background: color }} /> Este período
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-0 w-4 border-t-2 border-dashed border-cacao/40" /> Período anterior
+          </span>
+        </div>
+      )}
+      <div style={{ height }}>
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
+          <defs>
+            <linearGradient id="lc-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+              <stop offset="100%" stopColor={color} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {[25, 50, 75].map((g) => (
+            <line key={g} x1="0" y1={g} x2="100" y2={g} stroke="#2a2a33" strokeOpacity="0.06" strokeWidth="0.4" />
+          ))}
+          <polygon points={area} fill="url(#lc-fill)" />
+          {hayPrevia && (
+            <polyline
+              points={toLine(previa)}
+              fill="none"
+              stroke="#2a2a33"
+              strokeOpacity="0.3"
+              strokeWidth="1.5"
+              strokeDasharray="3 3"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+          <polyline
+            points={line}
+            fill="none"
+            stroke={color}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      </div>
     </div>
   );
 }

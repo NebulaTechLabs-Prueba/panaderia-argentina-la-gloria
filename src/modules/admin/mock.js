@@ -17,6 +17,9 @@ export const serieVisitas = [
   61, 54, 48, 57, 69, 78, 71, 63, 59, 68, 82, 88,
 ];
 
+// Mismo tramo del PERÍODO ANTERIOR (para comparar). ~18% menos → muestra crecimiento.
+export const serieVisitasPrev = serieVisitas.map((v) => Math.round(v * 0.82));
+
 export const fuentes = [
   { label: "Instagram", valor: 42, color: "#E1306C" },
   { label: "Directo", valor: 24, color: "#2f3a7e" },

@@ -73,6 +73,13 @@ export const conversionesPorProducto = [
   { label: "Pastafrola grande", valor: 7 },
 ];
 
+// Rendimiento de promociones: clics en el banner → pedidos → ingresos estimados.
+export const rendimientoPromos = [
+  { nombre: "Facturas + café", clics: 142, pedidos: 61, ingresos: 1240 },
+  { nombre: "Pan + café + asado", clics: 88, pedidos: 33, ingresos: 980 },
+  { nombre: "Consumo mínimo $30", clics: 54, pedidos: 19, ingresos: 610 },
+];
+
 export const seoKpis = [
   { id: "imp", label: "Impresiones", value: "18.4k", delta: 9.8 },
   { id: "clics", label: "Clics", value: "1.320", delta: 14.1 },

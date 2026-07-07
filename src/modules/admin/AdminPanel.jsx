@@ -297,6 +297,38 @@ function Conversiones() {
           <BarList items={M.conversionesPorProducto} color="#16a34a" />
         </Card>
       </div>
+
+      <Card title="Rendimiento de promociones" subtitle="Clic en el banner → pedido (estimado)">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-cacao/10 text-left text-xs uppercase tracking-wide text-cacao/45">
+                <th className="pb-2 pr-2 font-semibold">Promo</th>
+                <th className="pb-2 pr-2 text-right font-semibold">Clics</th>
+                <th className="pb-2 pr-2 text-right font-semibold">Pedidos</th>
+                <th className="pb-2 pr-2 text-right font-semibold">Conv.</th>
+                <th className="pb-2 text-right font-semibold">Ingresos est.</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-cacao/5">
+              {M.rendimientoPromos.map((r) => (
+                <tr key={r.nombre}>
+                  <td className="py-2.5 pr-2 font-medium text-cacao/80">{r.nombre}</td>
+                  <td className="py-2.5 pr-2 text-right tabular-nums text-cacao/70">{r.clics}</td>
+                  <td className="py-2.5 pr-2 text-right tabular-nums text-cacao/70">{r.pedidos}</td>
+                  <td className="py-2.5 pr-2 text-right tabular-nums font-semibold text-marca">
+                    {((r.pedidos / r.clics) * 100).toFixed(0)}%
+                  </td>
+                  <td className="py-2.5 text-right tabular-nums text-green-700">${r.ingresos}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-xs text-cacao/45">
+          Clics medidos por el evento del banner; pedidos e ingresos son estimados (intención de compra).
+        </p>
+      </Card>
     </div>
   );
 }

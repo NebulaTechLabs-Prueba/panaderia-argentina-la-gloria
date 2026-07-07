@@ -10,6 +10,7 @@ import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { estiloBadge } from "@/lib/badges";
+import { getPromos } from "@/lib/promos";
 import { ProductImage } from "./ProductImage";
 import { IconoCategoria } from "./IconoCategoria";
 import { header as headerColor } from "./catColors";
@@ -132,6 +133,9 @@ export function MenuLaGloria() {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [detalle, setDetalle] = useState(null);
+  const [promos, setPromos] = useState([]);
+
+  useEffect(() => setPromos(getPromos().filter((p) => p.activa)), []);
 
   useEffect(() => {
     let activo = true;
@@ -225,6 +229,20 @@ export function MenuLaGloria() {
           </p>
         )}
       </header>
+
+      {/* Promos activas */}
+      {promos.length > 0 && (
+        <div className="mx-auto max-w-4xl space-y-2 px-5 pb-1">
+          {promos.map((p) => (
+            <div
+              key={p.id}
+              className="flex items-center gap-2.5 rounded-2xl bg-corteza/15 px-4 py-2.5 text-sm font-semibold text-cacao ring-1 ring-corteza/30"
+            >
+              <span className="text-lg">🎁</span> {p.descripcion}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Navegación por categorías (fija al hacer scroll) */}
       {!cargando && catsConItems.length > 0 && (

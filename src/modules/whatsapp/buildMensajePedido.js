@@ -16,10 +16,14 @@ function lineasItems(items, monedaCfg) {
 // `personas` = comensales en la mesa (opcional, default 1). Sólo se escribe si es
 // 2 o más; se expresa como "Mesa para N" para que se entienda como tamaño de mesa
 // (consumo en el local / parrilla) y NO como multiplicador del pedido.
-export function buildMensajePedido(items, ajustes, { personas = 1 } = {}) {
+export function buildMensajePedido(items, ajustes, { personas = 1, regalos = [] } = {}) {
   const monedaCfg = { simbolo: ajustes.moneda_simbolo, moneda: ajustes.moneda };
   const total = formatCentavos(totalCentavos(items), monedaCfg);
-  const bloqueItems = lineasItems(items, monedaCfg);
+  let bloqueItems = lineasItems(items, monedaCfg);
+  if (regalos.length) {
+    bloqueItems +=
+      "\n" + regalos.map((r) => `🎁 ${r.cantidad}× ${r.nombre} — gratis (promo)`).join("\n");
+  }
   const bloquePersonas = personas > 1 ? `🍽️ Mesa para ${personas} personas\n\n` : "";
 
   const plantilla =

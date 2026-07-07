@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useState } from "react";
 import { CART_STORAGE_KEY } from "@/lib/config/constants";
 import { totalCentavos } from "@/lib/money/formatCentavos";
+import { calcularRegalos } from "@/lib/promos";
 import { playDing } from "@/lib/sound/ding";
 
 // Estado del carrito: lista de líneas. Cada línea guarda lo mínimo para mostrar
@@ -68,6 +69,13 @@ export function CarritoProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, estadoInicial);
   // Estado de UI del drawer (carrito desplegado o minimizado).
   const [drawerAbierto, setDrawerAbierto] = useState(false);
+  // Recalcular regalos cuando el panel activa/desactiva una promo.
+  const [promoTick, setPromoTick] = useState(0);
+  useEffect(() => {
+    const h = () => setPromoTick((t) => t + 1);
+    window.addEventListener("la-gloria:promos", h);
+    return () => window.removeEventListener("la-gloria:promos", h);
+  }, []);
 
   // Hidratar desde localStorage al montar (solo en navegador).
   useEffect(() => {
@@ -92,6 +100,7 @@ export function CarritoProvider({ children }) {
     const cantidadTotal = state.items.reduce((acc, i) => acc + i.cantidad, 0);
     return {
       items: state.items,
+      regalos: calcularRegalos(state.items),
       cantidadTotal,
       totalCentavos: totalCentavos(state.items),
       estaVacio: state.items.length === 0,
@@ -109,7 +118,7 @@ export function CarritoProvider({ children }) {
       abrirCarrito: () => setDrawerAbierto(true),
       cerrarCarrito: () => setDrawerAbierto(false),
     };
-  }, [state.items, drawerAbierto]);
+  }, [state.items, drawerAbierto, promoTick]);
 
   return <CarritoContext.Provider value={value}>{children}</CarritoContext.Provider>;
 }

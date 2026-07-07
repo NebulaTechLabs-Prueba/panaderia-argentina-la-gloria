@@ -14,7 +14,7 @@ import { playEnviar, playVaciar, playMas, playMenos, playQuitar, playCerrar } fr
 // Estado (abierto/minimizado) controlado desde el contexto del carrito.
 export function CartDrawer() {
   const {
-    items, totalCentavos, estaVacio, fijarCantidad, quitar, vaciar,
+    items, regalos, totalCentavos, estaVacio, fijarCantidad, quitar, vaciar,
     drawerAbierto, cerrarCarrito,
   } = useCarrito();
   const ajustes = useNegocio();
@@ -25,7 +25,7 @@ export function CartDrawer() {
   function enviarPorWhatsapp() {
     if (estaVacio || !ajustes) return;
     playEnviar(); // sonido de confirmación (distinto al de agregar)
-    const mensaje = buildMensajePedido(items, ajustes, { personas });
+    const mensaje = buildMensajePedido(items, ajustes, { personas, regalos });
     const url = buildWhatsappUrl(ajustes.whatsapp_numero, mensaje);
     window.open(url, "_blank", "noopener,noreferrer");
   }
@@ -140,6 +140,20 @@ export function CartDrawer() {
                   </li>
                 ))}
               </ul>
+            )}
+
+            {!estaVacio && regalos?.length > 0 && (
+              <div className="border-t border-corteza/20 bg-corteza/5 px-5 py-3">
+                <p className="mb-1 text-xs font-bold uppercase tracking-wide text-corteza">🎁 Promo aplicada</p>
+                {regalos.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between text-sm">
+                    <span className="text-cacao/80">
+                      {r.cantidad}× {r.nombre}
+                    </span>
+                    <span className="font-bold text-green-600">Gratis</span>
+                  </div>
+                ))}
+              </div>
             )}
 
             {!estaVacio && (

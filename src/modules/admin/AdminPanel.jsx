@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, TrendingUp, Filter, Search, Package, Wrench,
   MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays, LogOut,
-  Download, Printer,
+  Download, Printer, Ticket,
 } from "lucide-react";
 import { asset } from "@/lib/config/constants";
 import { Catalogo } from "./Catalogo";
+import { Promociones } from "./Promociones";
 import {
   Card, Kpi, LineChart, BarList, Donut, Funnel, Columnas, Impacto, EstadoPill,
 } from "./widgets";
@@ -21,6 +22,7 @@ const NAV = [
   { id: "consumidor", label: "Consumidor", icon: ShoppingCart },
   { id: "seo", label: "SEO", icon: Search },
   { id: "productos", label: "Productos", icon: Package },
+  { id: "promociones", label: "Promociones", icon: Ticket },
   { id: "herramientas", label: "Herramientas", icon: Wrench },
 ];
 
@@ -184,6 +186,7 @@ export function AdminPanel() {
           {sec === "consumidor" && <Consumidor />}
           {sec === "seo" && <Seo />}
           {sec === "productos" && <Catalogo />}
+          {sec === "promociones" && <Promociones />}
           {sec === "herramientas" && <Herramientas />}
         </main>
       </div>

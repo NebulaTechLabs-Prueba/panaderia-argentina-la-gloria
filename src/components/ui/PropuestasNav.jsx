@@ -79,6 +79,7 @@ export function PropuestasNav() {
 
   if (!montado) return null;
   const path = (pathname || "/").replace(/\/+$/, "") || "/";
+  if (path.startsWith("/admin")) return null; // el panel de gestión no muestra el nav de propuestas
 
   if (min) {
     return (

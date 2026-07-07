@@ -9,6 +9,7 @@ import { playTap } from "@/lib/sound/ding";
 export function ClickSonido() {
   useEffect(() => {
     const handler = (e) => {
+      if (window.location.pathname.includes("/admin")) return; // el panel es silencioso
       const el = e.target?.closest?.("button, a, [role='button']");
       if (el && !el.dataset.silencio) playTap();
     };

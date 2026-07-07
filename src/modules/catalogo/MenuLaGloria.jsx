@@ -189,6 +189,19 @@ export function MenuLaGloria() {
   const irACategoria = (id) =>
     document.getElementById(`sec-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
+  // Clic en el banner de promo: carga al carrito los productos de la condición
+  // (así el cliente no los busca uno por uno). El carrito detecta la promo y
+  // ofrece el premio solo. Emite un evento para métricas de promoción.
+  const { agregar } = useCarrito();
+  const agregarPromo = (promo) => {
+    window.dispatchEvent(new CustomEvent("la-gloria:promo-click", { detail: { id: promo.id } }));
+    if (promo.condicion?.tipo !== "productos") return;
+    for (const req of promo.condicion.productos || []) {
+      const p = productos.find((x) => x.id === req.producto_id);
+      if (p) agregar(p, req.cantidad || 1);
+    }
+  };
+
   return (
     <div className="relative min-h-full bg-cream">
       <Cintas />
@@ -230,29 +243,46 @@ export function MenuLaGloria() {
         )}
       </header>
 
-      {/* Promos activas */}
+      {/* Promos activas (clic = carga los productos de la promo al carrito) */}
       {promos.length > 0 && (
         <div className="mx-auto max-w-4xl space-y-2.5 px-5 pb-1">
-          {promos.map((p) => (
-            <motion.div
-              key={p.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="group relative overflow-hidden rounded-2xl bg-white/80 shadow-md ring-1 ring-corteza/25 backdrop-blur-sm"
-            >
-              {/* filo de color a la izquierda */}
-              <span className="absolute inset-y-0 left-0 w-1.5 bg-linear-to-b from-corteza to-celeste" />
-              <div className="flex items-center gap-3.5 bg-linear-to-r from-corteza/10 via-transparent to-transparent py-3 pl-5 pr-4">
+          {promos.map((p) => {
+            const clickable = p.condicion?.tipo === "productos";
+            return (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={clickable ? () => agregarPromo(p) : undefined}
+                role={clickable ? "button" : undefined}
+                tabIndex={clickable ? 0 : undefined}
+                onKeyDown={
+                  clickable
+                    ? (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), agregarPromo(p))
+                    : undefined
+                }
+                className={`group relative flex items-center gap-3.5 overflow-hidden rounded-2xl bg-white/80 py-3 pl-5 pr-4 shadow-md ring-1 ring-corteza/25 backdrop-blur-sm ${
+                  clickable ? "cursor-pointer transition hover:shadow-lg hover:ring-corteza/50" : ""
+                }`}
+              >
+                <span className="absolute inset-y-0 left-0 w-1.5 bg-linear-to-b from-corteza to-celeste" />
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-corteza text-cacao shadow-sm">
                   <Gift className="h-5 w-5" strokeWidth={2.2} />
                 </span>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-corteza">Promo</p>
                   <p className="truncate text-sm font-semibold text-cacao sm:text-base">{p.descripcion}</p>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+                {clickable ? (
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-marca px-3 py-1.5 text-xs font-bold text-cream transition group-hover:bg-corteza group-hover:text-cacao">
+                    <Plus className="h-3.5 w-3.5" strokeWidth={2.6} /> Agregar
+                  </span>
+                ) : (
+                  <span className="shrink-0 text-xs font-semibold text-cacao/50">al llegar al mínimo</span>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
       )}
 

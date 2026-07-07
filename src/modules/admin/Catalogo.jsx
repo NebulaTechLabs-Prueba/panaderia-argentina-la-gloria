@@ -1,19 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Upload } from "lucide-react";
 import { productosMock } from "@/lib/data/mock/productos";
 import { categoriasMock } from "@/lib/data/mock/categorias";
+import { IDS_CON_FOTO } from "@/lib/data/imagenesLocales";
+import { asset } from "@/lib/config/constants";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 
-const nuevoProducto = () => ({ id: "", nombre: "", categoria_id: "", precio_centavos: 0, descripcion: "", disponible: true });
+// Imagen que el producto muestra HOY en el sitio público (misma lógica que getProductos).
+const imagenActual = (p) =>
+  p.imagen_url || (IDS_CON_FOTO.has(p.id) ? asset(`/img/productos/${p.id}.jpg`) : "");
+
+const nuevoProducto = () => ({ id: "", nombre: "", categoria_id: "", precio_centavos: 0, descripcion: "", disponible: true, imagen_url: "" });
 const nuevaCategoria = () => ({ id: "", nombre: "", slug: "", orden: 99, activa: true });
 
 // CRUD de catálogo (SIMULADO): opera sobre estado local. Los cambios no persisten
 // —se resetean al recargar— hasta que exista el backend (Supabase).
 export function Catalogo() {
   const [tab, setTab] = useState("productos");
-  const [productos, setProductos] = useState(() => productosMock.map((p) => ({ ...p })));
+  const [productos, setProductos] = useState(() => productosMock.map((p) => ({ ...p, imagen_url: imagenActual(p) })));
   const [categorias, setCategorias] = useState(() => categoriasMock.map((c) => ({ ...c })));
   const [form, setForm] = useState(null); // { tipo, esNuevo, data }
 
@@ -87,6 +93,7 @@ export function Catalogo() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-cacao/10 text-left text-xs uppercase tracking-wide text-cacao/45">
+                <th className="p-3 font-semibold">Foto</th>
                 <th className="p-3 font-semibold">Producto</th>
                 <th className="p-3 font-semibold">Categoría</th>
                 <th className="p-3 text-right font-semibold">Precio</th>
@@ -97,6 +104,14 @@ export function Catalogo() {
             <tbody className="divide-y divide-cacao/5">
               {productos.map((p) => (
                 <tr key={p.id} className="hover:bg-masa/20">
+                  <td className="p-3">
+                    {p.imagen_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.imagen_url} alt="" className="h-10 w-10 rounded-lg object-cover ring-1 ring-cacao/10" />
+                    ) : (
+                      <span className="grid h-10 w-10 place-items-center rounded-lg bg-masa/50 text-[10px] text-cacao/40">—</span>
+                    )}
+                  </td>
                   <td className="p-3 font-medium text-cacao/85">{p.nombre}</td>
                   <td className="p-3 text-cacao/60">{nombreCat(p.categoria_id)}</td>
                   <td className="p-3 text-right tabular-nums text-cacao/80">{formatCentavos(p.precio_centavos)}</td>
@@ -191,6 +206,38 @@ export function Catalogo() {
                 </div>
                 <Campo label="Descripción">
                   <textarea rows={2} value={form.data.descripcion} onChange={(e) => setCampo("descripcion", e.target.value)} className={INPUT} />
+                </Campo>
+                <Campo label="Imagen (la que se ve en el sitio público)">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-masa/40 ring-1 ring-cacao/10">
+                      {form.data.imagen_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={form.data.imagen_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-[10px] text-cacao/40">Sin foto</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <input
+                        value={form.data.imagen_url || ""}
+                        onChange={(e) => setCampo("imagen_url", e.target.value)}
+                        placeholder="URL de la imagen"
+                        className={INPUT}
+                      />
+                      <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-masa/60 px-3 py-1.5 text-xs font-semibold text-cacao/70 transition hover:bg-masa">
+                        <Upload className="h-3.5 w-3.5" /> Subir archivo
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) setCampo("imagen_url", URL.createObjectURL(f));
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </Campo>
                 <label className="flex items-center gap-2 text-sm text-cacao/75">
                   <input type="checkbox" checked={form.data.disponible} onChange={(e) => setCampo("disponible", e.target.checked)} />

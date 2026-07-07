@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  LayoutDashboard, TrendingUp, Filter, Search, Package, Users, Wrench,
+  LayoutDashboard, TrendingUp, Filter, Search, Package, Wrench,
   MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays, LogOut,
   Download, Printer,
 } from "lucide-react";
@@ -21,7 +21,6 @@ const NAV = [
   { id: "consumidor", label: "Consumidor", icon: ShoppingCart },
   { id: "seo", label: "SEO", icon: Search },
   { id: "productos", label: "Productos", icon: Package },
-  { id: "equipo", label: "Equipo", icon: Users },
   { id: "herramientas", label: "Herramientas", icon: Wrench },
 ];
 
@@ -185,7 +184,6 @@ export function AdminPanel() {
           {sec === "consumidor" && <Consumidor />}
           {sec === "seo" && <Seo />}
           {sec === "productos" && <Catalogo />}
-          {sec === "equipo" && <Equipo />}
           {sec === "herramientas" && <Herramientas />}
         </main>
       </div>
@@ -252,11 +250,22 @@ function Trafico() {
         <Card title="Ciudades" subtitle="Dónde están los visitantes">
           <BarList items={M.ciudades} color="#63b0dd" />
         </Card>
+        <Card title="Estados (EE. UU.)" subtitle="Detalle geográfico del país principal">
+          <BarList items={M.estados} unit="%" color="#2f3a7e" />
+        </Card>
         <Card title="Dispositivos"><Donut segments={M.dispositivos} /></Card>
         <Card title="Nuevos vs. recurrentes" subtitle="Fidelización">
           <Donut segments={M.nuevosRecurrentes} />
         </Card>
       </div>
+
+      <Card title="Campañas (UTM)" subtitle="Posteos y promos etiquetados — para medir qué acción trajo tráfico">
+        <BarList items={M.campanas} color="#E1306C" />
+        <p className="mt-3 text-xs text-cacao/45">
+          Cada link etiquetado (ej. <code>?utm_campaign=promo-2x1</code>) aparece acá con su tráfico. Ideal para
+          comparar posteos y saber cuál funcionó.
+        </p>
+      </Card>
     </div>
   );
 }
@@ -473,27 +482,6 @@ function Seo() {
           </ul>
         </Card>
       </div>
-    </div>
-  );
-}
-
-function Equipo() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {M.equipo.map((m) => (
-        <div key={m.nombre} className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-cacao/5">
-          <div
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-full font-display text-lg font-bold text-white"
-            style={{ backgroundColor: m.color }}
-          >
-            {m.inicial}
-          </div>
-          <div>
-            <p className="font-semibold text-cacao">{m.nombre}</p>
-            <p className="text-sm text-cacao/55">{m.rol}</p>
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

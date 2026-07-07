@@ -98,11 +98,21 @@ export const seoChecklist = [
   { label: "Versión móvil optimizada", estado: "ok" },
 ];
 
-export const equipo = [
-  { nombre: "Coordinación Marketing", rol: "Administrador", inicial: "M", color: "#2f3a7e" },
-  { nombre: "Community Manager", rol: "Editor", inicial: "C", color: "#ff9900" },
-  { nombre: "Analista SEO", rol: "Analista", inicial: "S", color: "#63b0dd" },
-  { nombre: "La Gloria (dueños)", rol: "Solo lectura", inicial: "G", color: "#16a34a" },
+// Campañas / posteos etiquetados con UTM (para medir promos puntuales).
+export const campanas = [
+  { label: "IG · bio", valor: 210 },
+  { label: "IG · promo 2x1 (story)", valor: 148 },
+  { label: "TikTok · video asado", valor: 96 },
+  { label: "FB · evento 9 de Julio", valor: 61 },
+  { label: "Google · orgánico", valor: 54 },
+];
+
+// Detalle geográfico dentro de EE. UU. (por estado).
+export const estados = [
+  { label: "Virginia", valor: 61 },
+  { label: "Maryland", valor: 14 },
+  { label: "Washington DC", valor: 11 },
+  { label: "Otros estados", valor: 14 },
 ];
 
 // Métricas de calidad de visita (para explicar "tiempo en página" y "rebote").

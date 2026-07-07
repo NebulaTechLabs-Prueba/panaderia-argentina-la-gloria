@@ -3,32 +3,70 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2, X, Gift } from "lucide-react";
 import { productosMock } from "@/lib/data/mock/productos";
+import { formatCentavos } from "@/lib/money/formatCentavos";
 import { getPromos, guardarPromos } from "@/lib/promos";
 
 const INPUT = "w-full rounded-lg border border-cacao/15 bg-white px-3 py-2 text-sm text-cacao outline-none focus:border-marca";
+const nombreProd = (id) => productosMock.find((p) => p.id === id)?.nombre ?? "—";
 
 const nuevaPromo = () => ({
   id: "",
   nombre: "",
   descripcion: "",
-  tipo: "regalo",
-  condicion: { producto_id: "", cantidad: 2 },
-  premio: { producto_id: "", cantidad: 1 },
   activa: true,
+  condicion: { tipo: "productos", productos: [{ producto_id: "", cantidad: 1 }], monto_centavos: 0 },
+  premio: [{ producto_id: "", cantidad: 1 }],
 });
 
-// Promociones condicionales (tipo "regalo"): comprá N× un producto y otro va gratis.
-// Se aplican de verdad en el carrito del sitio público (localStorage + evento).
+function resumenCond(p) {
+  const c = p.condicion || {};
+  if (c.tipo === "monto") return `Consumo mínimo de ${formatCentavos(c.monto_centavos)}`;
+  const list = (c.productos || []).filter((r) => r.producto_id);
+  return list.length ? list.map((r) => `${r.cantidad}× ${nombreProd(r.producto_id)}`).join(" + ") : "—";
+}
+const resumenPremio = (p) =>
+  (p.premio || []).filter((r) => r.producto_id).map((r) => `${r.cantidad}× ${nombreProd(r.producto_id)}`).join(" + ") || "—";
+
+// Editor de una lista de { producto_id, cantidad }.
+function Filas({ filas, onChange }) {
+  const set = (i, campo, v) =>
+    onChange(filas.map((f, idx) => (idx === i ? { ...f, [campo]: campo === "cantidad" ? Number(v) || 1 : v } : f)));
+  return (
+    <div className="space-y-2">
+      {filas.map((f, i) => (
+        <div key={i} className="grid grid-cols-[1fr_auto_auto] gap-2">
+          <select value={f.producto_id} onChange={(e) => set(i, "producto_id", e.target.value)} className={INPUT}>
+            <option value="">Producto…</option>
+            {productosMock.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+          </select>
+          <input type="number" min="1" value={f.cantidad} onChange={(e) => set(i, "cantidad", e.target.value)} className={`${INPUT} w-16`} aria-label="Cantidad" />
+          <button
+            type="button"
+            onClick={() => onChange(filas.filter((_, idx) => idx !== i))}
+            disabled={filas.length === 1}
+            className="grid h-9 w-9 place-items-center rounded-lg text-cacao/50 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
+            aria-label="Quitar"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ))}
+      <button type="button" onClick={() => onChange([...filas, { producto_id: "", cantidad: 1 }])} className="text-xs font-semibold text-marca hover:underline">
+        + Agregar producto
+      </button>
+    </div>
+  );
+}
+
+// Promociones condicionales. Se aplican de verdad en el carrito del sitio público.
 export function Promociones() {
   const [promos, setPromos] = useState(() => getPromos());
   const [form, setForm] = useState(null); // { esNuevo, data }
-  const nombreProd = (id) => productosMock.find((p) => p.id === id)?.nombre ?? "—";
 
   const persistir = (lista) => {
     setPromos(lista);
     guardarPromos(lista);
   };
-
   const toggle = (id) => persistir(promos.map((p) => (p.id === id ? { ...p, activa: !p.activa } : p)));
   const eliminar = (id) => {
     if (!window.confirm("¿Eliminar la promo?")) return;
@@ -41,16 +79,8 @@ export function Promociones() {
     persistir(form.esNuevo ? [...promos, item] : promos.map((p) => (p.id === item.id ? item : p)));
     setForm(null);
   }
-  const setC = (path, v) =>
-    setForm((f) => {
-      const data = { ...f.data };
-      if (path === "nombre" || path === "descripcion") data[path] = v;
-      else if (path === "cond.prod") data.condicion = { ...data.condicion, producto_id: v };
-      else if (path === "cond.cant") data.condicion = { ...data.condicion, cantidad: Number(v) || 1 };
-      else if (path === "prem.prod") data.premio = { ...data.premio, producto_id: v };
-      else if (path === "prem.cant") data.premio = { ...data.premio, cantidad: Number(v) || 1 };
-      return { ...f, data };
-    });
+  const upd = (patch) => setForm((f) => ({ ...f, data: { ...f.data, ...patch } }));
+  const updCond = (patch) => setForm((f) => ({ ...f, data: { ...f.data, condicion: { ...f.data.condicion, ...patch } } }));
 
   return (
     <div className="space-y-4">
@@ -80,13 +110,15 @@ export function Promociones() {
                 {p.activa ? "Activa" : "Pausada"}
               </label>
             </div>
-            <p className="mt-1 text-sm text-cacao/60">{p.descripcion}</p>
+            {p.descripcion && <p className="mt-1 text-sm text-cacao/60">{p.descripcion}</p>}
             <div className="mt-3 rounded-lg bg-masa/40 px-3 py-2 text-sm text-cacao/80">
-              Comprá <b>{p.condicion.cantidad}×</b> {nombreProd(p.condicion.producto_id)} →{" "}
-              <b className="text-green-700">{p.premio.cantidad}× {nombreProd(p.premio.producto_id)} gratis</b>
+              <span className="text-cacao/60">Si comprás:</span> {resumenCond(p)}
+              <br />
+              <span className="text-cacao/60">Se lleva gratis:</span>{" "}
+              <b className="text-green-700">{resumenPremio(p)}</b>
             </div>
             <div className="mt-3 flex justify-end gap-1">
-              <button type="button" onClick={() => setForm({ esNuevo: false, data: { ...p, condicion: { ...p.condicion }, premio: { ...p.premio } } })} className="grid h-8 w-8 place-items-center rounded-lg text-cacao/60 hover:bg-masa/70 hover:text-marca" aria-label="Editar">
+              <button type="button" onClick={() => setForm({ esNuevo: false, data: JSON.parse(JSON.stringify(p)) })} className="grid h-8 w-8 place-items-center rounded-lg text-cacao/60 hover:bg-masa/70 hover:text-marca" aria-label="Editar">
                 <Pencil className="h-4 w-4" />
               </button>
               <button type="button" onClick={() => eliminar(p.id)} className="grid h-8 w-8 place-items-center rounded-lg text-cacao/60 hover:bg-red-50 hover:text-red-600" aria-label="Eliminar">
@@ -95,15 +127,13 @@ export function Promociones() {
             </div>
           </div>
         ))}
-        {promos.length === 0 && (
-          <p className="text-sm text-cacao/50">No hay promos. Creá una con “Nueva promo”.</p>
-        )}
+        {promos.length === 0 && <p className="text-sm text-cacao/50">No hay promos. Creá una con “Nueva promo”.</p>}
       </div>
 
       {form && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setForm(null)} />
-          <form onSubmit={guardar} className="relative z-10 w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+          <form onSubmit={guardar} className="relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-display text-lg font-bold text-cacao">{form.esNuevo ? "Nueva" : "Editar"} promo</h3>
               <button type="button" onClick={() => setForm(null)} className="grid h-8 w-8 place-items-center rounded-full text-cacao/50 hover:bg-masa/70" aria-label="Cerrar">
@@ -113,32 +143,50 @@ export function Promociones() {
 
             <div className="space-y-3">
               <Campo label="Nombre">
-                <input required value={form.data.nombre} onChange={(e) => setC("nombre", e.target.value)} className={INPUT} />
+                <input required value={form.data.nombre} onChange={(e) => upd({ nombre: e.target.value })} className={INPUT} />
               </Campo>
               <Campo label="Descripción (se muestra en el menú)">
-                <input value={form.data.descripcion} onChange={(e) => setC("descripcion", e.target.value)} placeholder="Ej: Llevá 2 facturas y el café va de regalo ☕" className={INPUT} />
+                <input value={form.data.descripcion} onChange={(e) => upd({ descripcion: e.target.value })} placeholder="Ej: Comprando pan, café y asado, ¡cremona y choripán de regalo!" className={INPUT} />
               </Campo>
 
+              {/* Condición */}
               <div className="rounded-xl bg-masa/30 p-3">
-                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-cacao/50">Condición (lo que compra)</p>
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <select required value={form.data.condicion.producto_id} onChange={(e) => setC("cond.prod", e.target.value)} className={INPUT}>
-                    <option value="">Producto…</option>
-                    {productosMock.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                  </select>
-                  <input type="number" min="1" value={form.data.condicion.cantidad} onChange={(e) => setC("cond.cant", e.target.value)} className={`${INPUT} w-20`} aria-label="Cantidad condición" />
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-wide text-cacao/50">Condición</p>
+                  <div className="flex gap-1 rounded-full bg-white p-0.5 ring-1 ring-cacao/10">
+                    {[["productos", "Por productos"], ["monto", "Consumo mínimo"]].map(([v, l]) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => updCond({ tipo: v })}
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${form.data.condicion.tipo === v ? "bg-marca text-cream" : "text-cacao/60"}`}
+                      >
+                        {l}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+                {form.data.condicion.tipo === "monto" ? (
+                  <label className="block">
+                    <span className="mb-1 block text-xs text-cacao/50">Monto mínimo (USD)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      value={(form.data.condicion.monto_centavos || 0) / 100}
+                      onChange={(e) => updCond({ monto_centavos: Math.round((Number(e.target.value) || 0) * 100) })}
+                      className={INPUT}
+                    />
+                  </label>
+                ) : (
+                  <Filas filas={form.data.condicion.productos} onChange={(productos) => updCond({ productos })} />
+                )}
               </div>
 
+              {/* Premio */}
               <div className="rounded-xl bg-green-50 p-3">
                 <p className="mb-2 text-xs font-bold uppercase tracking-wide text-green-700">Premio (lo que se lleva gratis)</p>
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <select required value={form.data.premio.producto_id} onChange={(e) => setC("prem.prod", e.target.value)} className={INPUT}>
-                    <option value="">Producto…</option>
-                    {productosMock.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                  </select>
-                  <input type="number" min="1" value={form.data.premio.cantidad} onChange={(e) => setC("prem.cant", e.target.value)} className={`${INPUT} w-20`} aria-label="Cantidad premio" />
-                </div>
+                <Filas filas={form.data.premio} onChange={(premio) => upd({ premio })} />
               </div>
             </div>
 

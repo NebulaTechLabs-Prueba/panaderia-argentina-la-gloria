@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Kaushan_Script } from "next/font/google";
 import { motion } from "framer-motion";
-import { Plus, Check, MapPin } from "lucide-react";
+import { Plus, Check, MapPin, Gift } from "lucide-react";
 import { getCategorias, getProductos } from "@/lib/data";
 import { ES_DEMO } from "@/lib/config/constants";
 import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
@@ -232,14 +232,26 @@ export function MenuLaGloria() {
 
       {/* Promos activas */}
       {promos.length > 0 && (
-        <div className="mx-auto max-w-4xl space-y-2 px-5 pb-1">
+        <div className="mx-auto max-w-4xl space-y-2.5 px-5 pb-1">
           {promos.map((p) => (
-            <div
+            <motion.div
               key={p.id}
-              className="flex items-center gap-2.5 rounded-2xl bg-corteza/15 px-4 py-2.5 text-sm font-semibold text-cacao ring-1 ring-corteza/30"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="group relative overflow-hidden rounded-2xl bg-white/80 shadow-md ring-1 ring-corteza/25 backdrop-blur-sm"
             >
-              <span className="text-lg">🎁</span> {p.descripcion}
-            </div>
+              {/* filo de color a la izquierda */}
+              <span className="absolute inset-y-0 left-0 w-1.5 bg-linear-to-b from-corteza to-celeste" />
+              <div className="flex items-center gap-3.5 bg-linear-to-r from-corteza/10 via-transparent to-transparent py-3 pl-5 pr-4">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-corteza text-cacao shadow-sm">
+                  <Gift className="h-5 w-5" strokeWidth={2.2} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-corteza">Promo</p>
+                  <p className="truncate text-sm font-semibold text-cacao sm:text-base">{p.descripcion}</p>
+                </div>
+              </div>
+            </motion.div>
           ))}
         </div>
       )}

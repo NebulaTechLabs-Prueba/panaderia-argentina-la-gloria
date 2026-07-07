@@ -1,15 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, TrendingUp, Filter, Search, Package, Users, Wrench,
-  MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays,
+  MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays, LogOut,
 } from "lucide-react";
 import { asset } from "@/lib/config/constants";
-import { formatCentavos } from "@/lib/money/formatCentavos";
-import { productosMock } from "@/lib/data/mock/productos";
-import { categoriasMock } from "@/lib/data/mock/categorias";
-import { IDS_CON_FOTO } from "@/lib/data/imagenesLocales";
+import { Catalogo } from "./Catalogo";
 import {
   Card, Kpi, LineChart, BarList, Donut, Funnel, Columnas, Impacto, EstadoPill,
 } from "./widgets";
@@ -27,10 +25,26 @@ const NAV = [
 ];
 
 export function AdminPanel() {
+  const router = useRouter();
+  const [listo, setListo] = useState(false);
   const [sec, setSec] = useState("resumen");
   const [rango, setRango] = useState("30 días");
   const [menu, setMenu] = useState(false);
   const actual = NAV.find((n) => n.id === sec);
+
+  // Guard simulado: sin "sesión" te manda al login. (No es seguridad real; sin
+  // backend no hay auth de verdad — es solo el flujo para el equipo.)
+  useEffect(() => {
+    if (sessionStorage.getItem("la-gloria:admin") === "1") setListo(true);
+    else router.replace("/admin/login");
+  }, [router]);
+
+  const cerrarSesion = () => {
+    sessionStorage.removeItem("la-gloria:admin");
+    router.replace("/admin/login");
+  };
+
+  if (!listo) return <div className="grid min-h-screen place-items-center bg-masa/40 text-cacao/40">Cargando…</div>;
 
   return (
     <div className="min-h-screen bg-masa/40 text-cacao">
@@ -72,7 +86,14 @@ export function AdminPanel() {
           })}
         </nav>
 
-        <div className="p-4">
+        <div className="space-y-2 p-4">
+          <button
+            type="button"
+            onClick={cerrarSesion}
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-cream/70 transition hover:bg-white/10 hover:text-white"
+          >
+            <LogOut className="h-4 w-4" /> Salir
+          </button>
           <div className="rounded-xl bg-white/10 p-3 text-xs text-cream/70">
             <span className="font-bold text-corteza">● Modo demo</span>
             <p className="mt-1">Datos simulados. Sin backend conectado todavía.</p>
@@ -119,7 +140,7 @@ export function AdminPanel() {
           {sec === "conversiones" && <Conversiones />}
           {sec === "consumidor" && <Consumidor />}
           {sec === "seo" && <Seo />}
-          {sec === "productos" && <Productos />}
+          {sec === "productos" && <Catalogo />}
           {sec === "equipo" && <Equipo />}
           {sec === "herramientas" && <Herramientas />}
         </main>
@@ -174,6 +195,10 @@ function Trafico() {
 function Conversiones() {
   return (
     <div className="space-y-5">
+      <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+        Los ingresos/ventas son <b>estimados</b>: reflejan la <b>intención de compra</b> (pedido enviado por
+        WhatsApp), no la venta cerrada — en el local el pedido puede cambiar. Útil como tendencia para marketing.
+      </p>
       <div className="grid gap-4 sm:grid-cols-3">
         <Kpi label="Pedidos por WhatsApp" value="76" delta={15.2} />
         <Kpi label="Tasa de conversión" value="6,1%" delta={2.3} />
@@ -198,12 +223,42 @@ function Conversiones() {
 function Consumidor() {
   const { armaron, enviaron } = M.abandono;
   const abandonoPct = (((armaron - enviaron) / armaron) * 100).toFixed(1);
+  const [gran, setGran] = useState("Semana");
   return (
     <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {M.consumidorKpis.map((k) => (
           <Kpi key={k.id} {...k} />
         ))}
+      </div>
+
+      {/* Destacados por granularidad */}
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-bold text-cacao/70">Destacados</h2>
+        <div className="flex gap-1 rounded-full bg-white p-1 shadow-sm ring-1 ring-cacao/5">
+          {M.GRANOS.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => setGran(g)}
+              className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                gran === g ? "bg-marca text-cream" : "text-cacao/60 hover:bg-masa/60"
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Card title="Producto más visto" subtitle={`Por ${gran.toLowerCase()}`}>
+          <p className="font-display text-2xl font-extrabold text-cacao">{M.masVistoPeriodo[gran].valor}</p>
+          <p className="mt-1 text-sm text-cacao/55">{M.masVistoPeriodo[gran].detalle}</p>
+        </Card>
+        <Card title="Período con más pedidos" subtitle={`Por ${gran.toLowerCase()}`}>
+          <p className="font-display text-2xl font-extrabold text-corteza">{M.pedidosPeriodo[gran].valor}</p>
+          <p className="mt-1 text-sm text-cacao/55">{M.pedidosPeriodo[gran].detalle}</p>
+        </Card>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -246,6 +301,10 @@ function Consumidor() {
           <Columnas data={M.porMes} color="#ff9900" />
         </Card>
       </div>
+
+      <Card title="Interacción por hora del día" subtitle="Cuándo entran (picos: mediodía y noche)">
+        <Columnas data={M.porHora} color="#63b0dd" />
+      </Card>
 
       <Card title="Fechas clave (Argentina + EE. UU.)" subtitle="Feriados que pueden mover la demanda">
         <div className="overflow-x-auto">
@@ -330,62 +389,6 @@ function Seo() {
         </Card>
       </div>
     </div>
-  );
-}
-
-function Productos() {
-  const nombreCat = (id) => categoriasMock.find((c) => c.id === id)?.nombre ?? "—";
-  return (
-    <Card
-      title="Catálogo"
-      subtitle="Editá precios, fotos y disponibilidad (simulado)"
-      action={
-        <span className="rounded-full bg-masa/70 px-3 py-1 text-xs font-semibold text-cacao/60">
-          {productosMock.length} productos
-        </span>
-      }
-    >
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-cacao/10 text-left text-xs uppercase tracking-wide text-cacao/45">
-              <th className="pb-2 font-semibold">Producto</th>
-              <th className="pb-2 font-semibold">Categoría</th>
-              <th className="pb-2 text-right font-semibold">Precio</th>
-              <th className="pb-2 text-center font-semibold">Foto</th>
-              <th className="pb-2 text-center font-semibold">Estado</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-cacao/5">
-            {productosMock.map((p) => (
-              <tr key={p.id} className="hover:bg-masa/30">
-                <td className="py-2.5 pr-2 font-medium text-cacao/85">{p.nombre}</td>
-                <td className="py-2.5 pr-2 text-cacao/60">{nombreCat(p.categoria_id)}</td>
-                <td className="py-2.5 text-right tabular-nums text-cacao/80">
-                  {formatCentavos(p.precio_centavos)}
-                </td>
-                <td className="py-2.5 text-center">
-                  {IDS_CON_FOTO.has(p.id) ? (
-                    <span className="text-green-600">✓</span>
-                  ) : (
-                    <span className="text-amber-500">Falta</span>
-                  )}
-                </td>
-                <td className="py-2.5 text-center">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                      p.disponible ? "bg-green-100 text-green-700" : "bg-cacao/10 text-cacao/50"
-                    }`}
-                  >
-                    {p.disponible ? "Activo" : "Pausado"}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Card>
   );
 }
 

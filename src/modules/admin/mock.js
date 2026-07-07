@@ -165,6 +165,26 @@ export const porMes = [
 
 export const diaPico = "Domingo 6 de diciembre";
 
+// Producto más visto y período con más pedidos, según granularidad.
+export const masVistoPeriodo = {
+  Día: { valor: "Milanesa Napolitana", detalle: "hoy · 38 vistas" },
+  Semana: { valor: "Facturas", detalle: "esta semana · 188 vistas" },
+  Mes: { valor: "Empanadas de carne", detalle: "este mes · 512 vistas" },
+};
+export const pedidosPeriodo = {
+  Día: { valor: "Domingo", detalle: "18 pedidos" },
+  Semana: { valor: "1–7 dic", detalle: "62 pedidos" },
+  Mes: { valor: "Diciembre", detalle: "168 pedidos" },
+};
+export const GRANOS = ["Día", "Semana", "Mes"];
+
+// Interacción por hora del día (picos de mediodía y noche).
+export const porHora = [
+  { label: "6h", valor: 8 }, { label: "8h", valor: 24 }, { label: "10h", valor: 41 },
+  { label: "12h", valor: 88 }, { label: "14h", valor: 63 }, { label: "16h", valor: 52 },
+  { label: "18h", valor: 97 }, { label: "20h", valor: 121 }, { label: "22h", valor: 68 },
+];
+
 // Calendario de fechas clave: feriados 🇦🇷 (comunidad) y 🇺🇸 (local Woodbridge, VA)
 // que pueden mover la demanda. Simulado / curado, no viene de una API todavía.
 export const feriados = [

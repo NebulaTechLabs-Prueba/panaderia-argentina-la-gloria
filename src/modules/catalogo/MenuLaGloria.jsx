@@ -298,23 +298,28 @@ export function MenuLaGloria() {
       {/* Navegación por categorías (fija al hacer scroll) */}
       {!cargando && catsConItems.length > 0 && (
         <nav className="sticky top-0 z-30 border-b border-cacao/10 bg-cream/95 backdrop-blur">
-          <div ref={navRef} className="mx-auto flex max-w-4xl gap-2 overflow-x-auto px-5 py-2.5 scrollbar-none">
-            {catsConItems.map((c) => {
-              const on = activa === c.id;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  data-cat={c.id}
-                  onClick={() => irACategoria(c.id)}
-                  className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
-                    on ? "bg-marca text-cream shadow" : "bg-white/80 text-cacao/70 ring-1 ring-cacao/10 hover:text-cacao"
-                  }`}
-                >
-                  {c.nombre}
-                </button>
-              );
-            })}
+          <div className="relative mx-auto max-w-4xl">
+            <div ref={navRef} className="flex gap-2 overflow-x-auto px-5 py-2.5 scrollbar-none">
+              {catsConItems.map((c) => {
+                const on = activa === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    data-cat={c.id}
+                    onClick={() => irACategoria(c.id)}
+                    className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
+                      on ? "bg-marca text-cream shadow" : "bg-white/80 text-cacao/70 ring-1 ring-cacao/10 hover:text-cacao"
+                    }`}
+                  >
+                    {c.nombre}
+                  </button>
+                );
+              })}
+            </div>
+            {/* fade en los laterales para difuminar el corte del scroll */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-linear-to-r from-cream to-transparent" />
+            <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-linear-to-l from-cream to-transparent" />
           </div>
         </nav>
       )}

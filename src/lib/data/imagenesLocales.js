@@ -26,6 +26,7 @@ export const IDS_CON_FOTO = new Set([
   // Nuevo lote de material (jul 2026): fotos reales
   "p-sandwich-miga",
   "p-pepas",
+  "p-emp-pollo",
   // Productos nuevos con foto real
   "p-rogel",
   "p-alfajor-santafesino",

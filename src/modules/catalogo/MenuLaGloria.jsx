@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Kaushan_Script } from "next/font/google";
-import { motion } from "framer-motion";
-import { Plus, Check, MapPin, Gift } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Check, MapPin, Gift, ChevronDown } from "lucide-react";
 import { getCategorias, getProductos } from "@/lib/data";
 import { ES_DEMO } from "@/lib/config/constants";
 import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
@@ -143,6 +143,15 @@ export function MenuLaGloria() {
   const [cargando, setCargando] = useState(true);
   const [detalle, setDetalle] = useState(null);
   const [promos, setPromos] = useState([]);
+  // Categorías colapsadas (default: vacío = todas desplegadas).
+  const [colapsadas, setColapsadas] = useState(() => new Set());
+  const toggleCategoria = (id) =>
+    setColapsadas((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
 
   useEffect(() => setPromos(getPromos().filter((p) => p.activa)), []);
 
@@ -332,43 +341,55 @@ export function MenuLaGloria() {
           categorias.map((cat) => {
             const items = porCategoria[cat.id] ?? [];
             if (items.length === 0) return null;
+            const colapsada = colapsadas.has(cat.id);
             return (
               <section key={cat.id} id={`sec-${cat.id}`} className="scroll-mt-24">
-                {/* Barra de título estilo menú (manuscrita + slogan) */}
-                <motion.div
+                {/* Barra de título = toggle (desplegar / retraer) */}
+                <motion.button
+                  type="button"
+                  onClick={() => toggleCategoria(cat.id)}
+                  aria-expanded={!colapsada}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-80px" }}
                   transition={{ type: "spring", damping: 20, stiffness: 200 }}
-                  className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-4xl px-4 py-3 shadow-md sm:px-6 ${headerColor(cat.color)}`}
+                  className={`flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-4xl px-4 py-3 text-left shadow-md sm:px-6 ${headerColor(cat.color)}`}
                 >
-                  <h2 className={`${script.className} text-3xl leading-tight sm:text-4xl`}>
-                    {cat.nombre}
-                  </h2>
+                  <h2 className={`${script.className} text-3xl leading-tight sm:text-4xl`}>{cat.nombre}</h2>
                   <span className="flex items-center gap-2 text-sm font-semibold italic opacity-90">
                     {cat.slogan}
                     <IconoCategoria icono={cat.icono} className="h-5 w-5" />
-                  </span>
-                </motion.div>
-
-                {/* Productos con reveal + stagger */}
-                <motion.ul
-                  variants={contenedor}
-                  initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true, margin: "-60px" }}
-                  className="mt-4 grid gap-3 sm:grid-cols-2"
-                >
-                  {items.map((p) => (
-                    <FilaProducto
-                      key={p.id}
-                      producto={p}
-                      categoria={cat}
-                      moneda={moneda}
-                      onAbrir={setDetalle}
+                    <ChevronDown
+                      className={`h-5 w-5 shrink-0 transition-transform duration-300 ${colapsada ? "-rotate-90" : ""}`}
                     />
-                  ))}
-                </motion.ul>
+                  </span>
+                </motion.button>
+
+                {/* Productos (colapsables) */}
+                <AnimatePresence initial={false}>
+                  {!colapsada && (
+                    <motion.div
+                      key="body"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.28, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <motion.ul
+                        variants={contenedor}
+                        initial="hidden"
+                        whileInView="show"
+                        viewport={{ once: true, margin: "-60px" }}
+                        className="mt-4 grid gap-3 sm:grid-cols-2"
+                      >
+                        {items.map((p) => (
+                          <FilaProducto key={p.id} producto={p} categoria={cat} moneda={moneda} onAbrir={setDetalle} />
+                        ))}
+                      </motion.ul>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </section>
             );
           })

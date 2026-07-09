@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { ProductImage } from "./ProductImage";
 import { formatCentavos } from "@/lib/money/formatCentavos";
+import { unidadSufijo } from "@/lib/unidades";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { useMoneda } from "@/modules/negocio/NegocioProvider";
 import { playMas, playMenos } from "@/lib/sound/ding";
@@ -73,9 +74,19 @@ export function ProductModal({ producto, categoria, onCerrar }) {
               <p className="mt-2 text-cacao/70">{producto.descripcion}</p>
 
               <div className="mt-4 flex items-center justify-between">
-                <span className="font-display text-2xl font-bold text-marca">
-                  {formatCentavos(producto.precio_centavos, moneda)}
-                </span>
+                <div className="leading-tight">
+                  <span className={`font-display text-2xl font-bold ${producto.estimado ? "text-marca/70" : "text-marca"}`}>
+                    {formatCentavos(producto.precio_centavos, moneda)}
+                  </span>
+                  {unidadSufijo(producto.unidad) && (
+                    <span className="ml-1 text-sm font-semibold text-cacao/45">{unidadSufijo(producto.unidad)}</span>
+                  )}
+                  {producto.estimado && (
+                    <span className="block text-[11px] font-bold uppercase tracking-wide text-amber-600">
+                      ≈ precio aprox. (a confirmar)
+                    </span>
+                  )}
+                </div>
 
                 <div className="flex items-center gap-2 rounded-full bg-masa p-1">
                   <button

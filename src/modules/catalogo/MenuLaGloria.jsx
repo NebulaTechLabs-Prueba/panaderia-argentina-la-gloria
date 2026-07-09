@@ -9,6 +9,7 @@ import { ES_DEMO } from "@/lib/config/constants";
 import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
+import { unidadSufijo } from "@/lib/unidades";
 import { estiloBadge } from "@/lib/badges";
 import { getPromos } from "@/lib/promos";
 import { ProductImage } from "./ProductImage";
@@ -107,9 +108,17 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-2">
-        <span className="font-display text-lg font-extrabold text-cacao">
-          {formatCentavos(producto.precio_centavos, moneda)}
-        </span>
+        <div className="text-right leading-tight">
+          <span className={`font-display text-lg font-extrabold ${producto.estimado ? "text-cacao/60" : "text-cacao"}`}>
+            {formatCentavos(producto.precio_centavos, moneda)}
+          </span>
+          {unidadSufijo(producto.unidad) && (
+            <span className="ml-0.5 text-xs font-semibold text-cacao/45">{unidadSufijo(producto.unidad)}</span>
+          )}
+          {producto.estimado && (
+            <span className="block text-[10px] font-bold uppercase tracking-wide text-amber-600">≈ aprox.</span>
+          )}
+        </div>
         <button
           type="button"
           onClick={add}
@@ -238,7 +247,7 @@ export function MenuLaGloria() {
 
         {ES_DEMO && (
           <p className="mt-3 inline-block rounded-full bg-corteza/20 px-3 py-1 text-xs font-semibold text-cacao ring-1 ring-corteza/40">
-            ⚠ Precios y fotos de muestra (demo)
+            ⚠ Algunas fotos son de muestra · los precios con ≈ son tentativos
           </p>
         )}
       </header>

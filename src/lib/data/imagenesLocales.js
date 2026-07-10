@@ -38,4 +38,5 @@ export const IDS_CON_FOTO = new Set([
   "p-canelones", "p-noquis",
   "p-pizza-fugazzeta", "p-pizza-individual", "p-pre-pizza",
   "p-ensalada-mixta", "p-ensalada-rusa", "p-papas-fritas", "p-huevo-frito", "p-pan", "p-matambre",
+  "p-conito",
 ]);

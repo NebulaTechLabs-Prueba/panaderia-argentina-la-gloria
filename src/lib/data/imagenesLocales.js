@@ -30,4 +30,12 @@ export const IDS_CON_FOTO = new Set([
   // Extras del POS con foto real
   "p-super-sandwich-mila",
   "p-cremona",
+  // Imágenes generadas con IA (jul 2026), watermark recortado
+  "p-cafe-expresso", "p-cafe-leche", "p-latte", "p-capuchino", "p-chocolatada", "p-te", "p-mate-cocido", "p-tostadas",
+  "p-jugo", "p-agua", "p-agua-perrier", "p-soda",
+  "p-milanesa",
+  "p-tarta-ricotta", "p-cremona-chica",
+  "p-canelones", "p-noquis",
+  "p-pizza-fugazzeta", "p-pizza-individual", "p-pre-pizza",
+  "p-ensalada-mixta", "p-ensalada-rusa", "p-papas-fritas", "p-huevo-frito", "p-pan", "p-matambre",
 ]);

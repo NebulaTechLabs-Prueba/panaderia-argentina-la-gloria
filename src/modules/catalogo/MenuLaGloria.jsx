@@ -57,6 +57,7 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
   const { agregar } = useCarrito();
   const [ok, setOk] = useState(false);
   const disp = producto.disponible;
+  const esVariable = producto.unidad === "variable"; // precio por peso: no se agrega al carrito
 
   function add(e) {
     e.stopPropagation();
@@ -110,7 +111,7 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
       <div className="flex shrink-0 flex-col items-end gap-2">
         <div className="text-right leading-tight">
           <span className={`font-display text-lg font-extrabold ${producto.estimado ? "text-cacao/60" : "text-cacao"}`}>
-            {formatCentavos(producto.precio_centavos, moneda)}
+            {esVariable ? "Variable" : formatCentavos(producto.precio_centavos, moneda)}
           </span>
           {unidadSufijo(producto.unidad) && (
             <span className="ml-0.5 text-xs font-semibold text-cacao/45">{unidadSufijo(producto.unidad)}</span>
@@ -119,15 +120,19 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
             <span className="block text-[10px] font-bold uppercase tracking-wide text-amber-600">≈ aprox.</span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={add}
-          disabled={!disp}
-          aria-label={`Agregar ${producto.nombre}`}
-          className="grid h-10 w-10 place-items-center rounded-full bg-marca text-cream shadow transition hover:bg-corteza hover:text-cacao active:scale-90 disabled:opacity-40"
-        >
-          {ok ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" strokeWidth={2.6} />}
-        </button>
+        {esVariable ? (
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-cacao/40">Por peso</span>
+        ) : (
+          <button
+            type="button"
+            onClick={add}
+            disabled={!disp}
+            aria-label={`Agregar ${producto.nombre}`}
+            className="grid h-10 w-10 place-items-center rounded-full bg-marca text-cream shadow transition hover:bg-corteza hover:text-cacao active:scale-90 disabled:opacity-40"
+          >
+            {ok ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" strokeWidth={2.6} />}
+          </button>
+        )}
       </div>
     </motion.li>
   );

@@ -4,7 +4,7 @@ const SUFIJO = {
   "media-docena": "½ doc.",
   docena: "docena",
   lb: "lb",
-  variable: "variable",
+  variable: "lb",
 };
 
 // "uni" o vacío → sin sufijo (se entiende por unidad).

@@ -15,6 +15,7 @@ export function ProductModal({ producto, categoria, onCerrar }) {
   const { agregar } = useCarrito();
   const moneda = useMoneda();
   const [cantidad, setCantidad] = useState(1);
+  const esVariable = producto?.unidad === "variable"; // por peso: no se agrega al carrito
 
   // Reiniciar cantidad cada vez que se abre un producto distinto.
   useEffect(() => {
@@ -76,7 +77,7 @@ export function ProductModal({ producto, categoria, onCerrar }) {
               <div className="mt-4 flex items-center justify-between">
                 <div className="leading-tight">
                   <span className={`font-display text-2xl font-bold ${producto.estimado ? "text-marca/70" : "text-marca"}`}>
-                    {formatCentavos(producto.precio_centavos, moneda)}
+                    {esVariable ? "Variable" : formatCentavos(producto.precio_centavos, moneda)}
                   </span>
                   {unidadSufijo(producto.unidad) && (
                     <span className="ml-1 text-sm font-semibold text-cacao/45">{unidadSufijo(producto.unidad)}</span>
@@ -88,28 +89,34 @@ export function ProductModal({ producto, categoria, onCerrar }) {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 rounded-full bg-masa p-1">
-                  <button
-                    type="button"
-                    onClick={() => { playMenos(); setCantidad((c) => Math.max(1, c - 1)); }}
-                    aria-label="Quitar uno"
-                    className="grid h-9 w-9 place-items-center rounded-full text-cacao transition hover:bg-cream"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="w-8 text-center font-semibold text-cacao">{cantidad}</span>
-                  <button
-                    type="button"
-                    onClick={() => { playMas(); setCantidad((c) => c + 1); }}
-                    aria-label="Agregar uno"
-                    className="grid h-9 w-9 place-items-center rounded-full text-cacao transition hover:bg-cream"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
+                {!esVariable && (
+                  <div className="flex items-center gap-2 rounded-full bg-masa p-1">
+                    <button
+                      type="button"
+                      onClick={() => { playMenos(); setCantidad((c) => Math.max(1, c - 1)); }}
+                      aria-label="Quitar uno"
+                      className="grid h-9 w-9 place-items-center rounded-full text-cacao transition hover:bg-cream"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="w-8 text-center font-semibold text-cacao">{cantidad}</span>
+                    <button
+                      type="button"
+                      onClick={() => { playMas(); setCantidad((c) => c + 1); }}
+                      aria-label="Agregar uno"
+                      className="grid h-9 w-9 place-items-center rounded-full text-cacao transition hover:bg-cream"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {producto.disponible ? (
+              {esVariable ? (
+                <p className="mt-5 rounded-2xl bg-masa px-5 py-4 text-center font-medium text-cacao/60">
+                  Se vende por peso (por libra). Coordiná la cantidad por WhatsApp.
+                </p>
+              ) : producto.disponible ? (
                 <button
                   type="button"
                   onClick={agregarAlPedido}

@@ -16,4 +16,5 @@ export const categoriasMock = [
   { id: "cat-pizzas", nombre: "Pizzas", slug: "pizzas", orden: 6, activa: true, slogan: "Masa crocante y calentita", texto: "Masa casera y mucho mozzarella. Una pizza bien nuestra, ponele.", color: "naranja", icono: "pizza", refKeyword: "pizza" },
   { id: "cat-empanadas", nombre: "Empanadas", slug: "empanadas", orden: 7, activa: true, slogan: "Las joyitas de la corona", texto: "Jugosas y recién horneadas. De esas que pedís de a docenas.", color: "celeste", icono: "empanada", refKeyword: "empanada" },
   { id: "cat-parrilla", nombre: "Parrilla Libre (Domingos)", slug: "parrilla-libre", orden: 8, activa: true, slogan: "Todos los domingos, en familia", texto: "El ritual del domingo: fuego, asado y sobremesa bien larga.", color: "carbon", icono: "parrilla", refKeyword: "barbecue" },
+  { id: "cat-guarniciones", nombre: "Guarniciones y otros", slug: "guarniciones", orden: 9, activa: true, slogan: "Para acompañar y sumar a la mesa", texto: "Eso que nunca falta al costado del plato.", color: "celeste", icono: "sandwich", refKeyword: "side" },
 ];

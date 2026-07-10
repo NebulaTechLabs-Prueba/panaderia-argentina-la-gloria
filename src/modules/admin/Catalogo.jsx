@@ -126,7 +126,7 @@ export function Catalogo() {
                   </td>
                   <td className="p-3 text-cacao/60">{nombreCat(p.categoria_id)}</td>
                   <td className="p-3 text-right tabular-nums text-cacao/80">
-                    <span className={p.estimado ? "text-cacao/55" : ""}>{formatCentavos(p.precio_centavos)}</span>
+                    <span className={p.estimado ? "text-cacao/55" : ""}>{p.unidad === "variable" ? "Variable" : formatCentavos(p.precio_centavos)}</span>
                     {unidadSufijo(p.unidad) && <span className="ml-1 text-xs text-cacao/40">{unidadSufijo(p.unidad)}</span>}
                     {p.estimado && (
                       <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">aprox.</span>

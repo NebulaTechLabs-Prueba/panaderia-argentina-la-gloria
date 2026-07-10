@@ -27,13 +27,7 @@ export const IDS_CON_FOTO = new Set([
   "p-sandwich-miga",
   "p-pepas",
   "p-emp-pollo",
-  // Productos nuevos con foto real
-  "p-rogel",
-  "p-alfajor-santafesino",
-  "p-masitas-finas",
+  // Extras del POS con foto real
   "p-super-sandwich-mila",
-  "p-pollo-asador",
   "p-cremona",
-  "p-super-choripan",
-  "p-lechon-asador",
 ]);

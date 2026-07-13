@@ -5,7 +5,6 @@ import { Kaushan_Script } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Check, MapPin, Gift, ChevronDown } from "lucide-react";
 import { getCategorias, getProductos } from "@/lib/data";
-import { ES_DEMO } from "@/lib/config/constants";
 import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
@@ -98,15 +97,17 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
           <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-corteza" />
-          <h3 className="min-w-0 truncate font-display text-base font-bold text-cacao sm:text-lg">
+          <h3 className="min-w-0 wrap-break-word font-display text-base font-bold text-cacao sm:text-lg">
             {producto.nombre}
           </h3>
         </div>
-        <p className="mt-0.5 pl-4.5 text-xs font-semibold text-marca/70 sm:hidden">Tocá para ver más →</p>
         {producto.descripcion && (
-          <p className="mt-0.5 hidden pl-4.5 text-sm text-cacao/55 sm:line-clamp-2 sm:block">
-            {producto.descripcion}
-          </p>
+          <>
+            <p className="mt-0.5 pl-4.5 text-xs font-semibold text-marca/70 sm:hidden">Tocá para ver más →</p>
+            <p className="mt-0.5 hidden wrap-break-word pl-4.5 text-sm text-cacao/55 sm:block">
+              {producto.descripcion}
+            </p>
+          </>
         )}
         {!disp && <span className="pl-4.5 text-xs font-semibold text-cacao/50">Agotado</span>}
       </div>
@@ -277,11 +278,6 @@ export function MenuLaGloria() {
           </div>
         )}
 
-        {ES_DEMO && (
-          <p className="mx-auto mt-3 block w-fit rounded-full bg-corteza/20 px-3 py-1 text-xs font-semibold text-cacao ring-1 ring-corteza/40">
-            ⚠ Algunas fotos son de muestra · los precios con ≈ son tentativos
-          </p>
-        )}
       </header>
 
       {/* Promos activas (clic = carga los productos de la promo al carrito) */}
@@ -312,7 +308,7 @@ export function MenuLaGloria() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-corteza">Promo</p>
-                  <p className="truncate text-sm font-semibold text-cacao sm:text-base">{p.descripcion}</p>
+                  <p className="wrap-break-word text-sm font-semibold text-cacao sm:text-base">{p.descripcion}</p>
                 </div>
                 {clickable ? (
                   <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-marca px-3 py-1.5 text-xs font-bold text-cream transition group-hover:bg-corteza group-hover:text-cacao">

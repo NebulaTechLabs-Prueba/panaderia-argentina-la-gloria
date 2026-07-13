@@ -72,11 +72,11 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
       variants={item}
       onClick={() => onAbrir(producto)}
       whileHover={{ x: 4 }}
-      className={`group flex cursor-pointer items-center gap-4 rounded-2xl bg-white/80 p-3 ring-1 ring-cacao/8 backdrop-blur-sm transition-shadow hover:bg-white hover:shadow-lg ${
+      className={`group flex cursor-pointer items-center gap-3 rounded-2xl bg-white/80 p-3 ring-1 ring-cacao/8 backdrop-blur-sm transition-shadow hover:bg-white hover:shadow-lg sm:gap-4 ${
         disp ? "" : "opacity-60"
       }`}
     >
-      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl sm:h-24 sm:w-24">
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl sm:h-24 sm:w-24">
         <ProductImage
           src={producto.imagen_url}
           alt={producto.nombre}
@@ -227,7 +227,7 @@ export function MenuLaGloria() {
   };
 
   return (
-    <div className="relative min-h-full bg-cream">
+    <div className="relative min-h-full overflow-x-clip bg-cream">
       <Cintas />
 
       {/* Encabezado / portada del menú */}

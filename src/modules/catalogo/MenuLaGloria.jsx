@@ -103,9 +103,11 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
           </h3>
         </div>
         {producto.descripcion && (
-          <p className="mt-0.5 line-clamp-2 pl-[18px] text-sm text-cacao/55">{producto.descripcion}</p>
+          <p className="mt-0.5 line-clamp-1 pl-4.5 text-xs text-cacao/55 sm:line-clamp-2 sm:text-sm">
+            {producto.descripcion}
+          </p>
         )}
-        {!disp && <span className="pl-[18px] text-xs font-semibold text-cacao/50">Agotado</span>}
+        {!disp && <span className="pl-4.5 text-xs font-semibold text-cacao/50">Agotado</span>}
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-2">

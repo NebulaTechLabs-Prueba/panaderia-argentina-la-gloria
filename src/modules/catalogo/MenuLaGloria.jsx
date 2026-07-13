@@ -96,9 +96,9 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-corteza" />
-          <h3 className="truncate font-display text-base font-bold text-cacao sm:text-lg">
+          <h3 className="min-w-0 truncate font-display text-base font-bold text-cacao sm:text-lg">
             {producto.nombre}
           </h3>
         </div>
@@ -111,8 +111,8 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-2">
-        <div className="text-right leading-tight">
-          <span className={`font-display text-lg font-extrabold ${ocultarPrecio ? "text-marca" : producto.estimado ? "text-cacao/60" : "text-cacao"}`}>
+        <div className="whitespace-nowrap text-right leading-tight">
+          <span className={`font-display text-base font-extrabold sm:text-lg ${ocultarPrecio ? "text-marca" : producto.estimado ? "text-cacao/60" : "text-cacao"}`}>
             {ocultarPrecio ? "Consultar" : formatCentavos(producto.precio_centavos, moneda)}
           </span>
           {!ocultarPrecio && unidadSufijo(producto.unidad) && (

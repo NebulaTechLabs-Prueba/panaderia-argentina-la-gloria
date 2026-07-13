@@ -14,7 +14,7 @@ import { estiloBadge } from "@/lib/badges";
 const imagenActual = (p) =>
   p.imagen_url || (IDS_CON_FOTO.has(p.id) ? asset(`/img/productos/${p.id}.jpg`) : "");
 
-const nuevoProducto = () => ({ id: "", nombre: "", categoria_id: "", precio_centavos: 0, unidad: "uni", estimado: false, descripcion: "", disponible: true, imagen_url: "", etiqueta: "" });
+const nuevoProducto = () => ({ id: "", nombre: "", categoria_id: "", precio_centavos: 0, unidad: "uni", estimado: false, consultar: false, descripcion: "", disponible: true, imagen_url: "", etiqueta: "" });
 
 const BADGES = ["Nuevo", "Promo", "2x1", "Destacado", "Más pedido", "Recomendado"];
 const nuevaCategoria = () => ({ id: "", nombre: "", slug: "", orden: 99, activa: true });
@@ -126,7 +126,7 @@ export function Catalogo() {
                   </td>
                   <td className="p-3 text-cacao/60">{nombreCat(p.categoria_id)}</td>
                   <td className="p-3 text-right tabular-nums text-cacao/80">
-                    <span className={p.estimado ? "text-cacao/55" : ""}>{p.unidad === "variable" ? "Variable" : formatCentavos(p.precio_centavos)}</span>
+                    <span className={p.estimado ? "text-cacao/55" : ""}>{(p.consultar || p.unidad === "variable") ? "Consultar" : formatCentavos(p.precio_centavos)}</span>
                     {unidadSufijo(p.unidad) && <span className="ml-1 text-xs text-cacao/40">{unidadSufijo(p.unidad)}</span>}
                     {p.estimado && (
                       <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">aprox.</span>
@@ -232,6 +232,10 @@ export function Catalogo() {
                     Precio estimado (a confirmar)
                   </label>
                 </div>
+                <label className="flex items-center gap-2 text-sm text-cacao/75">
+                  <input type="checkbox" checked={!!form.data.consultar} onChange={(e) => setCampo("consultar", e.target.checked)} />
+                  Precio a consultar / bajo pedido (oculta el precio y el botón de agregar)
+                </label>
                 <Campo label="Descripción">
                   <textarea rows={2} value={form.data.descripcion} onChange={(e) => setCampo("descripcion", e.target.value)} className={INPUT} />
                 </Campo>

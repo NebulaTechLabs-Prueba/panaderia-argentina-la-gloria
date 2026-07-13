@@ -11,7 +11,7 @@ import { useCarrito } from "@/modules/carrito/CarritoProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { unidadSufijo } from "@/lib/unidades";
 import { estiloBadge } from "@/lib/badges";
-import { getPromos } from "@/lib/promos";
+import { getPromos, promoVigente } from "@/lib/promos";
 import { ProductImage } from "./ProductImage";
 import { IconoCategoria } from "./IconoCategoria";
 import { header as headerColor } from "./catColors";
@@ -57,7 +57,7 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
   const { agregar } = useCarrito();
   const [ok, setOk] = useState(false);
   const disp = producto.disponible;
-  const esVariable = producto.unidad === "variable"; // precio por peso: no se agrega al carrito
+  const ocultarPrecio = producto.consultar || producto.unidad === "variable"; // precio a consultar: no se agrega
 
   function add(e) {
     e.stopPropagation();
@@ -110,18 +110,18 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
 
       <div className="flex shrink-0 flex-col items-end gap-2">
         <div className="text-right leading-tight">
-          <span className={`font-display text-lg font-extrabold ${producto.estimado ? "text-cacao/60" : "text-cacao"}`}>
-            {esVariable ? "Variable" : formatCentavos(producto.precio_centavos, moneda)}
+          <span className={`font-display text-lg font-extrabold ${ocultarPrecio ? "text-marca" : producto.estimado ? "text-cacao/60" : "text-cacao"}`}>
+            {ocultarPrecio ? "Consultar" : formatCentavos(producto.precio_centavos, moneda)}
           </span>
-          {unidadSufijo(producto.unidad) && (
+          {!ocultarPrecio && unidadSufijo(producto.unidad) && (
             <span className="ml-0.5 text-xs font-semibold text-cacao/45">{unidadSufijo(producto.unidad)}</span>
           )}
           {producto.estimado && (
             <span className="block text-[10px] font-bold uppercase tracking-wide text-amber-600">≈ aprox.</span>
           )}
         </div>
-        {esVariable ? (
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-cacao/40">Por peso</span>
+        {ocultarPrecio ? (
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-cacao/40">Consultá</span>
         ) : (
           <button
             type="button"
@@ -158,7 +158,7 @@ export function MenuLaGloria() {
       return n;
     });
 
-  useEffect(() => setPromos(getPromos().filter((p) => p.activa)), []);
+  useEffect(() => setPromos(getPromos().filter(promoVigente)), []);
 
   useEffect(() => {
     let activo = true;
@@ -181,6 +181,11 @@ export function MenuLaGloria() {
   }, [productos]);
 
   const catDetalle = categorias.find((c) => c.id === detalle?.categoria_id);
+  const mapsUrl =
+    ajustes?.maps_url ||
+    (ajustes?.direccion
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ajustes.direccion)}`
+      : null);
 
   // Navegación por categorías (clave en móvil): chips fijos que saltan a cada
   // sección y se resaltan según lo que estás viendo.
@@ -253,10 +258,22 @@ export function MenuLaGloria() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-2 flex items-center justify-center gap-1.5 text-sm font-medium text-cacao/60"
+          className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm font-medium text-cacao/60"
         >
-          <MapPin className="h-4 w-4 text-celeste" />
-          {ajustes?.nombre_negocio ?? "Panadería Argentina La Gloria"} · {ajustes?.direccion ?? "Woodbridge, VA"}
+          <span className="flex items-center gap-1.5">
+            <MapPin className="h-4 w-4 text-celeste" />
+            {ajustes?.nombre_negocio ?? "Panadería Argentina La Gloria"}
+          </span>
+          {mapsUrl && (
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-marca ring-1 ring-cacao/10 transition hover:bg-white"
+            >
+              ¿Cómo llegar? →
+            </a>
+          )}
         </motion.p>
 
         {ES_DEMO && (

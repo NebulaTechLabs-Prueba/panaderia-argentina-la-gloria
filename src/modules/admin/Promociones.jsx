@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, X, Gift } from "lucide-react";
 import { productosMock } from "@/lib/data/mock/productos";
 import { formatCentavos } from "@/lib/money/formatCentavos";
-import { getPromos, guardarPromos } from "@/lib/promos";
+import { getPromos, guardarPromos, promoVigente } from "@/lib/promos";
 
 const INPUT = "w-full rounded-lg border border-cacao/15 bg-white px-3 py-2 text-sm text-cacao outline-none focus:border-marca";
 const nombreProd = (id) => productosMock.find((p) => p.id === id)?.nombre ?? "—";
@@ -16,6 +16,7 @@ const nuevaPromo = () => ({
   activa: true,
   condicion: { tipo: "productos", productos: [{ producto_id: "", cantidad: 1 }], monto_centavos: 0 },
   premio: [{ producto_id: "", cantidad: 1 }],
+  vigencia: { desde: "", hasta: "" },
 });
 
 function resumenCond(p) {
@@ -117,6 +118,14 @@ export function Promociones() {
               <span className="text-cacao/60">Se lleva gratis:</span>{" "}
               <b className="text-green-700">{resumenPremio(p)}</b>
             </div>
+            {(p.vigencia?.desde || p.vigencia?.hasta) && (
+              <p className="mt-2 flex items-center gap-2 text-xs text-cacao/55">
+                📅 {p.vigencia.desde || "…"} → {p.vigencia.hasta || "…"}
+                {p.activa && !promoVigente(p) && (
+                  <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">fuera de fecha</span>
+                )}
+              </p>
+            )}
             <div className="mt-3 flex justify-end gap-1">
               <button type="button" onClick={() => setForm({ esNuevo: false, data: JSON.parse(JSON.stringify(p)) })} className="grid h-8 w-8 place-items-center rounded-lg text-cacao/60 hover:bg-masa/70 hover:text-marca" aria-label="Editar">
                 <Pencil className="h-4 w-4" />
@@ -187,6 +196,24 @@ export function Promociones() {
               <div className="rounded-xl bg-green-50 p-3">
                 <p className="mb-2 text-xs font-bold uppercase tracking-wide text-green-700">Premio (lo que se lleva gratis)</p>
                 <Filas filas={form.data.premio} onChange={(premio) => upd({ premio })} />
+              </div>
+
+              {/* Vigencia */}
+              <div className="rounded-xl bg-masa/30 p-3">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-cacao/50">Vigencia (opcional)</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block">
+                    <span className="mb-1 block text-xs text-cacao/50">Desde</span>
+                    <input type="date" value={form.data.vigencia?.desde || ""} onChange={(e) => upd({ vigencia: { ...form.data.vigencia, desde: e.target.value } })} className={INPUT} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-xs text-cacao/50">Hasta</span>
+                    <input type="date" value={form.data.vigencia?.hasta || ""} onChange={(e) => upd({ vigencia: { ...form.data.vigencia, hasta: e.target.value } })} className={INPUT} />
+                  </label>
+                </div>
+                <p className="mt-1 text-[11px] text-cacao/45">
+                  Vacío = sin límite. Promo de 1 día (ej. lanzamiento): poné la misma fecha en Desde y Hasta.
+                </p>
               </div>
             </div>
 

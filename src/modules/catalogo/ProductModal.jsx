@@ -15,7 +15,7 @@ export function ProductModal({ producto, categoria, onCerrar }) {
   const { agregar } = useCarrito();
   const moneda = useMoneda();
   const [cantidad, setCantidad] = useState(1);
-  const esVariable = producto?.unidad === "variable"; // por peso: no se agrega al carrito
+  const ocultarPrecio = producto?.consultar || producto?.unidad === "variable"; // a consultar: no se agrega
 
   // Reiniciar cantidad cada vez que se abre un producto distinto.
   useEffect(() => {
@@ -77,7 +77,7 @@ export function ProductModal({ producto, categoria, onCerrar }) {
               <div className="mt-4 flex items-center justify-between">
                 <div className="leading-tight">
                   <span className={`font-display text-2xl font-bold ${producto.estimado ? "text-marca/70" : "text-marca"}`}>
-                    {esVariable ? "Variable" : formatCentavos(producto.precio_centavos, moneda)}
+                    {ocultarPrecio ? "Consultar" : formatCentavos(producto.precio_centavos, moneda)}
                   </span>
                   {unidadSufijo(producto.unidad) && (
                     <span className="ml-1 text-sm font-semibold text-cacao/45">{unidadSufijo(producto.unidad)}</span>
@@ -89,7 +89,7 @@ export function ProductModal({ producto, categoria, onCerrar }) {
                   )}
                 </div>
 
-                {!esVariable && (
+                {!ocultarPrecio && (
                   <div className="flex items-center gap-2 rounded-full bg-masa p-1">
                     <button
                       type="button"
@@ -112,9 +112,9 @@ export function ProductModal({ producto, categoria, onCerrar }) {
                 )}
               </div>
 
-              {esVariable ? (
+              {ocultarPrecio ? (
                 <p className="mt-5 rounded-2xl bg-masa px-5 py-4 text-center font-medium text-cacao/60">
-                  Se vende por peso (por libra). Coordiná la cantidad por WhatsApp.
+                  Precio a consultar. Coordiná por WhatsApp y te pasamos el detalle.
                 </p>
               ) : producto.disponible ? (
                 <button

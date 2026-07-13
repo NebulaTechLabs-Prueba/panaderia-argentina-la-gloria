@@ -78,6 +78,13 @@ export function SiteFooter() {
     ? buildWhatsappUrl(ajustes.whatsapp_numero, "¡Hola, La Gloria! 🥐 Quería hacerles una consulta.")
     : null;
 
+  // "¿Cómo llegar?" — usa maps_url configurable, o lo arma a partir de la dirección.
+  const mapsUrl =
+    ajustes?.maps_url ||
+    (ajustes?.direccion
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ajustes.direccion)}`
+      : null);
+
   return (
     <footer className="relative overflow-hidden bg-marca text-cream">
       {/* filo superior con los colores de la marca */}
@@ -106,10 +113,16 @@ export function SiteFooter() {
         {/* Visitanos */}
         <div className="lg:col-span-4">
           <h3 className="font-display text-sm font-bold uppercase tracking-wider text-corteza">Visitanos</h3>
-          <p className="mt-3 flex items-center gap-2 text-sm text-cream/80">
-            <MapPin className="h-4 w-4 shrink-0 text-celeste" />
-            {ajustes?.direccion ?? "Woodbridge, VA"}
-          </p>
+          {mapsUrl && (
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-cream ring-1 ring-white/15 transition hover:bg-corteza hover:text-cacao"
+            >
+              <MapPin className="h-4 w-4 shrink-0" /> ¿Cómo llegar?
+            </a>
+          )}
           {ajustes?.horarios && (
             <div className="mt-3">
               <p className="flex items-center gap-2 text-sm font-medium text-cream/80">

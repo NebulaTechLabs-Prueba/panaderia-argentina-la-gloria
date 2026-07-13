@@ -32,7 +32,19 @@ function normalizar(p) {
   if (!Array.isArray(premio))
     premio = premio?.producto_id ? [{ producto_id: premio.producto_id, cantidad: premio.cantidad || 1 }] : [];
 
-  return { activa: true, ...p, condicion, premio };
+  return { activa: true, ...p, condicion, premio, vigencia: p.vigencia ?? null };
+}
+
+// ¿La promo está vigente ahora? (activa + dentro de la ventana de fechas, si tiene).
+// vigencia = { desde: "YYYY-MM-DD"|null, hasta: "YYYY-MM-DD"|null }.
+export function promoVigente(promo) {
+  if (!promo.activa) return false;
+  const v = promo.vigencia;
+  if (!v || (!v.desde && !v.hasta)) return true;
+  const now = new Date();
+  if (v.desde && now < new Date(v.desde + "T00:00:00")) return false;
+  if (v.hasta && now > new Date(v.hasta + "T23:59:59")) return false;
+  return true;
 }
 
 export function getPromos() {
@@ -61,7 +73,7 @@ export function calcularRegalos(items, promos = getPromos()) {
   const total = items.reduce((a, i) => a + i.precio_centavos * i.cantidad, 0);
 
   for (const promo of promos) {
-    if (!promo.activa) continue;
+    if (!promoVigente(promo)) continue;
     const cond = promo.condicion || {};
     let veces = 0;
 

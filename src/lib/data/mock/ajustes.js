@@ -16,7 +16,10 @@ export const ajustesMock = {
   instagram_url: "https://instagram.com/panaderia.argentina_la.gloria_",
   tiktok_url: "https://www.tiktok.com/@panaderia_la.gloria",
   facebook_url: "https://www.facebook.com/p/Panadería-Argentina-La-Gloria-61552555974825/",
-  direccion: "Woodbridge, VA",
+  direccion: "6100 Richmond Hwy, Alexandria, VA 22303",
+  // Link de "¿Cómo llegar?" (configurable desde el admin). Si queda vacío, se arma
+  // solo a partir de `direccion`.
+  maps_url: "https://www.google.com/maps/search/?api=1&query=6100+Richmond+Hwy,+Alexandria,+VA+22303",
   tagline: "Un cachito de Argentina, recién horneado.",
   horarios: {
     lun: "07:00–20:00",

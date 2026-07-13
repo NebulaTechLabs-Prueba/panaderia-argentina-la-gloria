@@ -9,7 +9,6 @@ export const IDS_CON_FOTO = new Set([
   "p-pastafrola-g",
   "p-pastafrola-p",
   "p-milanesa-napo",
-  "p-sandwich-mila",
   "p-pan-frances",
   "p-choripan",
   "p-emp-carne",
@@ -39,4 +38,6 @@ export const IDS_CON_FOTO = new Set([
   "p-pizza-fugazzeta", "p-pizza-individual", "p-pre-pizza",
   "p-ensalada-mixta", "p-ensalada-rusa", "p-papas-fritas", "p-huevo-frito", "p-pan", "p-matambre",
   "p-conito",
+  // Lote "cambiar material" (reemplazos + Rogel)
+  "p-rogel",
 ]);

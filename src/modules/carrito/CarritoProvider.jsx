@@ -37,6 +37,7 @@ function reducer(state, action) {
             precio_centavos: producto.precio_centavos,
             imagen_url: producto.imagen_url ?? null,
             cantidad,
+            consultar: !!(producto.consultar || producto.unidad === "variable"),
           },
         ],
       };

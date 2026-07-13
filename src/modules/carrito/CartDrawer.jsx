@@ -96,7 +96,7 @@ export function CartDrawer() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium text-cacao">{item.nombre}</p>
                       <p className="text-sm text-cacao/60">
-                        {formatCentavos(item.precio_centavos, moneda)} c/u
+                        {item.consultar ? "Precio a consultar" : `${formatCentavos(item.precio_centavos, moneda)} c/u`}
                       </p>
                     </div>
 
@@ -123,7 +123,7 @@ export function CartDrawer() {
                     </div>
 
                     <span className="w-20 text-right font-semibold text-cacao">
-                      {formatCentavos(item.precio_centavos * item.cantidad, moneda)}
+                      {item.consultar ? "—" : formatCentavos(item.precio_centavos * item.cantidad, moneda)}
                     </span>
 
                     <button

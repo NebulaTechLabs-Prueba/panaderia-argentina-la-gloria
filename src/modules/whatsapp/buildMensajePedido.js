@@ -5,8 +5,10 @@ import { formatCentavos, totalCentavos } from "@/lib/money/formatCentavos";
 function lineasItems(items, monedaCfg) {
   return items
     .map((i) => {
-      const subtotal = formatCentavos(i.precio_centavos * i.cantidad, monedaCfg);
-      return `• ${i.cantidad}× ${i.nombre} — ${subtotal}`;
+      const detalle = i.consultar
+        ? "a consultar"
+        : formatCentavos(i.precio_centavos * i.cantidad, monedaCfg);
+      return `• ${i.cantidad}× ${i.nombre} — ${detalle}`;
     })
     .join("\n");
 }

@@ -120,19 +120,15 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
             <span className="block text-[10px] font-bold uppercase tracking-wide text-amber-600">≈ aprox.</span>
           )}
         </div>
-        {ocultarPrecio ? (
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-cacao/40">Consultá</span>
-        ) : (
-          <button
-            type="button"
-            onClick={add}
-            disabled={!disp}
-            aria-label={`Agregar ${producto.nombre}`}
-            className="grid h-10 w-10 place-items-center rounded-full bg-marca text-cream shadow transition hover:bg-corteza hover:text-cacao active:scale-90 disabled:opacity-40"
-          >
-            {ok ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" strokeWidth={2.6} />}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={add}
+          disabled={!disp}
+          aria-label={`Agregar ${producto.nombre}`}
+          className="grid h-10 w-10 place-items-center rounded-full bg-marca text-cream shadow transition hover:bg-corteza hover:text-cacao active:scale-90 disabled:opacity-40"
+        >
+          {ok ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" strokeWidth={2.6} />}
+        </button>
       </div>
     </motion.li>
   );
@@ -258,23 +254,23 @@ export function MenuLaGloria() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm font-medium text-cacao/60"
+          className="mt-2 text-sm font-medium text-cacao/55"
         >
-          <span className="flex items-center gap-1.5">
-            <MapPin className="h-4 w-4 text-celeste" />
-            {ajustes?.nombre_negocio ?? "Panadería Argentina La Gloria"}
-          </span>
-          {mapsUrl && (
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-marca ring-1 ring-cacao/10 transition hover:bg-white"
-            >
-              ¿Cómo llegar? →
-            </a>
-          )}
+          {ajustes?.nombre_negocio ?? "Panadería Argentina La Gloria"}
         </motion.p>
+        {mapsUrl && (
+          <motion.a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-marca px-6 py-3 text-sm font-bold text-cream shadow-lg ring-1 ring-white/10 transition hover:bg-corteza hover:text-cacao active:scale-95"
+          >
+            <MapPin className="h-5 w-5" strokeWidth={2.4} /> ¿Cómo llegar?
+          </motion.a>
+        )}
 
         {ES_DEMO && (
           <p className="mt-3 inline-block rounded-full bg-corteza/20 px-3 py-1 text-xs font-semibold text-cacao ring-1 ring-corteza/40">

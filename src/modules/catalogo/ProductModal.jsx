@@ -89,42 +89,37 @@ export function ProductModal({ producto, categoria, onCerrar }) {
                   )}
                 </div>
 
-                {!ocultarPrecio && (
-                  <div className="flex items-center gap-2 rounded-full bg-masa p-1">
-                    <button
-                      type="button"
-                      onClick={() => { playMenos(); setCantidad((c) => Math.max(1, c - 1)); }}
-                      aria-label="Quitar uno"
-                      className="grid h-9 w-9 place-items-center rounded-full text-cacao transition hover:bg-cream"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="w-8 text-center font-semibold text-cacao">{cantidad}</span>
-                    <button
-                      type="button"
-                      onClick={() => { playMas(); setCantidad((c) => c + 1); }}
-                      aria-label="Agregar uno"
-                      className="grid h-9 w-9 place-items-center rounded-full text-cacao transition hover:bg-cream"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 rounded-full bg-masa p-1">
+                  <button
+                    type="button"
+                    onClick={() => { playMenos(); setCantidad((c) => Math.max(1, c - 1)); }}
+                    aria-label="Quitar uno"
+                    className="grid h-9 w-9 place-items-center rounded-full text-cacao transition hover:bg-cream"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="w-8 text-center font-semibold text-cacao">{cantidad}</span>
+                  <button
+                    type="button"
+                    onClick={() => { playMas(); setCantidad((c) => c + 1); }}
+                    aria-label="Agregar uno"
+                    className="grid h-9 w-9 place-items-center rounded-full text-cacao transition hover:bg-cream"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
 
-              {ocultarPrecio ? (
-                <p className="mt-5 rounded-2xl bg-masa px-5 py-4 text-center font-medium text-cacao/60">
-                  Precio a consultar. Coordiná por WhatsApp y te pasamos el detalle.
-                </p>
-              ) : producto.disponible ? (
+              {producto.disponible ? (
                 <button
                   type="button"
                   onClick={agregarAlPedido}
                   className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-marca px-5 py-4 font-semibold text-cream shadow-md transition hover:brightness-110 active:scale-[0.99]"
                 >
                   <ShoppingBag className="h-5 w-5" strokeWidth={2.2} />
-                  Agregar {cantidad > 1 ? `${cantidad} ` : ""}al pedido ·{" "}
-                  {formatCentavos(producto.precio_centavos * cantidad, moneda)}
+                  {ocultarPrecio
+                    ? `Agregar ${cantidad > 1 ? `${cantidad} ` : ""}al pedido · a consultar`
+                    : `Agregar ${cantidad > 1 ? `${cantidad} ` : ""}al pedido · ${formatCentavos(producto.precio_centavos * cantidad, moneda)}`}
                 </button>
               ) : (
                 <p className="mt-5 rounded-2xl bg-masa px-5 py-4 text-center font-medium text-cacao/60">

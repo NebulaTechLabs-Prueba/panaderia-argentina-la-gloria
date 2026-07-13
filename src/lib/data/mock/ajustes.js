@@ -19,7 +19,7 @@ export const ajustesMock = {
   direccion: "6100 Richmond Hwy, Alexandria, VA 22303",
   // Link de "¿Cómo llegar?" (configurable desde el admin). Si queda vacío, se arma
   // solo a partir de `direccion`.
-  maps_url: "https://www.google.com/maps/search/?api=1&query=6100+Richmond+Hwy,+Alexandria,+VA+22303",
+  maps_url: "https://maps.app.goo.gl/PX1cBQu6r1MNXwm99",
   tagline: "Un cachito de Argentina, recién horneado.",
   horarios: {
     lun: "07:00–20:00",

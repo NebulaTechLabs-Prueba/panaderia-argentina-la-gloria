@@ -102,11 +102,7 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
             {producto.nombre}
           </h3>
         </div>
-        {producto.descripcion && (
-          <p className="mt-0.5 line-clamp-1 pl-4.5 text-xs text-cacao/55 sm:line-clamp-2 sm:text-sm">
-            {producto.descripcion}
-          </p>
-        )}
+        <p className="mt-0.5 pl-4.5 text-xs font-semibold text-marca/70">Tocá para ver más →</p>
         {!disp && <span className="pl-4.5 text-xs font-semibold text-cacao/50">Agotado</span>}
       </div>
 
@@ -403,7 +399,7 @@ export function MenuLaGloria() {
                         initial="hidden"
                         whileInView="show"
                         viewport={{ once: true, margin: "-60px" }}
-                        className="mt-4 grid gap-3 sm:grid-cols-2"
+                        className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"
                       >
                         {items.map((p) => (
                           <FilaProducto key={p.id} producto={p} categoria={cat} moneda={moneda} onAbrir={setDetalle} />

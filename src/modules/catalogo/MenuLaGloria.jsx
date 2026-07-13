@@ -259,21 +259,23 @@ export function MenuLaGloria() {
           {ajustes?.nombre_negocio ?? "Panadería Argentina La Gloria"}
         </motion.p>
         {mapsUrl && (
-          <motion.a
-            href={mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-marca px-6 py-3 text-sm font-bold text-cream shadow-lg ring-1 ring-white/10 transition hover:bg-corteza hover:text-cacao active:scale-95"
-          >
-            <MapPin className="h-5 w-5" strokeWidth={2.4} /> ¿Cómo llegar?
-          </motion.a>
+          <div className="mt-4 flex justify-center">
+            <motion.a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="inline-flex items-center gap-2 rounded-full bg-marca px-6 py-3 text-sm font-bold text-cream shadow-lg ring-1 ring-white/10 transition hover:bg-corteza hover:text-cacao active:scale-95"
+            >
+              <MapPin className="h-5 w-5" strokeWidth={2.4} /> ¿Cómo llegar?
+            </motion.a>
+          </div>
         )}
 
         {ES_DEMO && (
-          <p className="mt-3 inline-block rounded-full bg-corteza/20 px-3 py-1 text-xs font-semibold text-cacao ring-1 ring-corteza/40">
+          <p className="mx-auto mt-3 block w-fit rounded-full bg-corteza/20 px-3 py-1 text-xs font-semibold text-cacao ring-1 ring-corteza/40">
             ⚠ Algunas fotos son de muestra · los precios con ≈ son tentativos
           </p>
         )}

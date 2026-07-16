@@ -1,0 +1,30 @@
+name: CI
+
+# Gate de calidad SOLO-TESTS. Corre en cada push a dev/main y en cada PR.
+# NO compila ni despliega: el build y el deploy los hace Vercel.
+# Así GitHub no interviene con Vercel (separamos test de build).
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # No hay suite de tests todavía. El gate valida el lint del código.
+      # Cuando se agregue `npm test`, sumar aquí un step que lo ejecute.
+      - name: Lint
+        run: npm run lint

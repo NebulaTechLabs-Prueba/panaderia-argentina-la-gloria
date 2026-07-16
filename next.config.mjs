@@ -1,24 +1,16 @@
 /** @type {import('next').NextConfig} */
 
-// En GitHub Pages el sitio se sirve bajo /<nombre-repo>/.
-// En dev (next dev) queremos basePath vacío. El workflow de deploy
-// exporta NEXT_PUBLIC_BASE_PATH="/panaderia-argentina-la-gloria".
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-
+// Desplegado en Vercel como app Next.js normal (SSG/SSR gestionado por la
+// plataforma). Ya NO usamos export estático ni basePath de subdirectorio:
+// el sitio se sirve desde la raíz del dominio.
 const nextConfig = {
-  // Export estático: GitHub Pages solo sirve HTML/CSS/JS (sin servidor Node).
-  // Esto deshabilita Server Actions, cookies(), route handlers dinámicos, etc.
-  output: "export",
-
-  // GH Pages sirve directorios; trailingSlash genera /ruta/index.html.
+  // GH Pages requería directorios; lo conservamos para mantener las URLs con
+  // barra final estables (evita redirecciones al cambiar de hosting).
   trailingSlash: true,
 
-  // Subpath del repo en producción (condicional para no romper `next dev`).
-  basePath,
-  assetPrefix: basePath || undefined,
-
   images: {
-    // Sin servidor de optimización: Supabase Storage ya entrega URLs públicas.
+    // Por ahora sin optimización de imágenes (las servimos ya listas desde
+    // /public). Se puede activar más adelante en Vercel.
     unoptimized: true,
   },
 };

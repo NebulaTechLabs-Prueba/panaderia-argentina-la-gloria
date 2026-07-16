@@ -1,16 +1,25 @@
-// Genera el favicon PNG (fallback) y previews desde src/app/icon.svg.
-// Uso: node scripts/gen-favicon.mjs
+// Genera los iconos de la app (favicon de pestaña + apple-icon) a partir del
+// logo oficial public/logo.png, centrado en un lienzo cuadrado para que NO
+// quede desplazado.  Uso: node scripts/gen-favicon.mjs
 import sharp from "sharp";
-import { readFile } from "node:fs/promises";
 
-const svg = await readFile("src/app/icon.svg");
+const SRC = "public/logo.png";
 
-// Fallback PNG de alta resolución (Next lo sirve para navegadores sin SVG).
-await sharp(svg, { density: 384 }).resize(512, 512).png().toFile("src/app/icon.png");
+// Favicon de la pestaña: logo centrado, fondo transparente, con un pequeño
+// margen para que el círculo no toque los bordes.
+await sharp(SRC)
+  .resize(480, 480, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  .extend({ top: 16, bottom: 16, left: 16, right: 16, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  .png()
+  .toFile("src/app/icon.png");
 
-// Previews para revisar legibilidad a tamaños reales de pestaña.
-await sharp(svg, { density: 384 }).resize(96, 96).png().toFile("scripts/_preview-96.png");
-await sharp(svg, { density: 384 }).resize(32, 32).png().toFile("scripts/_preview-32.png");
-await sharp(svg, { density: 384 }).resize(16, 16).png().resize(96, 96, { kernel: "nearest" }).png().toFile("scripts/_preview-16-zoom.png");
+// apple-icon (home de iOS): iOS no respeta transparencia (la vuelve negra),
+// así que aplanamos sobre blanco.
+await sharp(SRC)
+  .resize(496, 496, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } })
+  .extend({ top: 8, bottom: 8, left: 8, right: 8, background: { r: 255, g: 255, b: 255, alpha: 1 } })
+  .flatten({ background: "#ffffff" })
+  .png()
+  .toFile("src/app/apple-icon.png");
 
-console.log("OK: icon.png (512) + previews generados");
+console.log("OK: icon.png + apple-icon.png regenerados desde el logo oficial");

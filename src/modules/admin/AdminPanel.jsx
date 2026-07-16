@@ -7,7 +7,7 @@ import {
   MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays, LogOut,
   Download, Printer, Ticket,
 } from "lucide-react";
-import { asset } from "@/lib/config/constants";
+import { asset, adminBase } from "@/lib/config/constants";
 import { ajustesMock } from "@/lib/data/mock/ajustes";
 import { Catalogo } from "./Catalogo";
 import { Promociones } from "./Promociones";
@@ -39,12 +39,12 @@ export function AdminPanel() {
   // backend no hay auth de verdad — es solo el flujo para el equipo.)
   useEffect(() => {
     if (sessionStorage.getItem("la-gloria:admin") === "1") setListo(true);
-    else router.replace("/admin/login");
+    else router.replace(`${adminBase()}/login`);
   }, [router]);
 
   const cerrarSesion = () => {
     sessionStorage.removeItem("la-gloria:admin");
-    router.replace("/admin/login");
+    router.replace(`${adminBase()}/login`);
   };
 
   const descargarCSV = () => {

@@ -15,3 +15,15 @@ export function asset(path) {
   const clean = path.startsWith("/") ? path : `/${path}`;
   return `${BASE_PATH}${clean}`;
 }
+
+// Prefijo de rutas del panel de gestión según el host (solo en cliente):
+// - En el subdominio admin.* el panel vive en la RAÍZ → base "" (ej: "/login").
+// - En el dominio principal o localhost vive en /admin → base "/admin".
+// El proxy (src/proxy.js) reescribe la raíz del subdominio hacia /admin, así que
+// ambos casos terminan sirviendo el mismo árbol de rutas.
+export function adminBase() {
+  if (typeof window !== "undefined" && window.location.hostname.startsWith("admin.")) {
+    return "";
+  }
+  return "/admin";
+}

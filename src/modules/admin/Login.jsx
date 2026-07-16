@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn } from "lucide-react";
-import { asset } from "@/lib/config/constants";
+import { asset, adminBase } from "@/lib/config/constants";
 
 const INPUT = "w-full rounded-lg border border-cacao/15 px-3 py-2.5 text-sm text-cacao outline-none focus:border-marca";
 
@@ -19,7 +19,7 @@ export function Login() {
     try {
       sessionStorage.setItem("la-gloria:admin", "1");
     } catch {}
-    router.replace("/admin");
+    router.replace(adminBase() || "/");
   };
 
   return (

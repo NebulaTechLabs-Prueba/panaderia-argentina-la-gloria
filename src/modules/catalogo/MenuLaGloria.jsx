@@ -56,11 +56,16 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
   const { agregar } = useCarrito();
   const [ok, setOk] = useState(false);
   const disp = producto.disponible;
-  const ocultarPrecio = producto.consultar || producto.unidad === "variable"; // precio a consultar: no se agrega
+  const hayVariantes = Array.isArray(producto.variantes) && producto.variantes.length > 0;
+  const ocultarPrecio = !hayVariantes && (producto.consultar || producto.unidad === "variable"); // a consultar: no se agrega
+  const precioDesde = hayVariantes
+    ? Math.min(...producto.variantes.map((v) => v.precio_centavos))
+    : producto.precio_centavos;
 
   function add(e) {
     e.stopPropagation();
     if (!disp) return;
+    if (hayVariantes) { onAbrir(producto); return; } // con formatos: elegir en el modal
     agregar(producto, 1);
     setOk(true);
     setTimeout(() => setOk(false), 1100);
@@ -109,15 +114,21 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
             </p>
           </>
         )}
+        {producto.nota && (
+          <span className="mt-1 ml-4.5 inline-block rounded-full bg-corteza/20 px-2 py-0.5 text-[11px] font-semibold text-cacao/70 ring-1 ring-corteza/30">
+            🎨 Consultá variedades
+          </span>
+        )}
         {!disp && <span className="pl-4.5 text-xs font-semibold text-cacao/50">Agotado</span>}
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-2">
         <div className="whitespace-nowrap text-right leading-tight">
+          {hayVariantes && <span className="mr-0.5 text-[11px] font-semibold text-cacao/45">desde</span>}
           <span className={`font-display text-base font-extrabold sm:text-lg ${ocultarPrecio ? "text-marca" : producto.estimado ? "text-cacao/60" : "text-cacao"}`}>
-            {ocultarPrecio ? "Consultar" : formatCentavos(producto.precio_centavos, moneda)}
+            {ocultarPrecio ? "Consultar" : formatCentavos(precioDesde, moneda)}
           </span>
-          {!ocultarPrecio && unidadSufijo(producto.unidad) && (
+          {!ocultarPrecio && !hayVariantes && unidadSufijo(producto.unidad) && (
             <span className="ml-0.5 text-xs font-semibold text-cacao/45">{unidadSufijo(producto.unidad)}</span>
           )}
           {producto.estimado && (

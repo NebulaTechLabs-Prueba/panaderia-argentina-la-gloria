@@ -15,15 +15,40 @@ export function ProductModal({ producto, categoria, onCerrar }) {
   const { agregar } = useCarrito();
   const moneda = useMoneda();
   const [cantidad, setCantidad] = useState(1);
-  const ocultarPrecio = producto?.consultar || producto?.unidad === "variable"; // a consultar: no se agrega
+  // Productos con precio por formato (unidad / ½ docena / docena, etc.).
+  const hayVariantes = Array.isArray(producto?.variantes) && producto.variantes.length > 0;
+  const [variante, setVariante] = useState(null);
+  const ocultarPrecio = !hayVariantes && (producto?.consultar || producto?.unidad === "variable");
+  const precioActivo = hayVariantes && variante ? variante.precio_centavos : producto?.precio_centavos;
 
-  // Reiniciar cantidad cada vez que se abre un producto distinto.
+  // Reiniciar cantidad y variante cada vez que se abre un producto distinto.
   useEffect(() => {
     setCantidad(1);
-  }, [producto?.id]);
+    // Arranca en la variante más barata (coincide con el "desde $X" de la tarjeta).
+    setVariante(
+      hayVariantes
+        ? producto.variantes.reduce((a, b) => (b.precio_centavos < a.precio_centavos ? b : a))
+        : null
+    );
+  }, [producto?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function agregarAlPedido() {
-    agregar(producto, cantidad);
+    if (hayVariantes && variante) {
+      // Cada formato es una línea propia en el carrito (id compuesto).
+      agregar(
+        {
+          ...producto,
+          id: `${producto.id}::${variante.etiqueta}`,
+          nombre: `${producto.nombre} · ${variante.etiqueta}`,
+          precio_centavos: variante.precio_centavos,
+          unidad: "uni",
+          consultar: false,
+        },
+        cantidad
+      );
+    } else {
+      agregar(producto, cantidad);
+    }
     onCerrar();
   }
 
@@ -74,12 +99,40 @@ export function ProductModal({ producto, categoria, onCerrar }) {
               <h2 className="font-display text-2xl font-bold text-cacao">{producto.nombre}</h2>
               <p className="mt-2 text-cacao/70">{producto.descripcion}</p>
 
+              {producto.nota && (
+                <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-corteza/20 px-3 py-1.5 text-sm font-semibold text-cacao ring-1 ring-corteza/40">
+                  🎨 {producto.nota}
+                </p>
+              )}
+
+              {hayVariantes && (
+                <div className="mt-4">
+                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-cacao/50">Elegí el formato</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {producto.variantes.map((v) => {
+                      const activa = variante?.etiqueta === v.etiqueta;
+                      return (
+                        <button
+                          key={v.etiqueta}
+                          type="button"
+                          onClick={() => setVariante(v)}
+                          className={`flex flex-col items-center rounded-2xl border-2 px-2 py-2.5 transition ${activa ? "border-marca bg-marca/10" : "border-cacao/10 bg-white/60 hover:border-marca/40"}`}
+                        >
+                          <span className="text-xs font-bold text-cacao">{v.etiqueta}</span>
+                          <span className="mt-0.5 font-display text-sm font-extrabold text-marca">{formatCentavos(v.precio_centavos, moneda)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-4 flex items-center justify-between">
                 <div className="leading-tight">
                   <span className={`font-display text-2xl font-bold ${producto.estimado ? "text-marca/70" : "text-marca"}`}>
-                    {ocultarPrecio ? "Consultar" : formatCentavos(producto.precio_centavos, moneda)}
+                    {ocultarPrecio ? "Consultar" : formatCentavos(precioActivo, moneda)}
                   </span>
-                  {unidadSufijo(producto.unidad) && (
+                  {!hayVariantes && unidadSufijo(producto.unidad) && (
                     <span className="ml-1 text-sm font-semibold text-cacao/45">{unidadSufijo(producto.unidad)}</span>
                   )}
                   {producto.estimado && (
@@ -119,7 +172,7 @@ export function ProductModal({ producto, categoria, onCerrar }) {
                   <ShoppingBag className="h-5 w-5" strokeWidth={2.2} />
                   {ocultarPrecio
                     ? `Agregar ${cantidad > 1 ? `${cantidad} ` : ""}al pedido · a consultar`
-                    : `Agregar ${cantidad > 1 ? `${cantidad} ` : ""}al pedido · ${formatCentavos(producto.precio_centavos * cantidad, moneda)}`}
+                    : `Agregar ${cantidad > 1 ? `${cantidad} ` : ""}al pedido · ${formatCentavos(precioActivo * cantidad, moneda)}`}
                 </button>
               ) : (
                 <p className="mt-5 rounded-2xl bg-masa px-5 py-4 text-center font-medium text-cacao/60">

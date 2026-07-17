@@ -35,13 +35,14 @@ export function AdminPanel() {
   const [sec, setSec] = useState("resumen");
   const [rango, setRango] = useState("30 días");
   const [menu, setMenu] = useState(false);
+  const [email, setEmail] = useState("");
   const actual = NAV.find((n) => n.id === sec);
 
   // Guard real: sin sesión de Supabase, al login.
   useEffect(() => {
     const supabase = getSupabase();
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setListo(true);
+      if (data.session) { setListo(true); setEmail(data.session.user?.email || ""); }
       else router.replace(`${adminBase()}/login`);
     });
     // Si la sesión expira o se cierra en otra pestaña, volver al login.
@@ -185,8 +186,11 @@ export function AdminPanel() {
             >
               <Printer className="h-3.5 w-3.5" /> PDF
             </button>
-            <div className="grid h-9 w-9 place-items-center rounded-full bg-marca text-sm font-bold text-cream">
-              M
+            <div className="flex items-center gap-2" title={email}>
+              <span className="hidden max-w-48 truncate text-xs font-medium text-cacao/55 sm:inline">{email}</span>
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-marca text-sm font-bold uppercase text-cream">
+                {email ? email[0] : "·"}
+              </span>
             </div>
           </div>
         </header>

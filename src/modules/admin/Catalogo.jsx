@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, X, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Upload, Loader2, Search } from "lucide-react";
 import { getSupabase } from "@/lib/supabase/client";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { unidadSufijo, UNIDADES } from "@/lib/unidades";
@@ -15,7 +15,7 @@ const ICONOS = ["cafe", "bebida", "sandwich", "factura", "pasta", "pizza", "empa
 const nuevoProducto = () => ({
   id: "", nombre: "", categoria_id: "", precio_centavos: 0, unidad: "uni",
   estimado: false, consultar: false, nota: "", variantes: null, descripcion: "",
-  disponible: true, destacado: false, imagen_url: "", etiqueta: "", _modo: "simple",
+  disponible: true, destacado: false, imagen_url: "", etiqueta: "", min_cantidad: 1, _modo: "simple",
 });
 const nuevaCategoria = () => ({
   id: "", nombre: "", slug: "", orden: 99, activa: true,
@@ -23,12 +23,13 @@ const nuevaCategoria = () => ({
 });
 
 // Columnas reales de cada tabla (para no mandar campos extra —ni _modo— al upsert).
-const PROD_COLS = ["id", "categoria_id", "nombre", "descripcion", "precio_centavos", "unidad", "estimado", "consultar", "nota", "variantes", "imagen_url", "disponible", "destacado", "orden", "etiqueta"];
+const PROD_COLS = ["id", "categoria_id", "nombre", "descripcion", "precio_centavos", "unidad", "estimado", "consultar", "nota", "variantes", "imagen_url", "disponible", "destacado", "orden", "etiqueta", "min_cantidad"];
 const CAT_COLS = ["id", "nombre", "slug", "orden", "activa", "slogan", "texto", "color", "icono", "ref_keyword"];
 const pick = (o, cols) => Object.fromEntries(cols.filter((k) => k in o && o[k] !== undefined).map((k) => [k, o[k]]));
 const slugify = (s) =>
   (s || "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || String(Date.now());
+const norm = (s) => (s || "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const dolar = (cent) => (Number(cent) || 0) / 100;
 const aCent = (usd) => Math.round((Number(usd) || 0) * 100);
 const precioDesde = (p) => (p.variantes?.length ? Math.min(...p.variantes.map((v) => v.precio_centavos)) : p.precio_centavos);
@@ -41,7 +42,23 @@ export function Catalogo() {
   const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [msg, setMsg] = useState("");
+  const [busqueda, setBusqueda] = useState("");
+  const [subiendo, setSubiendo] = useState(false);
   const [form, setForm] = useState(null); // { tipo, esNuevo, data }
+
+  // Sube un archivo a Supabase Storage (bucket "productos") y devuelve su URL pública.
+  async function subirImagen(file) {
+    setSubiendo(true);
+    setMsg("");
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const base = (form?.data?.id || "img").replace(/[^a-z0-9-]/gi, "");
+    const path = `${base}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("productos").upload(path, file, { upsert: true, contentType: file.type });
+    if (error) { setMsg("No se pudo subir la imagen: " + error.message); setSubiendo(false); return; }
+    const { data } = supabase.storage.from("productos").getPublicUrl(path);
+    setCampo("imagen_url", data.publicUrl);
+    setSubiendo(false);
+  }
 
   async function cargar() {
     setCargando(true);
@@ -57,6 +74,10 @@ export function Catalogo() {
 
   const nombreCat = (id) => categorias.find((c) => c.id === id)?.nombre ?? "—";
   const setCampo = (k, v) => setForm((f) => ({ ...f, data: { ...f.data, [k]: v } }));
+
+  const q = norm(busqueda);
+  const prodsFiltrados = q ? productos.filter((p) => norm(p.nombre).includes(q) || norm(nombreCat(p.categoria_id)).includes(q)) : productos;
+  const catsFiltradas = q ? categorias.filter((c) => norm(c.nombre).includes(q) || norm(c.slogan).includes(q)) : categorias;
 
   function editarProducto(p) {
     const modo = p.consultar ? "consultar" : p.variantes?.length ? "formatos" : "simple";
@@ -81,6 +102,10 @@ export function Catalogo() {
   async function guardar(e) {
     e.preventDefault();
     const { tipo, data } = form;
+    if (tipo === "producto" && (data.imagen_url || "").startsWith("blob:")) {
+      setMsg("La imagen no terminó de subir. Esperá a que diga “subida” o volvé a cargar el archivo.");
+      return;
+    }
     if (tipo === "producto") {
       const d = { ...data };
       if (d._modo === "formatos") {
@@ -130,6 +155,15 @@ export function Catalogo() {
           <TabBtn id="productos">Productos ({productos.length})</TabBtn>
           <TabBtn id="categorias">Categorías ({categorias.length})</TabBtn>
         </div>
+        <div className="relative order-last w-full sm:order-none sm:w-64">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cacao/40" />
+          <input
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder={tab === "productos" ? "Buscar producto…" : "Buscar categoría…"}
+            className="w-full rounded-full border border-cacao/15 bg-white py-2 pl-9 pr-3 text-sm text-cacao outline-none focus:border-marca"
+          />
+        </div>
         <button
           type="button"
           onClick={abrirNuevo}
@@ -160,7 +194,7 @@ export function Catalogo() {
               </tr>
             </thead>
             <tbody className="divide-y divide-cacao/5">
-              {productos.map((p) => (
+              {prodsFiltrados.map((p) => (
                 <tr key={p.id} className="hover:bg-masa/20">
                   <td className="p-3">
                     {p.imagen_url ? (
@@ -220,7 +254,7 @@ export function Catalogo() {
               </tr>
             </thead>
             <tbody className="divide-y divide-cacao/5">
-              {categorias.map((c) => (
+              {catsFiltradas.map((c) => (
                 <tr key={c.id} className="hover:bg-masa/20">
                   <td className="p-3 font-medium text-cacao/85">
                     <span className="inline-flex items-center gap-2">
@@ -327,14 +361,17 @@ export function Catalogo() {
                   )}
                 </div>
 
-                <Campo label="Nota / consideración (opcional — ej: Pedido mínimo 5 porciones · Consultá por otras variedades)">
+                <Campo label="Pedido mínimo (cantidad — 1 = sin mínimo). El contador del sitio arranca acá y no baja de este número.">
+                  <input type="number" min="1" value={form.data.min_cantidad || 1} onChange={(e) => setCampo("min_cantidad", Math.max(1, Number(e.target.value) || 1))} className={INPUT} />
+                </Campo>
+                <Campo label="Nota / consideración (opcional — ej: Consultá por otras variedades)">
                   <input value={form.data.nota || ""} onChange={(e) => setCampo("nota", e.target.value)} className={INPUT} />
                 </Campo>
                 <Campo label="Descripción">
                   <textarea rows={2} value={form.data.descripcion || ""} onChange={(e) => setCampo("descripcion", e.target.value)} className={INPUT} />
                 </Campo>
 
-                <Campo label="Imagen (la que se ve en el sitio público)">
+                <Campo label="Imagen (pegá una URL o subí un archivo)">
                   <div className="flex items-center gap-3">
                     <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-masa/40 ring-1 ring-cacao/10">
                       {form.data.imagen_url ? (
@@ -345,11 +382,15 @@ export function Catalogo() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1 space-y-2">
-                      <input value={form.data.imagen_url || ""} onChange={(e) => setCampo("imagen_url", e.target.value)} placeholder="URL de la imagen" className={INPUT} />
-                      <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-masa/60 px-3 py-1.5 text-xs font-semibold text-cacao/70 transition hover:bg-masa">
-                        <Upload className="h-3.5 w-3.5" /> Subir archivo
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setCampo("imagen_url", URL.createObjectURL(f)); }} />
+                      <input value={form.data.imagen_url || ""} onChange={(e) => setCampo("imagen_url", e.target.value)} placeholder="https://…" className={INPUT} />
+                      <label className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${subiendo ? "bg-masa/40 text-cacao/40" : "bg-masa/60 text-cacao/70 hover:bg-masa"}`}>
+                        {subiendo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                        {subiendo ? "Subiendo…" : "Subir archivo"}
+                        <input type="file" accept="image/*" disabled={subiendo} className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) subirImagen(f); e.target.value = ""; }} />
                       </label>
+                      {(form.data.imagen_url || "").startsWith("blob:") && (
+                        <p className="text-[11px] font-medium text-red-600">Esa imagen es temporal. Volvé a subir el archivo para guardarla.</p>
+                      )}
                     </div>
                   </div>
                 </Campo>

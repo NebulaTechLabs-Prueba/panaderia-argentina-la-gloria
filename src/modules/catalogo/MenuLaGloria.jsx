@@ -65,7 +65,8 @@ function FilaProducto({ producto, categoria, moneda, onAbrir }) {
   function add(e) {
     e.stopPropagation();
     if (!disp) return;
-    if (hayVariantes) { onAbrir(producto); return; } // con formatos: elegir en el modal
+    // Con formatos o pedido mínimo: se resuelve en el modal.
+    if (hayVariantes || (producto.min_cantidad || 1) > 1) { onAbrir(producto); return; }
     agregar(producto, 1);
     setOk(true);
     setTimeout(() => setOk(false), 1100);

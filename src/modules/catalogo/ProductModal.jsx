@@ -20,10 +20,11 @@ export function ProductModal({ producto, categoria, onCerrar }) {
   const [variante, setVariante] = useState(null);
   const ocultarPrecio = !hayVariantes && (producto?.consultar || producto?.unidad === "variable");
   const precioActivo = hayVariantes && variante ? variante.precio_centavos : producto?.precio_centavos;
+  const minQty = producto?.min_cantidad || 1;
 
   // Reiniciar cantidad y variante cada vez que se abre un producto distinto.
   useEffect(() => {
-    setCantidad(1);
+    setCantidad(minQty);
     // Arranca en la variante más barata (coincide con el "desde $X" de la tarjeta).
     setVariante(
       hayVariantes
@@ -97,7 +98,12 @@ export function ProductModal({ producto, categoria, onCerrar }) {
                 </span>
               )}
               <h2 className="font-display text-2xl font-bold text-cacao">{producto.nombre}</h2>
-              <p className="mt-2 text-cacao/70">{producto.descripcion}</p>
+              {producto.descripcion && <p className="mt-2 text-cacao/70">{producto.descripcion}</p>}
+              {minQty > 1 && (
+                <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
+                  🧾 Pedido mínimo: {minQty} {producto.unidad === "porcion" ? "porciones" : "unidades"}
+                </p>
+              )}
 
               {producto.nota && (
                 <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-corteza/20 px-3 py-1.5 text-sm font-semibold text-cacao ring-1 ring-corteza/40">
@@ -145,7 +151,7 @@ export function ProductModal({ producto, categoria, onCerrar }) {
                 <div className="flex items-center gap-2 rounded-full bg-masa p-1">
                   <button
                     type="button"
-                    onClick={() => { playMenos(); setCantidad((c) => Math.max(1, c - 1)); }}
+                    onClick={() => { playMenos(); setCantidad((c) => Math.max(minQty, c - 1)); }}
                     aria-label="Quitar uno"
                     className="grid h-9 w-9 place-items-center rounded-full text-cacao transition hover:bg-cream"
                   >

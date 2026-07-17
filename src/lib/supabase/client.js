@@ -1,25 +1,21 @@
-// Cliente Supabase para el NAVEGADOR. En export estático (GitHub Pages) no hay
-// servidor: todas las lecturas/escrituras de Supabase ocurren client-side y la
-// seguridad real la imponen las políticas RLS en la base.
+// Cliente Supabase para el NAVEGADOR. La app es client-side: todas las
+// lecturas/escrituras ocurren en el browser y la seguridad real la imponen las
+// políticas RLS de la base.
 //
-// ⚠ Aún NO está cableado: la app usa datos mock vía lib/data. Cuando se conecte
-// Supabase, lib/data/index.js usará este cliente. Requiere variables de entorno:
-//   NEXT_PUBLIC_SUPABASE_URL
-//   NEXT_PUBLIC_SUPABASE_ANON_KEY
+// La URL y la PUBLISHABLE KEY son públicas por diseño (van al bundle del
+// navegador). Se pueden overridear por env vars; si no, usan estos valores.
 import { createBrowserClient } from "@supabase/ssr";
+
+const URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://hiwfupqzkrrqanpufezp.supabase.co";
+const KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  "sb_publishable_8jP8m_7YqqJbtMqN-UeP-w_Je2KxyxM";
 
 let _client = null;
 
-// Singleton perezoso: no rompe el build si las env vars todavía no existen.
+// Singleton perezoso.
 export function getSupabase() {
-  if (_client) return _client;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) {
-    throw new Error(
-      "Faltan NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY"
-    );
-  }
-  _client = createBrowserClient(url, anonKey);
+  if (!_client) _client = createBrowserClient(URL, KEY);
   return _client;
 }

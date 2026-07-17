@@ -8,6 +8,7 @@ import {
   Download, Printer, Ticket,
 } from "lucide-react";
 import { asset, adminBase } from "@/lib/config/constants";
+import { getSupabase } from "@/lib/supabase/client";
 import { ajustesMock } from "@/lib/data/mock/ajustes";
 import { Catalogo } from "./Catalogo";
 import { Promociones } from "./Promociones";
@@ -35,15 +36,22 @@ export function AdminPanel() {
   const [menu, setMenu] = useState(false);
   const actual = NAV.find((n) => n.id === sec);
 
-  // Guard simulado: sin "sesión" te manda al login. (No es seguridad real; sin
-  // backend no hay auth de verdad — es solo el flujo para el equipo.)
+  // Guard real: sin sesión de Supabase, al login.
   useEffect(() => {
-    if (sessionStorage.getItem("la-gloria:admin") === "1") setListo(true);
-    else router.replace(`${adminBase()}/login`);
+    const supabase = getSupabase();
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setListo(true);
+      else router.replace(`${adminBase()}/login`);
+    });
+    // Si la sesión expira o se cierra en otra pestaña, volver al login.
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (!session) router.replace(`${adminBase()}/login`);
+    });
+    return () => sub.subscription.unsubscribe();
   }, [router]);
 
-  const cerrarSesion = () => {
-    sessionStorage.removeItem("la-gloria:admin");
+  const cerrarSesion = async () => {
+    await getSupabase().auth.signOut();
     router.replace(`${adminBase()}/login`);
   };
 

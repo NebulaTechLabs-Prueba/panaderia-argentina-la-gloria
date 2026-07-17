@@ -1,33 +1,17 @@
 // ────────────────────────────────────────────────────────────────────────────
 // CAPA DE ACCESO A DATOS
-// El resto de la app SOLO importa desde acá. Hoy resuelve con datos mock; mañana
-// se reemplaza el cuerpo de cada función por una consulta a Supabase (en el
-// navegador, vía lib/supabase/client) y la UI no cambia.
-//
-//   Ejemplo futuro:
-//     import { supabase } from "@/lib/supabase/client";
-//     export async function getCategorias() {
-//       const { data, error } = await supabase
-//         .from("categories").select("*").eq("activa", true).order("orden");
-//       if (error) throw error;
-//       return data;
-//     }
+// El resto de la app SOLO importa desde acá. Lee de Supabase (client-side).
+// Si Supabase falla (red/keys), cae a los datos mock para no romper el sitio.
 // ────────────────────────────────────────────────────────────────────────────
 
+import { getSupabase } from "@/lib/supabase/client";
 import { categoriasMock } from "./mock/categorias";
 import { productosMock } from "./mock/productos";
 import { ajustesMock } from "./mock/ajustes";
 import { IDS_CON_FOTO } from "./imagenesLocales";
 import { asset } from "@/lib/config/constants";
 
-// Pequeño delay para simular red y poder probar estados de carga/skeletons.
-const SIMULAR_LATENCIA_MS = 250;
-const demora = (valor) =>
-  new Promise((resolve) => setTimeout(() => resolve(valor), SIMULAR_LATENCIA_MS));
-
-// Asigna la FOTO REAL (local, en /public/img/productos/p-<id>.jpg) a los productos
-// que ya la tienen. Los demás quedan con imagen_url null → la UI muestra el
-// placeholder de marca con "Próximamente". Respeta una imagen_url ya cargada.
+// Fallback: asigna la foto local a los productos mock que la tienen.
 function conImagenesLocales(productos) {
   return productos.map((p) => {
     if (p.imagen_url) return p;
@@ -38,26 +22,51 @@ function conImagenesLocales(productos) {
 
 // Solo categorías activas, ordenadas (lo que vería el público).
 export async function getCategorias() {
-  const data = categoriasMock
-    .filter((c) => c.activa)
-    .sort((a, b) => a.orden - b.orden);
-  return demora(data);
+  try {
+    const { data, error } = await getSupabase()
+      .from("categories")
+      .select("*")
+      .eq("activa", true)
+      .order("orden");
+    if (error) throw error;
+    // ref_keyword (DB) → refKeyword (UI, legado).
+    return data.map((c) => ({ ...c, refKeyword: c.ref_keyword }));
+  } catch (e) {
+    console.warn("getCategorias → fallback mock:", e?.message);
+    return categoriasMock.filter((c) => c.activa).sort((a, b) => a.orden - b.orden);
+  }
 }
 
-// Productos para el catálogo público: incluye los no disponibles para poder
-// mostrarlos como "agotado" (no se ocultan). Ordenados por categoría y orden.
+// Productos del catálogo público: incluye no disponibles (se muestran "agotado").
 export async function getProductos() {
-  const ordenados = [...productosMock].sort((a, b) => a.orden - b.orden);
-  return demora(conImagenesLocales(ordenados));
+  try {
+    const { data, error } = await getSupabase()
+      .from("products")
+      .select("*")
+      .order("orden");
+    if (error) throw error;
+    return data;
+  } catch (e) {
+    console.warn("getProductos → fallback mock:", e?.message);
+    return conImagenesLocales([...productosMock].sort((a, b) => a.orden - b.orden));
+  }
 }
 
-// Ajustes del negocio (fila única). Prefija las rutas de imágenes locales
-// (logo/portada) con el basePath para que carguen en GitHub Pages.
+// Ajustes del negocio (fila única id=1).
 export async function getAjustes() {
-  const ajustes = {
-    ...ajustesMock,
-    logo_url: ajustesMock.logo_url ? asset(ajustesMock.logo_url) : null,
-    portada_url: ajustesMock.portada_url ? asset(ajustesMock.portada_url) : null,
-  };
-  return demora(ajustes);
+  try {
+    const { data, error } = await getSupabase()
+      .from("business_settings")
+      .select("*")
+      .eq("id", 1)
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (e) {
+    console.warn("getAjustes → fallback mock:", e?.message);
+    return {
+      ...ajustesMock,
+      logo_url: ajustesMock.logo_url ? asset(ajustesMock.logo_url) : null,
+    };
+  }
 }

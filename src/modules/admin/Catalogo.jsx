@@ -1,31 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, X, Upload } from "lucide-react";
-import { productosMock } from "@/lib/data/mock/productos";
-import { categoriasMock } from "@/lib/data/mock/categorias";
-import { IDS_CON_FOTO } from "@/lib/data/imagenesLocales";
-import { asset } from "@/lib/config/constants";
+import { getSupabase } from "@/lib/supabase/client";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { unidadSufijo, UNIDADES } from "@/lib/unidades";
 import { estiloBadge } from "@/lib/badges";
-
-// Imagen que el producto muestra HOY en el sitio público (misma lógica que getProductos).
-const imagenActual = (p) =>
-  p.imagen_url || (IDS_CON_FOTO.has(p.id) ? asset(`/img/productos/${p.id}.jpg`) : "");
 
 const nuevoProducto = () => ({ id: "", nombre: "", categoria_id: "", precio_centavos: 0, unidad: "uni", estimado: false, consultar: false, descripcion: "", disponible: true, imagen_url: "", etiqueta: "" });
 
 const BADGES = ["Nuevo", "Promo", "2x1", "Destacado", "Más pedido", "Recomendado"];
 const nuevaCategoria = () => ({ id: "", nombre: "", slug: "", orden: 99, activa: true });
 
-// CRUD de catálogo (SIMULADO): opera sobre estado local. Los cambios no persisten
-// —se resetean al recargar— hasta que exista el backend (Supabase).
+// Columnas reales de cada tabla (para no mandar campos extra al upsert).
+const PROD_COLS = ["id", "categoria_id", "nombre", "descripcion", "precio_centavos", "unidad", "estimado", "consultar", "nota", "variantes", "imagen_url", "disponible", "destacado", "orden", "etiqueta"];
+const CAT_COLS = ["id", "nombre", "slug", "orden", "activa", "slogan", "texto", "color", "icono", "ref_keyword"];
+const pick = (o, cols) => Object.fromEntries(cols.filter((k) => k in o && o[k] !== undefined).map((k) => [k, o[k]]));
+const slugify = (s) =>
+  (s || "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || String(Date.now());
+
+// CRUD de catálogo REAL contra Supabase (persiste). RLS restringe la escritura
+// al super-admin autenticado.
 export function Catalogo() {
+  const supabase = getSupabase();
   const [tab, setTab] = useState("productos");
-  const [productos, setProductos] = useState(() => productosMock.map((p) => ({ ...p, imagen_url: imagenActual(p) })));
-  const [categorias, setCategorias] = useState(() => categoriasMock.map((c) => ({ ...c })));
+  const [productos, setProductos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [msg, setMsg] = useState("");
   const [form, setForm] = useState(null); // { tipo, esNuevo, data }
+
+  async function cargar() {
+    setCargando(true);
+    const [{ data: prods }, { data: cats }] = await Promise.all([
+      supabase.from("products").select("*").order("orden"),
+      supabase.from("categories").select("*").order("orden"),
+    ]);
+    setProductos(prods || []);
+    setCategorias(cats || []);
+    setCargando(false);
+  }
+  useEffect(() => { cargar(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const nombreCat = (id) => categorias.find((c) => c.id === id)?.nombre ?? "—";
   const setCampo = (k, v) => setForm((f) => ({ ...f, data: { ...f.data, [k]: v } }));
@@ -37,26 +53,33 @@ export function Catalogo() {
         : { tipo: "categoria", esNuevo: true, data: nuevaCategoria() }
     );
   }
-  function eliminar(tipo, id) {
-    if (!window.confirm("¿Eliminar? (demo — no se guarda)")) return;
+  async function eliminar(tipo, id) {
+    if (!window.confirm("¿Eliminar definitivamente?")) return;
+    const tabla = tipo === "producto" ? "products" : "categories";
+    const { error } = await supabase.from(tabla).delete().eq("id", id);
+    if (error) { setMsg("No se pudo eliminar: " + error.message); return; }
     if (tipo === "producto") setProductos((ps) => ps.filter((p) => p.id !== id));
     else setCategorias((cs) => cs.filter((c) => c.id !== id));
+    setMsg("Eliminado ✓");
   }
-  function guardar(e) {
+  async function guardar(e) {
     e.preventDefault();
-    const { tipo, esNuevo, data } = form;
+    const { tipo, data } = form;
     if (tipo === "producto") {
-      const item = { ...data, id: data.id || `p-${Date.now()}` };
-      setProductos((ps) => (esNuevo ? [item, ...ps] : ps.map((p) => (p.id === item.id ? item : p))));
+      const row = pick({ ...data, id: data.id || `p-${slugify(data.nombre)}` }, PROD_COLS);
+      const { error } = await supabase.from("products").upsert(row);
+      if (error) { setMsg("No se pudo guardar: " + error.message); return; }
     } else {
-      const item = {
-        ...data,
-        id: data.id || `cat-${Date.now()}`,
-        slug: data.slug || data.nombre.toLowerCase().replace(/\s+/g, "-"),
-      };
-      setCategorias((cs) => (esNuevo ? [...cs, item] : cs.map((c) => (c.id === item.id ? item : c))));
+      const row = pick(
+        { ...data, id: data.id || `cat-${slugify(data.nombre)}`, slug: data.slug || slugify(data.nombre), ref_keyword: data.ref_keyword ?? data.refKeyword },
+        CAT_COLS
+      );
+      const { error } = await supabase.from("categories").upsert(row);
+      if (error) { setMsg("No se pudo guardar: " + error.message); return; }
     }
     setForm(null);
+    setMsg("Guardado ✓");
+    cargar();
   }
 
   const TabBtn = ({ id, children }) => (
@@ -88,9 +111,11 @@ export function Catalogo() {
         </button>
       </div>
 
-      <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-        Demo: los cambios funcionan pero <b>no se guardan</b> (sin backend). Con Supabase esto persistirá.
-      </p>
+      {(cargando || msg) && (
+        <p className={`rounded-lg px-3 py-2 text-xs font-medium ring-1 ${cargando ? "bg-masa/40 text-cacao/60 ring-cacao/10" : "bg-green-50 text-green-700 ring-green-200"}`}>
+          {cargando ? "Cargando del servidor…" : msg}
+        </p>
+      )}
 
       <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-cacao/5">
         {tab === "productos" ? (

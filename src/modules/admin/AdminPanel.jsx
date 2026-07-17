@@ -155,20 +155,22 @@ export function AdminPanel() {
             <h1 className="truncate font-display text-lg font-bold">{actual?.label}</h1>
           </div>
           <div className="ml-auto flex items-center gap-2 print:hidden sm:gap-3">
-            <div className="hidden items-center gap-1 rounded-full bg-masa/70 p-1 sm:flex">
-              {M.RANGOS.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRango(r)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                    rango === r ? "bg-white text-cacao shadow-sm" : "text-cacao/60 hover:text-cacao"
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
+            {["resumen", "trafico", "conversiones", "consumidor", "seo"].includes(sec) && (
+              <div className="hidden items-center gap-1 rounded-full bg-masa/70 p-1 sm:flex">
+                {M.RANGOS.map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRango(r)}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      rango === r ? "bg-white text-cacao shadow-sm" : "text-cacao/60 hover:text-cacao"
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            )}
             <button
               type="button"
               onClick={descargarCSV}

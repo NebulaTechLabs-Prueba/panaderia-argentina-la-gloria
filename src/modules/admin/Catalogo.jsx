@@ -380,28 +380,14 @@ export function Catalogo() {
                   <textarea rows={2} value={form.data.descripcion || ""} onChange={(e) => setCampo("descripcion", e.target.value)} className={INPUT} />
                 </Campo>
 
-                <Campo label="Imagen (pegá una URL o subí un archivo)">
-                  <div className="flex items-center gap-3">
-                    <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-masa/40 ring-1 ring-cacao/10">
-                      {form.data.imagen_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={form.data.imagen_url} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="text-[10px] text-cacao/40">Sin foto</span>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <input value={form.data.imagen_url || ""} onChange={(e) => setCampo("imagen_url", e.target.value)} placeholder="https://…" className={INPUT} />
-                      <label className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${subiendo ? "bg-masa/40 text-cacao/40" : "bg-masa/60 text-cacao/70 hover:bg-masa"}`}>
-                        {subiendo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                        {subiendo ? "Subiendo…" : "Subir archivo"}
-                        <input type="file" accept="image/*" disabled={subiendo} className="hidden" onChange={(e) => { const f = e.target.files?.[0]; const input = e.target; if (f) subirImagen(f).finally(() => { input.value = ""; }); }} />
-                      </label>
-                      {(form.data.imagen_url || "").startsWith("blob:") && (
-                        <p className="text-[11px] font-medium text-red-600">Esa imagen es temporal. Volvé a subir el archivo para guardarla.</p>
-                      )}
-                    </div>
-                  </div>
+                <Campo label="Imagen (la que se ve en el sitio público)">
+                  <ZonaImagen
+                    url={form.data.imagen_url}
+                    subiendo={subiendo}
+                    onArchivo={subirImagen}
+                    onUrl={(u) => setCampo("imagen_url", u)}
+                    onQuitar={() => setCampo("imagen_url", "")}
+                  />
                 </Campo>
 
                 <Campo label="Etiqueta / badge (para destacar o promocionar)">
@@ -504,6 +490,76 @@ function Formatos({ filas, onChange }) {
         + Agregar formato
       </button>
       <p className="text-[11px] text-cacao/45">En la tarjeta se muestra “desde” el más barato; en el detalle, el cliente elige el formato.</p>
+    </div>
+  );
+}
+
+// Zona de imagen: drag & drop + clic para subir, con preview y sin exponer la
+// URL técnica. Opción secundaria de pegar un enlace.
+function ZonaImagen({ url, subiendo, onArchivo, onUrl, onQuitar }) {
+  const [drag, setDrag] = useState(false);
+  const [modoUrl, setModoUrl] = useState(false);
+  const [urlManual, setUrlManual] = useState("");
+
+  const soltar = (e) => {
+    e.preventDefault();
+    setDrag(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) onArchivo(f);
+  };
+
+  if (url) {
+    return (
+      <div className="flex items-center gap-3 rounded-xl bg-masa/30 p-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={url} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover ring-1 ring-cacao/10" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-green-700">✓ Imagen cargada</p>
+          <p className="text-xs text-cacao/45">Se muestra en el sitio público.</p>
+        </div>
+        <button type="button" onClick={onQuitar} className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50">
+          Quitar / cambiar
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <label
+        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={soltar}
+        className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed px-4 py-6 text-center transition ${drag ? "border-marca bg-marca/5" : "border-cacao/20 hover:border-marca/50 hover:bg-masa/20"}`}
+      >
+        {subiendo ? (
+          <span className="flex items-center gap-2 text-sm text-cacao/60"><Loader2 className="h-4 w-4 animate-spin" /> Subiendo…</span>
+        ) : (
+          <>
+            <Upload className="h-6 w-6 text-cacao/40" />
+            <span className="text-sm font-semibold text-cacao/70">Arrastrá una imagen o hacé clic</span>
+            <span className="text-xs text-cacao/45">JPG o PNG</span>
+          </>
+        )}
+        <input type="file" accept="image/*" disabled={subiendo} className="hidden" onChange={(e) => { const f = e.target.files?.[0]; const input = e.target; if (f) onArchivo(f).finally(() => { input.value = ""; }); }} />
+      </label>
+
+      {!modoUrl ? (
+        <button type="button" onClick={() => setModoUrl(true)} className="text-xs font-semibold text-marca hover:underline">
+          o pegar el enlace de una imagen
+        </button>
+      ) : (
+        <div className="flex gap-2">
+          <input value={urlManual} onChange={(e) => setUrlManual(e.target.value)} placeholder="https://…" className={INPUT} />
+          <button
+            type="button"
+            onClick={() => { if (urlManual.trim()) { onUrl(urlManual.trim()); setUrlManual(""); setModoUrl(false); } }}
+            className="shrink-0 rounded-lg bg-marca px-3 py-2 text-xs font-bold text-cream hover:brightness-110"
+          >
+            Usar
+          </button>
+        </div>
+      )}
     </div>
   );
 }

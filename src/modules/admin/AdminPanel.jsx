@@ -573,13 +573,13 @@ function Herramientas() {
       ))}
       <div className="rounded-2xl border border-dashed border-cacao/20 p-5 text-sm text-cacao/55 lg:col-span-2">
         <p className="flex items-center gap-2 font-semibold text-cacao/70">
-          <ExternalLink className="h-4 w-4" /> Qué falta para la analítica real
+          <ExternalLink className="h-4 w-4" /> Qué falta para ver métricas reales
         </p>
         <p className="mt-2">
-          El catálogo, las promociones, los ajustes y el acceso ya funcionan sobre <b>Supabase</b>. Para que la
-          analítica deje de ser de muestra falta sumar el seguimiento: GA4 para el tráfico general y eventos
-          propios (ver producto → carrito → WhatsApp) guardados en Supabase para el embudo, más Search Console
-          para el SEO.
+          Los productos, promociones y ajustes ya se gestionan desde este panel y se reflejan en el sitio al
+          instante. Para que la analítica deje de ser de muestra falta activar el seguimiento del sitio: Google
+          Analytics para el tráfico y el registro de eventos (ver producto → agregar al carrito → enviar por
+          WhatsApp) para el embudo, más Search Console para el SEO.
         </p>
       </div>
     </div>

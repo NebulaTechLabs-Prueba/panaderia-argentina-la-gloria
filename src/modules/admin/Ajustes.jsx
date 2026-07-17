@@ -10,6 +10,14 @@ const DIAS = [["lun", "Lunes"], ["mar", "Martes"], ["mie", "Miércoles"], ["jue"
 const COLS = ["id", "nombre_negocio", "whatsapp_numero", "tagline", "direccion", "maps_url", "mensaje_bienvenida", "mensaje_pedido_template", "instagram_url", "tiktok_url", "facebook_url", "horarios"];
 const pick = (o) => Object.fromEntries(COLS.filter((k) => k in o && o[k] !== undefined).map((k) => [k, o[k]]));
 
+// Horario guardado como texto ("07:00–16:00" | "Cerrado") ↔ estructura editable.
+const parseHorario = (str) => {
+  if (!str || /cerrado/i.test(str)) return { abierto: false, desde: "07:00", hasta: "16:00" };
+  const [desde, hasta] = str.split(/[–-]/).map((s) => s.trim());
+  return { abierto: true, desde: desde || "07:00", hasta: hasta || "16:00" };
+};
+const fmtHorario = (h) => (h.abierto ? `${h.desde}–${h.hasta}` : "Cerrado");
+
 // Ajustes del negocio (fila única business_settings). Persiste en Supabase.
 export function Ajustes() {
   const supabase = getSupabase();
@@ -60,10 +68,28 @@ export function Ajustes() {
         </Card>
 
         <Card titulo="Horarios">
-          <div className="grid grid-cols-2 gap-2">
-            {DIAS.map(([k, label]) => (
-              <Campo key={k} label={label}><input value={data.horarios?.[k] || ""} onChange={(e) => setHora(k, e.target.value)} placeholder="07:00–16:00 o Cerrado" className={INPUT} /></Campo>
-            ))}
+          <div className="space-y-1.5">
+            {DIAS.map(([k, label]) => {
+              const h = parseHorario(data.horarios?.[k]);
+              const upd = (patch) => setHora(k, fmtHorario({ ...h, ...patch }));
+              return (
+                <div key={k} className="flex items-center gap-2">
+                  <label className="flex w-28 shrink-0 cursor-pointer items-center gap-2 text-sm text-cacao/80">
+                    <input type="checkbox" checked={h.abierto} onChange={(e) => upd({ abierto: e.target.checked })} />
+                    {label}
+                  </label>
+                  {h.abierto ? (
+                    <div className="flex items-center gap-1.5">
+                      <input type="time" value={h.desde} onChange={(e) => upd({ desde: e.target.value })} className="rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-sm text-cacao outline-none focus:border-marca" />
+                      <span className="text-cacao/40">a</span>
+                      <input type="time" value={h.hasta} onChange={(e) => upd({ hasta: e.target.value })} className="rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-sm text-cacao outline-none focus:border-marca" />
+                    </div>
+                  ) : (
+                    <span className="text-sm font-medium text-cacao/35">Cerrado</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </Card>
 

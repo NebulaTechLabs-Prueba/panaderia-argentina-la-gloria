@@ -261,14 +261,6 @@ export const herramientas = [
     nota: "Se agrega el script en el sitio público. Los eventos de e-commerce simple (ver producto) también pueden ir acá.",
   },
   {
-    nombre: "Base de datos (Supabase)",
-    para: "Catálogo, promos, ajustes y acceso del panel.",
-    estado: "Conectado",
-    campo: "Proyecto",
-    placeholder: "Panaderia La Gloria",
-    nota: "Ya en uso: el catálogo, las promociones y los ajustes se gestionan acá y se reflejan en el sitio. Falta sumar los eventos propios (ver producto → carrito → WhatsApp) para el embudo.",
-  },
-  {
     nombre: "Google Search Console",
     para: "SEO: keywords, impresiones, clics y posición.",
     estado: "Sin conectar",
@@ -277,11 +269,11 @@ export const herramientas = [
     nota: "Requiere verificar el dominio. Su API alimenta la sección de SEO.",
   },
   {
-    nombre: "WhatsApp Business",
+    nombre: "WhatsApp",
     para: "Destino de los pedidos (ya integrado en el sitio).",
-    estado: "Activo (link)",
+    estado: "Activo",
     campo: "Número",
-    placeholder: "+1 571 580 4516",
-    nota: "Hoy es un link wa.me. A futuro, la API de WhatsApp Business daría métricas de respuesta.",
+    placeholder: "El que cargás en Ajustes → Negocio",
+    nota: "Es el mismo número que configurás en Ajustes → Negocio: al enviar un pedido, el sitio abre WhatsApp con ese número.",
   },
 ];

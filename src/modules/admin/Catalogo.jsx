@@ -6,11 +6,10 @@ import { getSupabase } from "@/lib/supabase/client";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { unidadSufijo, UNIDADES } from "@/lib/unidades";
 import { estiloBadge } from "@/lib/badges";
-import { IconoCategoria } from "@/modules/catalogo/IconoCategoria";
+import { IconoCategoria, ICONOS_CATEGORIA } from "@/modules/catalogo/IconoCategoria";
 
 const BADGES = ["Nuevo", "Promo", "2x1", "Destacado", "Más pedido", "Recomendado"];
 const COLORES = [["naranja", "Naranja"], ["celeste", "Celeste"], ["carbon", "Carbón"]];
-const ICONOS = ["cafe", "bebida", "sandwich", "factura", "pasta", "pizza", "empanada", "parrilla"];
 
 const nuevoProducto = () => ({
   id: "", nombre: "", categoria_id: "", precio_centavos: 0, unidad: "uni",
@@ -50,11 +49,23 @@ export function Catalogo() {
   async function subirImagen(file) {
     setSubiendo(true);
     setMsg("");
+    // Revalida la sesión: si venció, el token no viaja y Storage rechaza (RLS).
+    const { data: sesion } = await supabase.auth.getSession();
+    if (!sesion?.session) {
+      setMsg("Tu sesión expiró. Cerrá sesión y volvé a entrar para subir imágenes.");
+      setSubiendo(false);
+      return;
+    }
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const base = (form?.data?.id || "img").replace(/[^a-z0-9-]/gi, "");
+    const base = (form?.data?.id || "img").replace(/[^a-z0-9-]/gi, "") || "img";
     const path = `${base}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("productos").upload(path, file, { upsert: true, contentType: file.type });
-    if (error) { setMsg("No se pudo subir la imagen: " + error.message); setSubiendo(false); return; }
+    if (error) {
+      const authFail = /row-level security|jwt|expired|not authenticated|401/i.test(error.message);
+      setMsg(authFail ? "No se pudo subir: tu sesión expiró. Cerrá sesión y volvé a entrar." : "No se pudo subir la imagen: " + error.message);
+      setSubiendo(false);
+      return;
+    }
     const { data } = supabase.storage.from("productos").getPublicUrl(path);
     setCampo("imagen_url", data.publicUrl);
     setSubiendo(false);
@@ -427,26 +438,24 @@ export function Catalogo() {
                 <Campo label="Texto cálido (tarjeta de la sección, opcional)">
                   <textarea rows={2} value={form.data.texto || ""} onChange={(e) => setCampo("texto", e.target.value)} placeholder="Ej: El cierre dulce que no puede faltar." className={INPUT} />
                 </Campo>
-                <div className="grid grid-cols-2 gap-3">
-                  <Campo label="Color">
-                    <div className="flex gap-2">
-                      {COLORES.map(([v, l]) => (
-                        <button key={v} type="button" onClick={() => setCampo("color", v)} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold ring-2 transition ${form.data.color === v ? "ring-marca" : "ring-transparent"} ${v === "celeste" ? "bg-celeste text-white" : v === "carbon" ? "bg-marca text-cream" : "bg-corteza text-cacao"}`}>
-                          {l}
-                        </button>
-                      ))}
-                    </div>
-                  </Campo>
-                  <Campo label="Ícono">
-                    <div className="flex flex-wrap gap-1.5">
-                      {ICONOS.map((ic) => (
-                        <button key={ic} type="button" onClick={() => setCampo("icono", ic)} className={`grid h-9 w-9 place-items-center rounded-lg ring-2 transition ${form.data.icono === ic ? "bg-marca text-cream ring-marca" : "bg-masa/50 text-cacao/70 ring-transparent hover:bg-masa"}`} aria-label={ic}>
-                          <IconoCategoria icono={ic} className="h-4 w-4" />
-                        </button>
-                      ))}
-                    </div>
-                  </Campo>
-                </div>
+                <Campo label="Color">
+                  <div className="flex gap-2">
+                    {COLORES.map(([v, l]) => (
+                      <button key={v} type="button" onClick={() => setCampo("color", v)} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold ring-2 transition ${form.data.color === v ? "ring-marca" : "ring-transparent"} ${v === "celeste" ? "bg-celeste text-white" : v === "carbon" ? "bg-marca text-cream" : "bg-corteza text-cacao"}`}>
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+                </Campo>
+                <Campo label="Ícono">
+                  <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto rounded-lg bg-masa/20 p-2">
+                    {ICONOS_CATEGORIA.map((ic) => (
+                      <button key={ic} type="button" onClick={() => setCampo("icono", ic)} className={`grid h-9 w-9 place-items-center rounded-lg ring-2 transition ${form.data.icono === ic ? "bg-marca text-cream ring-marca" : "bg-masa/50 text-cacao/70 ring-transparent hover:bg-masa"}`} aria-label={ic}>
+                        <IconoCategoria icono={ic} className="h-4 w-4" />
+                      </button>
+                    ))}
+                  </div>
+                </Campo>
                 <div className="grid grid-cols-2 gap-3">
                   <Campo label="Slug (opcional)">
                     <input value={form.data.slug} onChange={(e) => setCampo("slug", e.target.value)} placeholder="se genera solo" className={INPUT} />

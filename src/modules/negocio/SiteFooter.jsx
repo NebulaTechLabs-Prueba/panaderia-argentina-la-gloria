@@ -142,18 +142,22 @@ export function SiteFooter() {
 
         {/* Seguinos / Contacto */}
         <div className="lg:col-span-3">
-          <h3 className="font-display text-sm font-bold uppercase tracking-wider text-corteza">Seguinos</h3>
-          <div className="mt-3 flex gap-2">
-            {ajustes?.instagram_url && (
-              <Red href={ajustes.instagram_url} label="Instagram"><IgIcon className="h-5 w-5" /></Red>
-            )}
-            {ajustes?.tiktok_url && (
-              <Red href={ajustes.tiktok_url} label="TikTok"><TtIcon className="h-5 w-5" /></Red>
-            )}
-            {ajustes?.facebook_url && (
-              <Red href={ajustes.facebook_url} label="Facebook"><FbIcon className="h-5 w-5" /></Red>
-            )}
-          </div>
+          {(ajustes?.instagram_url?.trim() || ajustes?.tiktok_url?.trim() || ajustes?.facebook_url?.trim()) && (
+            <>
+              <h3 className="font-display text-sm font-bold uppercase tracking-wider text-corteza">Seguinos</h3>
+              <div className="mt-3 flex gap-2">
+                {ajustes?.instagram_url?.trim() && (
+                  <Red href={ajustes.instagram_url} label="Instagram"><IgIcon className="h-5 w-5" /></Red>
+                )}
+                {ajustes?.tiktok_url?.trim() && (
+                  <Red href={ajustes.tiktok_url} label="TikTok"><TtIcon className="h-5 w-5" /></Red>
+                )}
+                {ajustes?.facebook_url?.trim() && (
+                  <Red href={ajustes.facebook_url} label="Facebook"><FbIcon className="h-5 w-5" /></Red>
+                )}
+              </div>
+            </>
+          )}
           {waUrl && (
             <a
               href={waUrl}

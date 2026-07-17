@@ -47,22 +47,18 @@ export function Catalogo() {
 
   // Sube un archivo a Supabase Storage (bucket "productos") y devuelve su URL pública.
   async function subirImagen(file) {
-    setSubiendo(true);
     setMsg("");
-    // Revalida la sesión: si venció, el token no viaja y Storage rechaza (RLS).
-    const { data: sesion } = await supabase.auth.getSession();
-    if (!sesion?.session) {
-      setMsg("Tu sesión expiró. Cerrá sesión y volvé a entrar para subir imágenes.");
-      setSubiendo(false);
+    if (!file || file.size === 0) {
+      setMsg("El archivo está vacío o no se pudo leer. Elegilo de nuevo.");
       return;
     }
+    setSubiendo(true);
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const base = (form?.data?.id || "img").replace(/[^a-z0-9-]/gi, "") || "img";
     const path = `${base}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("productos").upload(path, file, { upsert: true, contentType: file.type });
     if (error) {
-      const authFail = /row-level security|jwt|expired|not authenticated|401/i.test(error.message);
-      setMsg(authFail ? "No se pudo subir: tu sesión expiró. Cerrá sesión y volvé a entrar." : "No se pudo subir la imagen: " + error.message);
+      setMsg("No se pudo subir la imagen: " + error.message);
       setSubiendo(false);
       return;
     }
@@ -397,7 +393,7 @@ export function Catalogo() {
                       <label className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${subiendo ? "bg-masa/40 text-cacao/40" : "bg-masa/60 text-cacao/70 hover:bg-masa"}`}>
                         {subiendo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                         {subiendo ? "Subiendo…" : "Subir archivo"}
-                        <input type="file" accept="image/*" disabled={subiendo} className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) subirImagen(f); e.target.value = ""; }} />
+                        <input type="file" accept="image/*" disabled={subiendo} className="hidden" onChange={(e) => { const f = e.target.files?.[0]; const input = e.target; if (f) subirImagen(f).finally(() => { input.value = ""; }); }} />
                       </label>
                       {(form.data.imagen_url || "").startsWith("blob:") && (
                         <p className="text-[11px] font-medium text-red-600">Esa imagen es temporal. Volvé a subir el archivo para guardarla.</p>

@@ -62,6 +62,12 @@ function reducer(state, action) {
     case "VACIAR":
       return { items: [] };
 
+    // Saca del carrito los productos que ya no existen en el catálogo (borrados
+    // en el admin). Las variantes tienen id compuesto "base::formato" → se valida
+    // el id base.
+    case "RECONCILIAR":
+      return { items: state.items.filter((i) => action.validos.has(String(i.id).split("::")[0])) };
+
     default:
       return state;
   }
@@ -78,7 +84,10 @@ export function CarritoProvider({ children }) {
   const cargarPromos = useCallback(async () => {
     const [ps, prods] = await Promise.all([getPromos(), getProductos()]);
     setPromos(ps);
-    setNombrePorId(Object.fromEntries((prods || []).map((p) => [p.id, p.nombre])));
+    const lista = prods || [];
+    setNombrePorId(Object.fromEntries(lista.map((p) => [p.id, p.nombre])));
+    // Reconciliar el carrito con el catálogo real (quita productos borrados).
+    if (lista.length) dispatch({ type: "RECONCILIAR", validos: new Set(lista.map((p) => p.id)) });
   }, []);
 
   // Cargar al montar y recargar cuando el panel edita una promo.

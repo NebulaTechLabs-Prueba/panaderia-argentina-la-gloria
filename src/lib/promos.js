@@ -1,42 +1,24 @@
-import { productosMock } from "@/lib/data/mock/productos";
+"use client";
 
-// Promos SIMULADAS (sin backend). El carrito las aplica solo; el panel las edita.
-// Modelo:
-//   condicion.tipo = "productos"  → requiere una LISTA de productos (todos) con su
-//                                    cantidad mínima. Ej: pan + café + asado.
-//   condicion.tipo = "monto"      → requiere un consumo mínimo (monto_centavos).
-//   premio = LISTA de productos gratis. Ej: cremona + choripán.
-export const PROMOS_SEED = [
-  {
-    id: "promo-facturas-cafe",
-    nombre: "Facturas + café",
-    descripcion: "Llevá 2 facturas y el café con leche va de regalo ☕",
-    activa: true,
-    condicion: { tipo: "productos", productos: [{ producto_id: "p-facturas", cantidad: 2 }], monto_centavos: 0 },
-    premio: [{ producto_id: "p-cafe-leche", cantidad: 1 }],
-  },
-];
+import { getSupabase } from "@/lib/supabase/client";
 
-const KEY = "la-gloria:promos";
+// Promos gestionadas en Supabase (tabla `promos`). Lectura pública; escritura
+// solo super-admin (RLS). El carrito las aplica solo.
+//   condicion.tipo = "productos" → lista de productos (todos) con cantidad mínima.
+//   condicion.tipo = "monto"     → consumo mínimo (monto_centavos).
+//   premio = lista de productos gratis.
 
-// Acepta promos con el modelo viejo (1 producto → 1 premio) y las normaliza.
-function normalizar(p) {
+// Normaliza una fila (tolera formas viejas).
+export function normalizar(p) {
   const cond = p.condicion || {};
-  let condicion;
-  if (cond.tipo) condicion = { monto_centavos: 0, productos: [], ...cond };
-  else if (cond.producto_id)
-    condicion = { tipo: "productos", productos: [{ producto_id: cond.producto_id, cantidad: cond.cantidad || 1 }], monto_centavos: 0 };
-  else condicion = { tipo: "productos", productos: [], monto_centavos: 0 };
-
-  let premio = p.premio;
-  if (!Array.isArray(premio))
-    premio = premio?.producto_id ? [{ producto_id: premio.producto_id, cantidad: premio.cantidad || 1 }] : [];
-
-  return { activa: true, ...p, condicion, premio, vigencia: p.vigencia ?? null };
+  const condicion = cond.tipo
+    ? { monto_centavos: 0, productos: [], ...cond }
+    : { tipo: "productos", productos: [], monto_centavos: 0 };
+  const premio = Array.isArray(p.premio) ? p.premio : [];
+  return { ...p, activa: p.activa ?? true, condicion, premio, vigencia: p.vigencia ?? null };
 }
 
 // ¿La promo está vigente ahora? (activa + dentro de la ventana de fechas, si tiene).
-// vigencia = { desde: "YYYY-MM-DD"|null, hasta: "YYYY-MM-DD"|null }.
 export function promoVigente(promo) {
   if (!promo.activa) return false;
   const v = promo.vigencia;
@@ -47,28 +29,38 @@ export function promoVigente(promo) {
   return true;
 }
 
-export function getPromos() {
-  let promos = PROMOS_SEED;
-  if (typeof window !== "undefined") {
-    try {
-      const raw = window.localStorage.getItem(KEY);
-      if (raw) promos = JSON.parse(raw);
-    } catch {}
-  }
-  return promos.map(normalizar);
-}
-
-export function guardarPromos(promos) {
+// Lee todas las promos de Supabase (normalizadas).
+export async function getPromos() {
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(promos));
-  } catch {}
-  window.dispatchEvent(new CustomEvent("la-gloria:promos"));
+    const { data, error } = await getSupabase().from("promos").select("*").order("orden");
+    if (error) throw error;
+    return (data || []).map(normalizar);
+  } catch (e) {
+    console.warn("getPromos:", e?.message);
+    return [];
+  }
 }
 
-const prod = (id) => productosMock.find((p) => p.id === id);
+// Alta/edición (super-admin). Emite evento para refrescar carrito/menú.
+export async function guardarPromo(row) {
+  const { error } = await getSupabase().from("promos").upsert(row);
+  if (!error) notificarPromos();
+  return { error };
+}
 
-// Calcula los REGALOS que corresponden según el carrito y las promos activas.
-export function calcularRegalos(items, promos = getPromos()) {
+export async function eliminarPromo(id) {
+  const { error } = await getSupabase().from("promos").delete().eq("id", id);
+  if (!error) notificarPromos();
+  return { error };
+}
+
+export function notificarPromos() {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("la-gloria:promos"));
+}
+
+// Calcula los REGALOS que corresponden según el carrito y las promos.
+// `nombrePorId`: mapa { producto_id → nombre } para resolver los premios.
+export function calcularRegalos(items, promos = [], nombrePorId = {}) {
   const regalos = [];
   const total = items.reduce((a, i) => a + i.precio_centavos * i.cantidad, 0);
 
@@ -93,11 +85,11 @@ export function calcularRegalos(items, promos = getPromos()) {
 
     if (veces < 1) continue;
     for (const pr of promo.premio || []) {
-      const p = prod(pr.producto_id);
-      if (!p) continue;
+      const nombre = nombrePorId[pr.producto_id];
+      if (!nombre) continue;
       regalos.push({
         id: `regalo-${promo.id}-${pr.producto_id}`,
-        nombre: p.nombre,
+        nombre,
         cantidad: (pr.cantidad || 1) * veces,
         promo: promo.nombre,
       });

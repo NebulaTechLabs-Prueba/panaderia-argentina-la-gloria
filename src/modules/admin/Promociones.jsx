@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, X, Gift } from "lucide-react";
-import { productosMock } from "@/lib/data/mock/productos";
 import { formatCentavos } from "@/lib/money/formatCentavos";
-import { getPromos, guardarPromos, promoVigente } from "@/lib/promos";
+import { getProductos } from "@/lib/data";
+import { getPromos, guardarPromo, eliminarPromo, promoVigente } from "@/lib/promos";
 
 const INPUT = "w-full rounded-lg border border-cacao/15 bg-white px-3 py-2 text-sm text-cacao outline-none focus:border-marca";
-const nombreProd = (id) => productosMock.find((p) => p.id === id)?.nombre ?? "—";
+const PROMO_COLS = ["id", "nombre", "descripcion", "activa", "vigencia", "condicion", "premio", "orden"];
+const pick = (o, cols) => Object.fromEntries(cols.filter((k) => k in o && o[k] !== undefined).map((k) => [k, o[k]]));
 
 const nuevaPromo = () => ({
   id: "",
@@ -19,17 +20,8 @@ const nuevaPromo = () => ({
   vigencia: { desde: "", hasta: "" },
 });
 
-function resumenCond(p) {
-  const c = p.condicion || {};
-  if (c.tipo === "monto") return `Consumo mínimo de ${formatCentavos(c.monto_centavos)}`;
-  const list = (c.productos || []).filter((r) => r.producto_id);
-  return list.length ? list.map((r) => `${r.cantidad}× ${nombreProd(r.producto_id)}`).join(" + ") : "—";
-}
-const resumenPremio = (p) =>
-  (p.premio || []).filter((r) => r.producto_id).map((r) => `${r.cantidad}× ${nombreProd(r.producto_id)}`).join(" + ") || "—";
-
 // Editor de una lista de { producto_id, cantidad }.
-function Filas({ filas, onChange }) {
+function Filas({ filas, productos, onChange }) {
   const set = (i, campo, v) =>
     onChange(filas.map((f, idx) => (idx === i ? { ...f, [campo]: campo === "cantidad" ? Number(v) || 1 : v } : f)));
   return (
@@ -38,7 +30,7 @@ function Filas({ filas, onChange }) {
         <div key={i} className="grid grid-cols-[1fr_auto_auto] gap-2">
           <select value={f.producto_id} onChange={(e) => set(i, "producto_id", e.target.value)} className={INPUT}>
             <option value="">Producto…</option>
-            {productosMock.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+            {productos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
           </select>
           <input type="number" min="1" value={f.cantidad} onChange={(e) => set(i, "cantidad", e.target.value)} className={`${INPUT} w-16`} aria-label="Cantidad" />
           <button
@@ -59,26 +51,55 @@ function Filas({ filas, onChange }) {
   );
 }
 
-// Promociones condicionales. Se aplican de verdad en el carrito del sitio público.
+// Promociones condicionales (Supabase). Se aplican de verdad en el carrito.
 export function Promociones() {
-  const [promos, setPromos] = useState(() => getPromos());
+  const [promos, setPromos] = useState([]);
+  const [productos, setProductos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [msg, setMsg] = useState("");
   const [form, setForm] = useState(null); // { esNuevo, data }
 
-  const persistir = (lista) => {
-    setPromos(lista);
-    guardarPromos(lista);
+  const nombreProd = (id) => productos.find((p) => p.id === id)?.nombre ?? "—";
+
+  async function cargar() {
+    setCargando(true);
+    const [ps, prods] = await Promise.all([getPromos(), getProductos()]);
+    setPromos(ps);
+    setProductos(prods || []);
+    setCargando(false);
+  }
+  useEffect(() => { cargar(); }, []);
+
+  const resumenCond = (p) => {
+    const c = p.condicion || {};
+    if (c.tipo === "monto") return `Consumo mínimo de ${formatCentavos(c.monto_centavos)}`;
+    const list = (c.productos || []).filter((r) => r.producto_id);
+    return list.length ? list.map((r) => `${r.cantidad}× ${nombreProd(r.producto_id)}`).join(" + ") : "—";
   };
-  const toggle = (id) => persistir(promos.map((p) => (p.id === id ? { ...p, activa: !p.activa } : p)));
-  const eliminar = (id) => {
+  const resumenPremio = (p) =>
+    (p.premio || []).filter((r) => r.producto_id).map((r) => `${r.cantidad}× ${nombreProd(r.producto_id)}`).join(" + ") || "—";
+
+  const toggle = async (p) => {
+    const { error } = await guardarPromo(pick({ ...p, activa: !p.activa }, PROMO_COLS));
+    if (error) { setMsg("No se pudo guardar: " + error.message); return; }
+    cargar();
+  };
+  const eliminar = async (id) => {
     if (!window.confirm("¿Eliminar la promo?")) return;
-    persistir(promos.filter((p) => p.id !== id));
+    const { error } = await eliminarPromo(id);
+    if (error) { setMsg("No se pudo eliminar: " + error.message); return; }
+    setMsg("Eliminada ✓");
+    cargar();
   };
-  function guardar(e) {
+  async function guardar(e) {
     e.preventDefault();
     const d = form.data;
-    const item = { ...d, id: d.id || `promo-${Date.now()}` };
-    persistir(form.esNuevo ? [...promos, item] : promos.map((p) => (p.id === item.id ? item : p)));
+    const row = pick({ ...d, id: d.id || `promo-${Date.now()}` }, PROMO_COLS);
+    const { error } = await guardarPromo(row);
+    if (error) { setMsg("No se pudo guardar: " + error.message); return; }
     setForm(null);
+    setMsg("Guardada ✓");
+    cargar();
   }
   const upd = (patch) => setForm((f) => ({ ...f, data: { ...f.data, ...patch } }));
   const updCond = (patch) => setForm((f) => ({ ...f, data: { ...f.data, condicion: { ...f.data.condicion, ...patch } } }));
@@ -86,8 +107,8 @@ export function Promociones() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-          Estas promos <b>se aplican de verdad</b> en el carrito del sitio (demo, guardado en el navegador).
+        <p className={`rounded-lg px-3 py-2 text-xs font-medium ring-1 ${cargando ? "bg-masa/40 text-cacao/60 ring-cacao/10" : msg ? "bg-green-50 text-green-700 ring-green-200" : "bg-masa/40 text-cacao/70 ring-cacao/10"}`}>
+          {cargando ? "Cargando del servidor…" : msg || "Se aplican de verdad en el carrito del sitio."}
         </p>
         <button
           type="button"
@@ -107,7 +128,7 @@ export function Promociones() {
                 <h3 className="font-display font-bold text-cacao">{p.nombre}</h3>
               </div>
               <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-cacao/60">
-                <input type="checkbox" checked={p.activa} onChange={() => toggle(p.id)} />
+                <input type="checkbox" checked={p.activa} onChange={() => toggle(p)} />
                 {p.activa ? "Activa" : "Pausada"}
               </label>
             </div>
@@ -136,7 +157,7 @@ export function Promociones() {
             </div>
           </div>
         ))}
-        {promos.length === 0 && <p className="text-sm text-cacao/50">No hay promos. Creá una con “Nueva promo”.</p>}
+        {!cargando && promos.length === 0 && <p className="text-sm text-cacao/50">No hay promos. Creá una con “Nueva promo”.</p>}
       </div>
 
       {form && (
@@ -188,14 +209,14 @@ export function Promociones() {
                     />
                   </label>
                 ) : (
-                  <Filas filas={form.data.condicion.productos} onChange={(productos) => updCond({ productos })} />
+                  <Filas filas={form.data.condicion.productos} productos={productos} onChange={(productos) => updCond({ productos })} />
                 )}
               </div>
 
               {/* Premio */}
               <div className="rounded-xl bg-green-50 p-3">
                 <p className="mb-2 text-xs font-bold uppercase tracking-wide text-green-700">Premio (lo que se lleva gratis)</p>
-                <Filas filas={form.data.premio} onChange={(premio) => upd({ premio })} />
+                <Filas filas={form.data.premio} productos={productos} onChange={(premio) => upd({ premio })} />
               </div>
 
               {/* Vigencia */}

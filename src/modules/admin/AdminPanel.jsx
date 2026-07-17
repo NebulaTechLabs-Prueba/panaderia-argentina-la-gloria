@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, TrendingUp, Filter, Search, Package, Wrench,
   MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays, LogOut,
-  Download, Printer, Ticket,
+  Download, Printer, Ticket, Settings,
 } from "lucide-react";
 import { asset, adminBase } from "@/lib/config/constants";
 import { getSupabase } from "@/lib/supabase/client";
-import { ajustesMock } from "@/lib/data/mock/ajustes";
+import { Ajustes } from "./Ajustes";
 import { Catalogo } from "./Catalogo";
 import { Promociones } from "./Promociones";
 import {
@@ -25,6 +25,7 @@ const NAV = [
   { id: "seo", label: "SEO", icon: Search },
   { id: "productos", label: "Productos", icon: Package },
   { id: "promociones", label: "Promociones", icon: Ticket },
+  { id: "ajustes", label: "Ajustes", icon: Settings },
   { id: "herramientas", label: "Herramientas", icon: Wrench },
 ];
 
@@ -196,6 +197,7 @@ export function AdminPanel() {
           {sec === "seo" && <Seo />}
           {sec === "productos" && <Catalogo />}
           {sec === "promociones" && <Promociones />}
+          {sec === "ajustes" && <Ajustes />}
           {sec === "herramientas" && <Herramientas />}
         </main>
       </div>
@@ -533,14 +535,12 @@ function Seo() {
 function Herramientas() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-cacao/5 lg:col-span-2">
-        <h3 className="font-display font-bold text-cacao">Ubicación · botón “¿Cómo llegar?”</h3>
-        <p className="text-sm text-cacao/55">Se muestra como botón en el sitio (footer y menú), sin exponer la dirección como texto.</p>
-        <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-cacao/45">Dirección</label>
-        <input disabled value={ajustesMock.direccion} className="mt-1 w-full rounded-lg border border-cacao/10 bg-masa/30 px-3 py-2 text-sm text-cacao/70" />
-        <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-cacao/45">Link de Google Maps</label>
-        <input disabled value={ajustesMock.maps_url} className="mt-1 w-full rounded-lg border border-cacao/10 bg-masa/30 px-3 py-2 text-sm text-cacao/60" />
-        <p className="mt-3 text-xs text-cacao/50">Editable desde acá cuando se conecte el backend (Supabase).</p>
+      <div className="rounded-2xl bg-marca/10 p-5 ring-1 ring-marca/20 lg:col-span-2">
+        <h3 className="font-display font-bold text-cacao">Datos del negocio</h3>
+        <p className="mt-1 text-sm text-cacao/60">
+          La dirección, el link de Maps, horarios, redes y mensajes ahora se editan en la
+          sección <b>Ajustes</b> (se guardan en Supabase y se reflejan en el sitio).
+        </p>
       </div>
       {M.herramientas.map((h) => (
         <div key={h.nombre} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-cacao/5">

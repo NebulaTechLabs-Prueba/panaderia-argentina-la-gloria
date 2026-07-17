@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useReducer, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState } from "react";
 import { CART_STORAGE_KEY } from "@/lib/config/constants";
 import { totalCentavos } from "@/lib/money/formatCentavos";
-import { calcularRegalos } from "@/lib/promos";
+import { calcularRegalos, getPromos } from "@/lib/promos";
+import { getProductos } from "@/lib/data";
 import { playDing } from "@/lib/sound/ding";
 
 // Estado del carrito: lista de líneas. Cada línea guarda lo mínimo para mostrar
@@ -70,13 +71,23 @@ export function CarritoProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, estadoInicial);
   // Estado de UI del drawer (carrito desplegado o minimizado).
   const [drawerAbierto, setDrawerAbierto] = useState(false);
-  // Recalcular regalos cuando el panel activa/desactiva una promo.
-  const [promoTick, setPromoTick] = useState(0);
+  // Promos (Supabase) + nombres de productos para resolver los premios.
+  const [promos, setPromos] = useState([]);
+  const [nombrePorId, setNombrePorId] = useState({});
+
+  const cargarPromos = useCallback(async () => {
+    const [ps, prods] = await Promise.all([getPromos(), getProductos()]);
+    setPromos(ps);
+    setNombrePorId(Object.fromEntries((prods || []).map((p) => [p.id, p.nombre])));
+  }, []);
+
+  // Cargar al montar y recargar cuando el panel edita una promo.
   useEffect(() => {
-    const h = () => setPromoTick((t) => t + 1);
+    cargarPromos();
+    const h = () => cargarPromos();
     window.addEventListener("la-gloria:promos", h);
     return () => window.removeEventListener("la-gloria:promos", h);
-  }, []);
+  }, [cargarPromos]);
 
   // Hidratar desde localStorage al montar (solo en navegador).
   useEffect(() => {
@@ -101,7 +112,7 @@ export function CarritoProvider({ children }) {
     const cantidadTotal = state.items.reduce((acc, i) => acc + i.cantidad, 0);
     return {
       items: state.items,
-      regalos: calcularRegalos(state.items),
+      regalos: calcularRegalos(state.items, promos, nombrePorId),
       cantidadTotal,
       totalCentavos: totalCentavos(state.items),
       estaVacio: state.items.length === 0,
@@ -119,7 +130,7 @@ export function CarritoProvider({ children }) {
       abrirCarrito: () => setDrawerAbierto(true),
       cerrarCarrito: () => setDrawerAbierto(false),
     };
-  }, [state.items, drawerAbierto, promoTick]);
+  }, [state.items, drawerAbierto, promos, nombrePorId]);
 
   return <CarritoContext.Provider value={value}>{children}</CarritoContext.Provider>;
 }

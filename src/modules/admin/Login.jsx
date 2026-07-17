@@ -9,17 +9,19 @@ import { getSupabase } from "@/lib/supabase/client";
 const INPUT = "w-full rounded-lg border border-cacao/15 px-3 py-2.5 text-sm text-cacao outline-none focus:border-marca";
 
 // Login REAL del panel (Supabase Auth). Solo el super-admin puede escribir
-// (lo impone RLS); cualquier otro usuario logueado solo podría leer.
+// (lo impone RLS). Incluye recuperación de contraseña por email.
 export function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
+  const [aviso, setAviso] = useState("");
   const [cargando, setCargando] = useState(false);
 
   const entrar = async (e) => {
     e.preventDefault();
     setError("");
+    setAviso("");
     setCargando(true);
     const { error: err } = await getSupabase().auth.signInWithPassword({
       email: email.trim(),
@@ -31,6 +33,25 @@ export function Login() {
       return;
     }
     router.replace(adminBase() || "/");
+  };
+
+  const recuperar = async () => {
+    setError("");
+    setAviso("");
+    if (!email.trim()) {
+      setError("Escribí tu email arriba y volvé a tocar “¿Olvidaste tu contraseña?”.");
+      return;
+    }
+    setCargando(true);
+    const { error: err } = await getSupabase().auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}${adminBase()}/reset/`,
+    });
+    setCargando(false);
+    if (err) {
+      setError("No se pudo enviar el email. Revisá la dirección.");
+      return;
+    }
+    setAviso("Te enviamos un email con el link para restablecer tu contraseña. Revisá tu bandeja (y spam).");
   };
 
   return (
@@ -49,9 +70,10 @@ export function Login() {
         </div>
 
         {error && (
-          <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-600 ring-1 ring-red-200">
-            {error}
-          </p>
+          <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-600 ring-1 ring-red-200">{error}</p>
+        )}
+        {aviso && (
+          <p className="mt-3 rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700 ring-1 ring-green-200">{aviso}</p>
         )}
 
         <button
@@ -60,12 +82,19 @@ export function Login() {
           className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-corteza py-3 font-bold text-cacao transition hover:brightness-105 disabled:opacity-60"
         >
           {cargando ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogIn className="h-5 w-5" />}
-          {cargando ? "Ingresando…" : "Ingresar"}
+          {cargando ? "Procesando…" : "Ingresar"}
         </button>
 
-        <p className="mt-4 text-center text-xs text-cacao/45">
-          Acceso restringido al equipo de La Gloria.
-        </p>
+        <button
+          type="button"
+          onClick={recuperar}
+          disabled={cargando}
+          className="mt-3 w-full text-center text-xs font-semibold text-marca hover:underline disabled:opacity-60"
+        >
+          ¿Olvidaste tu contraseña?
+        </button>
+
+        <p className="mt-4 text-center text-xs text-cacao/45">Acceso restringido al equipo de La Gloria.</p>
       </form>
     </div>
   );

@@ -169,7 +169,12 @@ export function MenuLaGloria() {
       return n;
     });
 
-  useEffect(() => setPromos(getPromos().filter(promoVigente)), []);
+  useEffect(() => {
+    const cargar = () => getPromos().then((ps) => setPromos(ps.filter(promoVigente)));
+    cargar();
+    window.addEventListener("la-gloria:promos", cargar);
+    return () => window.removeEventListener("la-gloria:promos", cargar);
+  }, []);
 
   useEffect(() => {
     let activo = true;

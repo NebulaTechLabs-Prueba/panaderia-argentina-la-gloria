@@ -1,24 +1,9 @@
 // Datos estructurados (JSON-LD, schema.org Bakery) para SEO local. Server
-// component: lee business_settings de Supabase (lectura pública) en el servidor
-// y los deja en el HTML inicial. Revalida cada hora.
-const SB = "https://hiwfupqzkrrqanpufezp.supabase.co";
-const KEY = "sb_publishable_8jP8m_7YqqJbtMqN-UeP-w_Je2KxyxM";
+// component: lee business_settings en el servidor y los deja en el HTML inicial.
+import { getSettingsServer } from "@/lib/seo/settings";
+
 const BASE = "https://panaderia-lagloria.com";
 const DIAS = { lun: "Monday", mar: "Tuesday", mie: "Wednesday", jue: "Thursday", vie: "Friday", sab: "Saturday", dom: "Sunday" };
-
-async function getSettings() {
-  try {
-    const res = await fetch(`${SB}/rest/v1/business_settings?id=eq.1&select=*`, {
-      headers: { apikey: KEY },
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    const [s] = await res.json();
-    return s || null;
-  } catch {
-    return null;
-  }
-}
 
 function parseAddr(dir) {
   if (!dir) return undefined;
@@ -45,7 +30,7 @@ function horariosSpec(horarios) {
 }
 
 export async function StructuredData() {
-  const s = await getSettings();
+  const s = await getSettingsServer();
   const sameAs = [s?.instagram_url, s?.tiktok_url, s?.facebook_url].filter(Boolean);
   const jsonLd = {
     "@context": "https://schema.org",

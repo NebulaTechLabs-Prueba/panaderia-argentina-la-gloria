@@ -58,7 +58,7 @@ export function AdminPanel() {
 
   const descargarCSV = () => {
     const filas = [
-      ["Panel La Gloria — resumen (datos simulados)"],
+      ["Panel La Gloria — resumen (datos de muestra)"],
       [],
       ["KPI", "Valor", "Δ%"],
       ...M.kpis.map((k) => [k.label, k.value, k.delta]),
@@ -136,8 +136,8 @@ export function AdminPanel() {
             <LogOut className="h-4 w-4" /> Salir
           </button>
           <div className="rounded-xl bg-white/10 p-3 text-xs text-cream/70">
-            <span className="font-bold text-corteza">● Modo demo</span>
-            <p className="mt-1">Datos simulados. Sin backend conectado todavía.</p>
+            <span className="font-bold text-green-300">● En vivo</span>
+            <p className="mt-1">Catálogo, promos y ajustes en Supabase. La analítica todavía es de muestra.</p>
           </div>
         </div>
       </aside>
@@ -190,6 +190,11 @@ export function AdminPanel() {
         </header>
 
         <main className="p-5">
+          {["resumen", "trafico", "conversiones", "consumidor", "seo"].includes(sec) && (
+            <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+              📊 Analítica con <b>datos de muestra</b>. Se activa con datos reales al conectar GA4 y el seguimiento de eventos del sitio. El resto del panel (catálogo, promos, ajustes) ya es real.
+            </p>
+          )}
           {sec === "resumen" && <Resumen />}
           {sec === "trafico" && <Trafico />}
           {sec === "conversiones" && <Conversiones />}
@@ -491,7 +496,7 @@ function Seo() {
         ))}
       </div>
       <div className="grid gap-5 lg:grid-cols-3">
-        <Card title="Palabras clave" subtitle="Search Console (simulado)" className="lg:col-span-2">
+        <Card title="Palabras clave" subtitle="Search Console (datos de muestra)" className="lg:col-span-2">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -566,12 +571,13 @@ function Herramientas() {
       ))}
       <div className="rounded-2xl border border-dashed border-cacao/20 p-5 text-sm text-cacao/55 lg:col-span-2">
         <p className="flex items-center gap-2 font-semibold text-cacao/70">
-          <ExternalLink className="h-4 w-4" /> Cómo se conecta (cuando haya backend)
+          <ExternalLink className="h-4 w-4" /> Qué falta para la analítica real
         </p>
         <p className="mt-2">
-          El sitio público emite eventos (ver producto, agregar al carrito, enviar por WhatsApp). GA4 recibe el
-          tráfico general; los eventos propios se guardan en Supabase para el embudo; Search Console alimenta el
-          SEO. Este panel solo lee y muestra. Hoy todo es simulado.
+          El catálogo, las promociones, los ajustes y el acceso ya funcionan sobre <b>Supabase</b>. Para que la
+          analítica deje de ser de muestra falta sumar el seguimiento: GA4 para el tráfico general y eventos
+          propios (ver producto → carrito → WhatsApp) guardados en Supabase para el embudo, más Search Console
+          para el SEO.
         </p>
       </div>
     </div>

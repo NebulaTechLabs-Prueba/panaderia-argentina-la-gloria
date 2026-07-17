@@ -1,6 +1,7 @@
-// Datos SIMULADOS del panel de gestión. Nada de esto es real todavía: cuando se
-// conecte GA4 + eventos propios (Supabase), estos objetos se reemplazan por las
-// consultas reales manteniendo la misma forma.
+// Datos de MUESTRA para la ANALÍTICA del panel (visitas, embudo, SEO, etc.).
+// El catálogo, promos, ajustes y el acceso ya son REALES (Supabase). Estas
+// métricas se vuelven reales al conectar GA4 + eventos propios, manteniendo la
+// misma forma de los objetos.
 
 export const RANGOS = ["7 días", "30 días", "90 días"];
 
@@ -260,12 +261,12 @@ export const herramientas = [
     nota: "Se agrega el script en el sitio público. Los eventos de e-commerce simple (ver producto) también pueden ir acá.",
   },
   {
-    nombre: "Eventos propios (Supabase)",
-    para: "El embudo del negocio: ver producto → carrito → WhatsApp.",
-    estado: "Sin backend",
-    campo: "URL del proyecto",
-    placeholder: "https://xxxx.supabase.co",
-    nota: "Es lo que ninguna herramienta genérica mide bien. Guarda cada evento en una tabla y el panel lo agrega.",
+    nombre: "Base de datos (Supabase)",
+    para: "Catálogo, promos, ajustes y acceso del panel.",
+    estado: "Conectado",
+    campo: "Proyecto",
+    placeholder: "Panaderia La Gloria",
+    nota: "Ya en uso: el catálogo, las promociones y los ajustes se gestionan acá y se reflejan en el sitio. Falta sumar los eventos propios (ver producto → carrito → WhatsApp) para el embudo.",
   },
   {
     nombre: "Google Search Console",

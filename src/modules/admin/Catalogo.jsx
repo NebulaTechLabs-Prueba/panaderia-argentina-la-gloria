@@ -56,7 +56,9 @@ export function Catalogo() {
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const base = (form?.data?.id || "img").replace(/[^a-z0-9-]/gi, "") || "img";
     const path = `${base}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("productos").upload(path, file, { upsert: true, contentType: file.type });
+    // Sin upsert: el path ya es único (timestamp). upsert:true exigiría también
+    // políticas SELECT+UPDATE en storage.objects y rompía con RLS.
+    const { error } = await supabase.storage.from("productos").upload(path, file, { contentType: file.type });
     if (error) {
       setMsg("No se pudo subir la imagen: " + error.message);
       setSubiendo(false);
@@ -162,7 +164,7 @@ export function Catalogo() {
           <TabBtn id="productos">Productos ({productos.length})</TabBtn>
           <TabBtn id="categorias">Categorías ({categorias.length})</TabBtn>
         </div>
-        <div className="relative order-last w-full sm:order-none sm:w-64">
+        <div className="relative order-last w-full sm:order-0 sm:w-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cacao/40" />
           <input
             value={busqueda}

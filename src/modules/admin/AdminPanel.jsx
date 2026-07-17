@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { asset, adminBase } from "@/lib/config/constants";
 import { getSupabase } from "@/lib/supabase/client";
+import { getMetricas } from "@/lib/data";
 import { Ajustes } from "./Ajustes";
 import { Catalogo } from "./Catalogo";
 import { Promociones } from "./Promociones";
@@ -196,12 +197,12 @@ export function AdminPanel() {
         </header>
 
         <main className="p-5">
-          {["resumen", "trafico", "conversiones", "consumidor", "seo"].includes(sec) && (
+          {["trafico", "conversiones", "consumidor", "seo"].includes(sec) && (
             <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-              📊 Analítica con <b>datos de muestra</b>. Se activa con datos reales al conectar GA4 y el seguimiento de eventos del sitio. El resto del panel (catálogo, promos, ajustes) ya es real.
+              📊 Esta sección todavía usa <b>datos de muestra</b>. El <b>Resumen</b> ya es real (visitas, embudo y pedidos). El resto se activa al sumar más seguimiento (y GA4 para tráfico/fuentes).
             </p>
           )}
-          {sec === "resumen" && <Resumen />}
+          {sec === "resumen" && <Resumen rango={rango} />}
           {sec === "trafico" && <Trafico />}
           {sec === "conversiones" && <Conversiones />}
           {sec === "consumidor" && <Consumidor />}
@@ -216,30 +217,57 @@ export function AdminPanel() {
   );
 }
 
-function Resumen() {
+function Resumen({ rango }) {
+  const dias = parseInt(rango, 10) || 30;
+  const [m, setM] = useState(null);
+  useEffect(() => { setM(null); getMetricas(dias).then(setM); }, [dias]);
+
+  if (!m) return <p className="text-sm text-cacao/50">Cargando métricas…</p>;
+
+  if (m.totalEventos === 0) {
+    return (
+      <div className="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-cacao/5">
+        <p className="font-display text-lg font-bold text-cacao">Todavía no hay datos 📊</p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-cacao/55">
+          El seguimiento ya está <b>activo</b>. A medida que la gente visite el sitio, vea productos y arme
+          pedidos, este panel se irá llenando con datos <b>reales</b>. Volvé en unas horas.
+        </p>
+      </div>
+    );
+  }
+
+  const serie = m.serie.map((s) => s.valor);
+  const maxSerie = Math.max(...serie, 0);
+  const kpis = [
+    { id: "visitas", label: "Visitas", value: m.visitas.toLocaleString("es") },
+    { id: "sesiones", label: "Sesiones", value: m.sesiones.toLocaleString("es") },
+    { id: "whatsapp", label: "Pedidos por WhatsApp", value: m.whatsapp.toLocaleString("es") },
+    { id: "conv", label: "Conversión", value: `${m.conversion.toFixed(1)}%` },
+  ];
+  const embudo = [
+    { label: "Vieron un producto", valor: m.embudo.ver },
+    { label: "Agregaron al carrito", valor: m.embudo.carrito },
+    { label: "Enviaron por WhatsApp", valor: m.embudo.whatsapp },
+  ];
+  const vacio = <p className="py-10 text-center text-sm text-cacao/45">Sin datos aún.</p>;
+
   return (
     <div className="space-y-5">
-      <p className="text-xs text-cacao/45">
-        Cada <span className="font-semibold text-green-700">▲</span> /{" "}
-        <span className="font-semibold text-red-600">▼</span> compara con el <b>período anterior</b> equivalente.
-      </p>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {M.kpis.map((k) => (
-          <Kpi key={k.id} {...k} />
-        ))}
+        {kpis.map((k) => <Kpi key={k.id} {...k} spark={maxSerie > 0 ? serie : undefined} />)}
       </div>
       <div className="grid gap-5 lg:grid-cols-3">
-        <Card title="Visitas" subtitle="Este período vs. anterior" className="lg:col-span-2">
-          <LineChart data={M.serieVisitas} previa={M.serieVisitasPrev} />
+        <Card title="Visitas" subtitle={`Últimos ${dias} días`} className="lg:col-span-2">
+          {maxSerie > 0 ? <LineChart data={serie} /> : vacio}
         </Card>
-        <Card title="Fuentes de tráfico">
-          <Donut segments={M.fuentes} />
-        </Card>
-        <Card title="Embudo hacia WhatsApp" subtitle="Vista → carrito → pedido" className="lg:col-span-2">
-          <Funnel steps={M.embudo} />
+        <Card title="Embudo hacia WhatsApp" subtitle="Vista → carrito → pedido">
+          <Funnel steps={embudo} />
         </Card>
         <Card title="Productos más vistos">
-          <BarList items={M.topProductos} />
+          {m.topVistos.length ? <BarList items={m.topVistos} /> : vacio}
+        </Card>
+        <Card title="Productos más agregados al carrito" className="lg:col-span-2">
+          {m.topAgregados.length ? <BarList items={m.topAgregados} color="#2f3a7e" /> : vacio}
         </Card>
       </div>
     </div>

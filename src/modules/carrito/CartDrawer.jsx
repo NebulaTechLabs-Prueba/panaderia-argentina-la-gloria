@@ -8,6 +8,7 @@ import { useNegocio, useMoneda } from "@/modules/negocio/NegocioProvider";
 import { formatCentavos } from "@/lib/money/formatCentavos";
 import { buildMensajePedido } from "@/modules/whatsapp/buildMensajePedido";
 import { buildWhatsappUrl } from "@/modules/whatsapp/buildWhatsappUrl";
+import { track } from "@/lib/track";
 import { playEnviar, playVaciar, playMas, playMenos, playQuitar, playCerrar } from "@/lib/sound/ding";
 
 // Panel lateral con el detalle del pedido y el botón que redirige a WhatsApp.
@@ -25,6 +26,7 @@ export function CartDrawer() {
   function enviarPorWhatsapp() {
     if (estaVacio || !ajustes) return;
     playEnviar(); // sonido de confirmación (distinto al de agregar)
+    track("enviar_whatsapp", { meta: { total_centavos: totalCentavos, items: items.length } });
     const mensaje = buildMensajePedido(items, ajustes, { personas, regalos });
     const url = buildWhatsappUrl(ajustes.whatsapp_numero, mensaje);
     window.open(url, "_blank", "noopener,noreferrer");

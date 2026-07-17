@@ -11,6 +11,7 @@ import { formatCentavos } from "@/lib/money/formatCentavos";
 import { unidadSufijo } from "@/lib/unidades";
 import { estiloBadge } from "@/lib/badges";
 import { getPromos, promoVigente } from "@/lib/promos";
+import { track, trackVisita } from "@/lib/track";
 import { ProductImage } from "./ProductImage";
 import { IconoCategoria } from "./IconoCategoria";
 import { header as headerColor } from "./catColors";
@@ -169,6 +170,15 @@ export function MenuLaGloria() {
       else n.add(id);
       return n;
     });
+
+  // Registrar la visita (una por sesión).
+  useEffect(() => { trackVisita("/"); }, []);
+
+  // Abrir el detalle de un producto → registra "ver producto".
+  const abrirDetalle = (p) => {
+    track("ver_producto", { producto_id: p.id });
+    setDetalle(p);
+  };
 
   useEffect(() => {
     const cargar = () => getPromos().then((ps) => setPromos(ps.filter(promoVigente)));
@@ -420,7 +430,7 @@ export function MenuLaGloria() {
                         className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"
                       >
                         {items.map((p) => (
-                          <FilaProducto key={p.id} producto={p} categoria={cat} moneda={moneda} onAbrir={setDetalle} />
+                          <FilaProducto key={p.id} producto={p} categoria={cat} moneda={moneda} onAbrir={abrirDetalle} />
                         ))}
                       </motion.ul>
                     </motion.div>

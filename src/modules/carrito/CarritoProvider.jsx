@@ -5,6 +5,7 @@ import { CART_STORAGE_KEY } from "@/lib/config/constants";
 import { totalCentavos } from "@/lib/money/formatCentavos";
 import { calcularRegalos, getPromos } from "@/lib/promos";
 import { getProductos } from "@/lib/data";
+import { track } from "@/lib/track";
 import { playDing } from "@/lib/sound/ding";
 
 // Estado del carrito: lista de líneas. Cada línea guarda lo mínimo para mostrar
@@ -129,6 +130,7 @@ export function CarritoProvider({ children }) {
         // Al agregar el PRIMER producto, el carrito se abre solo.
         if (state.items.length === 0) setDrawerAbierto(true);
         dispatch({ type: "AGREGAR", producto, cantidad });
+        track("agregar_carrito", { producto_id: String(producto.id).split("::")[0], meta: { cantidad: cantidad || 1 } });
         playDing(); // campanita de mostrador
       },
       fijarCantidad: (id, cantidad) => dispatch({ type: "FIJAR_CANTIDAD", id, cantidad }),

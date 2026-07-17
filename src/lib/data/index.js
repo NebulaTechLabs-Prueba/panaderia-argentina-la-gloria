@@ -53,21 +53,33 @@ export async function getProductos() {
 }
 
 // ── Analítica real (a partir de la tabla `events`) ──────────────────────────
-function resumirEventos(ev, dias, nombre) {
-  const sesiones = new Set();
-  let visitas = 0, verP = 0, agg = 0, wa = 0, ingresos = 0;
-  const vistos = {}, agregados = {};
+function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
+  const sesiones = new Set(), sesArmaron = new Set(), sesEnviaron = new Set();
+  let visitas = 0, verP = 0, agg = 0, wa = 0, ingresos = 0, sumItems = 0;
+  const vistos = {}, agregados = {}, promoClicks = {};
+  const tamanos = { chicas: 0, medianas: 0, grandes: 0 };
   const porDia = {};
+  const dow = [0, 0, 0, 0, 0, 0, 0]; // getDay(): 0=Dom … 6=Sáb
   for (const e of ev) {
     if (e.session_id) sesiones.add(e.session_id);
     const dia = (e.created_at || "").slice(0, 10);
-    if (e.tipo === "page_view") { visitas++; porDia[dia] = (porDia[dia] || 0) + 1; }
+    if (e.tipo === "page_view") { visitas++; porDia[dia] = (porDia[dia] || 0) + 1; dow[new Date(e.created_at).getDay()]++; }
     else if (e.tipo === "ver_producto") { verP++; if (e.producto_id) vistos[e.producto_id] = (vistos[e.producto_id] || 0) + 1; }
-    else if (e.tipo === "agregar_carrito") { agg++; if (e.producto_id) agregados[e.producto_id] = (agregados[e.producto_id] || 0) + 1; }
-    else if (e.tipo === "enviar_whatsapp") { wa++; ingresos += Number(e.meta?.total_centavos || 0); }
+    else if (e.tipo === "agregar_carrito") { agg++; if (e.session_id) sesArmaron.add(e.session_id); if (e.producto_id) agregados[e.producto_id] = (agregados[e.producto_id] || 0) + 1; }
+    else if (e.tipo === "enviar_whatsapp") {
+      wa++;
+      ingresos += Number(e.meta?.total_centavos || 0);
+      const it = Number(e.meta?.items || 0);
+      sumItems += it;
+      if (it <= 2) tamanos.chicas++; else if (it <= 4) tamanos.medianas++; else tamanos.grandes++;
+      if (e.session_id) sesEnviaron.add(e.session_id);
+    } else if (e.tipo === "promo_click") {
+      const pid = e.meta?.promo_id || "?";
+      promoClicks[pid] = (promoClicks[pid] || 0) + 1;
+    }
   }
-  const top = (obj) =>
-    Object.entries(obj).map(([id, valor]) => ({ producto_id: id, label: nombre[id] || id, valor }))
+  const top = (obj, dic) =>
+    Object.entries(obj).map(([id, valor]) => ({ id, label: (dic[id] || id), valor }))
       .sort((a, b) => b.valor - a.valor).slice(0, 6);
   const serie = [];
   for (let i = dias - 1; i >= 0; i--) {
@@ -80,9 +92,15 @@ function resumirEventos(ev, dias, nombre) {
     whatsapp: wa,
     conversion: sesiones.size ? (wa / sesiones.size) * 100 : 0,
     embudo: { ver: verP, carrito: agg, whatsapp: wa },
-    topVistos: top(vistos),
-    topAgregados: top(agregados),
-    serie,
+    topVistos: top(vistos, nombre),
+    topAgregados: top(agregados, nombre),
+    promoClicks: top(promoClicks, nombrePromo),
+    ticket_centavos: wa ? Math.round(ingresos / wa) : 0,
+    items_por_pedido: wa ? sumItems / wa : 0,
+    carritos_armados: sesArmaron.size,
+    carritos_enviaron: sesEnviaron.size,
+    tamanos,
+    porDiaSemana: [1, 2, 3, 4, 5, 6, 0].map((d, i) => ({ label: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"][i], valor: dow[d] })),
     ingresos_centavos: ingresos,
     totalEventos: ev.length,
   };
@@ -92,16 +110,18 @@ function resumirEventos(ev, dias, nombre) {
 export async function getMetricas(dias = 30) {
   const desde = new Date(Date.now() - dias * 86400000).toISOString();
   try {
-    const [{ data: ev, error }, prods] = await Promise.all([
+    const [{ data: ev, error }, prods, { data: promos }] = await Promise.all([
       getSupabase().from("events").select("tipo, producto_id, session_id, meta, created_at").gte("created_at", desde).order("created_at").limit(50000),
       getProductos(),
+      getSupabase().from("promos").select("id, nombre"),
     ]);
     if (error) throw error;
     const nombre = Object.fromEntries((prods || []).map((p) => [p.id, p.nombre]));
-    return resumirEventos(ev || [], dias, nombre);
+    const nombrePromo = Object.fromEntries((promos || []).map((p) => [p.id, p.nombre]));
+    return resumirEventos(ev || [], dias, nombre, nombrePromo);
   } catch (e) {
     console.warn("getMetricas:", e?.message);
-    return resumirEventos([], dias, {});
+    return resumirEventos([], dias, {}, {});
   }
 }
 

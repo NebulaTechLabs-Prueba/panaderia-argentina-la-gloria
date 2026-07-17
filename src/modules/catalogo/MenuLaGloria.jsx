@@ -250,6 +250,7 @@ export function MenuLaGloria() {
   const { agregar } = useCarrito();
   const agregarPromo = (promo) => {
     window.dispatchEvent(new CustomEvent("la-gloria:promo-click", { detail: { id: promo.id } }));
+    track("promo_click", { meta: { promo_id: promo.id, promo: promo.nombre } });
     if (promo.condicion?.tipo !== "productos") return;
     for (const req of promo.condicion.productos || []) {
       const p = productos.find((x) => x.id === req.producto_id);

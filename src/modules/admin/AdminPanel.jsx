@@ -197,15 +197,15 @@ export function AdminPanel() {
         </header>
 
         <main className="p-5">
-          {["trafico", "conversiones", "consumidor", "seo"].includes(sec) && (
+          {["trafico", "seo"].includes(sec) && (
             <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-              📊 Esta sección todavía usa <b>datos de muestra</b>. El <b>Resumen</b> ya es real (visitas, embudo y pedidos). El resto se activa al sumar más seguimiento (y GA4 para tráfico/fuentes).
+              📊 Esta sección usa <b>datos de muestra</b>: necesita <b>Google Analytics</b> (tráfico, fuentes, geo) y <b>Search Console</b> (SEO), aún sin conectar. El Resumen, Conversiones y Consumidor ya son reales.
             </p>
           )}
           {sec === "resumen" && <Resumen rango={rango} />}
           {sec === "trafico" && <Trafico />}
-          {sec === "conversiones" && <Conversiones />}
-          {sec === "consumidor" && <Consumidor />}
+          {sec === "conversiones" && <Conversiones rango={rango} />}
+          {sec === "consumidor" && <Consumidor rango={rango} />}
           {sec === "seo" && <Seo />}
           {sec === "productos" && <Catalogo />}
           {sec === "promociones" && <Promociones />}
@@ -323,169 +323,102 @@ function Trafico() {
   );
 }
 
-function Conversiones() {
+function Conversiones({ rango }) {
+  const dias = parseInt(rango, 10) || 30;
+  const [m, setM] = useState(null);
+  useEffect(() => { setM(null); getMetricas(dias).then(setM); }, [dias]);
+  if (!m) return <p className="text-sm text-cacao/50">Cargando…</p>;
+  const money = (c) => "$" + ((c || 0) / 100).toFixed(2);
+  const embudo = [
+    { label: "Vieron un producto", valor: m.embudo.ver },
+    { label: "Agregaron al carrito", valor: m.embudo.carrito },
+    { label: "Enviaron por WhatsApp", valor: m.embudo.whatsapp },
+  ];
+  const vacio = <p className="py-8 text-center text-sm text-cacao/45">Sin datos aún.</p>;
   return (
     <div className="space-y-5">
       <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-        Los ingresos/ventas son <b>estimados</b>: reflejan la <b>intención de compra</b> (pedido enviado por
-        WhatsApp), no la venta cerrada — en el local el pedido puede cambiar. Útil como tendencia para marketing.
+        Los pedidos reflejan la <b>intención de compra</b> (envío por WhatsApp), no la venta cerrada — en el local
+        el pedido puede cambiar. Útil como tendencia para marketing.
       </p>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Kpi label="Pedidos por WhatsApp" value="76" delta={15.2} />
-        <Kpi label="Tasa de conversión" value="6,1%" delta={2.3} />
-        <Kpi label="Ticket estimado" value="$28,40" delta={4.7} />
+        <Kpi label="Pedidos por WhatsApp" value={m.whatsapp.toLocaleString("es")} />
+        <Kpi label="Tasa de conversión" value={`${m.conversion.toFixed(1)}%`} />
+        <Kpi label="Ticket estimado" value={money(m.ticket_centavos)} />
       </div>
       <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Embudo del negocio" subtitle="Cada paso hacia el pedido">
-          <Funnel steps={M.embudo} />
+          <Funnel steps={embudo} />
           <p className="mt-4 flex items-center gap-2 rounded-lg bg-masa/50 p-3 text-xs text-cacao/60">
             <MessageCircle className="h-4 w-4 text-[#25D366]" />
             El evento clave es el click en “Enviar pedido por WhatsApp”.
           </p>
         </Card>
-        <Card title="Productos que más convierten" subtitle="Pedidos atribuidos">
-          <BarList items={M.conversionesPorProducto} color="#16a34a" />
+        <Card title="Más agregados al carrito" subtitle="Los que más interés generan">
+          {m.topAgregados.length ? <BarList items={m.topAgregados} color="#16a34a" /> : vacio}
         </Card>
       </div>
-
-      <Card title="Rendimiento de promociones" subtitle="Clic en el banner → pedido (estimado)">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-cacao/10 text-left text-xs uppercase tracking-wide text-cacao/45">
-                <th className="pb-2 pr-2 font-semibold">Promo</th>
-                <th className="pb-2 pr-2 text-right font-semibold">Clics</th>
-                <th className="pb-2 pr-2 text-right font-semibold">Pedidos</th>
-                <th className="pb-2 pr-2 text-right font-semibold">Conv.</th>
-                <th className="pb-2 text-right font-semibold">Ingresos est.</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-cacao/5">
-              {M.rendimientoPromos.map((r) => (
-                <tr key={r.nombre}>
-                  <td className="py-2.5 pr-2 font-medium text-cacao/80">{r.nombre}</td>
-                  <td className="py-2.5 pr-2 text-right tabular-nums text-cacao/70">{r.clics}</td>
-                  <td className="py-2.5 pr-2 text-right tabular-nums text-cacao/70">{r.pedidos}</td>
-                  <td className="py-2.5 pr-2 text-right tabular-nums font-semibold text-marca">
-                    {((r.pedidos / r.clics) * 100).toFixed(0)}%
-                  </td>
-                  <td className="py-2.5 text-right tabular-nums text-green-700">${r.ingresos}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-3 text-xs text-cacao/45">
-          Clics medidos por el evento del banner; pedidos e ingresos son estimados (intención de compra).
-        </p>
+      <Card title="Rendimiento de promociones" subtitle="Clics en el banner de promo">
+        {m.promoClicks.length ? (
+          <BarList items={m.promoClicks} color="#ff9900" />
+        ) : (
+          <p className="py-6 text-center text-sm text-cacao/45">Todavía no hubo clics en promos.</p>
+        )}
       </Card>
     </div>
   );
 }
 
-function Consumidor() {
-  const { armaron, enviaron } = M.abandono;
-  const abandonoPct = (((armaron - enviaron) / armaron) * 100).toFixed(1);
-  const [gran, setGran] = useState("Semana");
+function Consumidor({ rango }) {
+  const dias = parseInt(rango, 10) || 30;
+  const [m, setM] = useState(null);
+  useEffect(() => { setM(null); getMetricas(dias).then(setM); }, [dias]);
+  if (!m) return <p className="text-sm text-cacao/50">Cargando…</p>;
+  const money = (c) => "$" + ((c || 0) / 100).toFixed(2);
+  const abandono = m.carritos_armados ? Math.round(((m.carritos_armados - m.carritos_enviaron) / m.carritos_armados) * 100) : 0;
+  const kpis = [
+    { id: "ticket", label: "Ticket promedio", value: money(m.ticket_centavos) },
+    { id: "items", label: "Ítems por pedido", value: m.items_por_pedido.toFixed(1) },
+    { id: "pedidos", label: "Pedidos", value: m.whatsapp.toLocaleString("es") },
+    { id: "abandono", label: "Abandono de carrito", value: `${abandono}%` },
+  ];
+  const tamanos = [
+    { label: "Chicas (1–2)", valor: m.tamanos.chicas, color: "#63b0dd" },
+    { label: "Medianas (3–4)", valor: m.tamanos.medianas, color: "#2f3a7e" },
+    { label: "Grandes (5+)", valor: m.tamanos.grandes, color: "#ff9900" },
+  ];
+  const hayTamanos = tamanos.some((t) => t.valor > 0);
+  const hayDow = m.porDiaSemana.some((d) => d.valor > 0);
+  const vacio = <p className="py-8 text-center text-sm text-cacao/45">Sin datos aún.</p>;
   return (
     <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {M.consumidorKpis.map((k) => (
-          <Kpi key={k.id} {...k} />
-        ))}
+        {kpis.map((k) => <Kpi key={k.id} {...k} />)}
       </div>
-
-      {/* Destacados por granularidad */}
-      <div className="flex items-center justify-between">
-        <h2 className="font-display font-bold text-cacao/70">Destacados</h2>
-        <div className="flex gap-1 rounded-full bg-white p-1 shadow-sm ring-1 ring-cacao/5">
-          {M.GRANOS.map((g) => (
-            <button
-              key={g}
-              type="button"
-              onClick={() => setGran(g)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                gran === g ? "bg-marca text-cream" : "text-cacao/60 hover:bg-masa/60"
-              }`}
-            >
-              {g}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Card title="Producto más visto" subtitle={`Por ${gran.toLowerCase()}`}>
-          <p className="font-display text-2xl font-extrabold text-cacao">{M.masVistoPeriodo[gran].valor}</p>
-          <p className="mt-1 text-sm text-cacao/55">{M.masVistoPeriodo[gran].detalle}</p>
-        </Card>
-        <Card title="Período con más pedidos" subtitle={`Por ${gran.toLowerCase()}`}>
-          <p className="font-display text-2xl font-extrabold text-corteza">{M.pedidosPeriodo[gran].valor}</p>
-          <p className="mt-1 text-sm text-cacao/55">{M.pedidosPeriodo[gran].detalle}</p>
-        </Card>
-      </div>
-
       <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Abandono de carrito" subtitle="Armaron el carrito pero no enviaron">
-          <Funnel
-            steps={[
-              { label: "Armaron el carrito", valor: armaron },
-              { label: "Enviaron por WhatsApp", valor: enviaron },
-            ]}
-          />
+          <Funnel steps={[{ label: "Armaron el carrito", valor: m.carritos_armados }, { label: "Enviaron por WhatsApp", valor: m.carritos_enviaron }]} />
           <p className="mt-3 rounded-lg bg-masa/50 p-3 text-xs text-cacao/60">
-            {armaron - enviaron} de {armaron} carritos ({abandonoPct}%) no llegaron a WhatsApp — oportunidad de
-            recuperar (recordatorio, oferta, simplificar el paso).
+            {m.carritos_armados - m.carritos_enviaron} de {m.carritos_armados} carritos ({abandono}%) no llegaron a
+            WhatsApp — oportunidad de recuperar (recordatorio, oferta, simplificar el paso).
           </p>
         </Card>
-        <Card title="Tamaño de las órdenes" subtitle="Chicas, medianas y grandes">
-          <Donut segments={M.tamanoOrdenes} />
+        <Card title="Tamaño de las órdenes" subtitle="Por cantidad de ítems">
+          {hayTamanos ? <Donut segments={tamanos} /> : vacio}
         </Card>
-
         <Card title="Más agregados al carrito">
-          <BarList items={M.masAgregado} />
+          {m.topAgregados.length ? <BarList items={m.topAgregados} /> : vacio}
         </Card>
-        <Card title="Se piden en mayor cantidad" subtitle="Unidades promedio por pedido">
-          <BarList items={M.cantidadPorPedido} color="#63b0dd" />
-        </Card>
-
-        <Card title="Ingresos por producto" subtitle="Estimado — el pedido no es venta confirmada">
-          <BarList items={M.ingresosPorProducto} color="#16a34a" />
-        </Card>
-        <Card title="Los que menos se piden" subtitle="Candidatos a promo o a revisar">
-          <BarList items={M.menosVendido} color="#dc2626" />
+        <Card title="Más vistos">
+          {m.topVistos.length ? <BarList items={m.topVistos} color="#63b0dd" /> : vacio}
         </Card>
       </div>
 
-      <Card title="Productos vistos juntos" subtitle="Se ven en la misma visita → ideas de combos / cross-sell">
-        <ul className="divide-y divide-cacao/5">
-          {M.vistosJuntos.map((v, i) => (
-            <li key={i} className="flex items-center justify-between py-2.5 text-sm">
-              <span className="text-cacao/70">
-                <b className="text-cacao">{v.a}</b> <span className="text-cacao/40">+</span>{" "}
-                <b className="text-cacao">{v.b}</b>
-              </span>
-              <span className="rounded-full bg-masa/60 px-2.5 py-0.5 text-xs font-semibold text-cacao/60">
-                {v.veces} veces
-              </span>
-            </li>
-          ))}
-        </ul>
+      <Card title="Visitas por día de la semana" subtitle="Cuándo entran más al sitio">
+        {hayDow ? <Columnas data={m.porDiaSemana} color="#2f3a7e" /> : vacio}
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Card title="Interacción por día de la semana" subtitle={`Pico: ${M.diaPico}`}>
-          <Columnas data={M.porDiaSemana} color="#2f3a7e" />
-        </Card>
-        <Card title="Interacción por mes" subtitle="Estacionalidad del año">
-          <Columnas data={M.porMes} color="#ff9900" />
-        </Card>
-      </div>
-
-      <Card title="Interacción por hora del día" subtitle="Cuándo entran (picos: mediodía y noche)">
-        <Columnas data={M.porHora} color="#63b0dd" />
-      </Card>
-
-      <Card title="Fechas clave (Argentina + EE. UU.)" subtitle="Feriados que pueden mover la demanda">
+      <Card title="Fechas clave (Argentina + EE. UU.)" subtitle="Feriados que pueden mover la demanda (referencia)">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -513,8 +446,7 @@ function Consumidor() {
           </table>
         </div>
         <p className="mt-3 flex items-center gap-2 text-xs text-cacao/50">
-          <CalendarDays className="h-4 w-4" /> A futuro estas fechas se superponen a los gráficos para explicar los
-          picos de demanda.
+          <CalendarDays className="h-4 w-4" /> Calendario de referencia (curado) para anticipar picos de demanda.
         </p>
       </Card>
     </div>

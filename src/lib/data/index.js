@@ -87,6 +87,7 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
     serie.push({ dia: d, valor: porDia[d] || 0 });
   }
   return {
+    serie,
     sesiones: sesiones.size,
     visitas,
     whatsapp: wa,

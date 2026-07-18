@@ -209,7 +209,8 @@ export function Funnel({ steps }) {
     <div className="space-y-2">
       {steps.map((s, i) => {
         const pct = (s.valor / top) * 100;
-        const desde = i === 0 ? 100 : (s.valor / steps[i - 1].valor) * 100;
+        const prev = i === 0 ? 0 : steps[i - 1].valor;
+        const desde = i === 0 ? 100 : prev ? (s.valor / prev) * 100 : 0;
         return (
           <div key={s.label}>
             <div className="mb-1 flex items-center justify-between text-sm">

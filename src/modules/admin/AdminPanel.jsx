@@ -236,7 +236,7 @@ function Resumen({ rango }) {
     );
   }
 
-  const serie = m.serie.map((s) => s.valor);
+  const serie = (m.serie || []).map((s) => s.valor);
   const maxSerie = Math.max(...serie, 0);
   const kpis = [
     { id: "visitas", label: "Visitas", value: m.visitas.toLocaleString("es") },

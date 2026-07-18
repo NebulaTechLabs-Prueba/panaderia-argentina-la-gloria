@@ -1,7 +1,17 @@
 import { MenuLaGloria } from "@/modules/catalogo/MenuLaGloria";
+import { SeoPublic } from "@/components/SeoPublic";
+import { metadataPublica } from "@/lib/seo/metadata";
 
-// El cliente eligió la propuesta B. La raíz pública ("/") ahora sirve el menú (B).
-// Las otras propuestas quedan solo por URL directa hasta confirmar su eliminación.
+export function generateMetadata() {
+  return metadataPublica("/");
+}
+
+// El cliente eligió la propuesta B. La raíz pública ("/") sirve el menú (B).
 export default function Page() {
-  return <MenuLaGloria />;
+  return (
+    <>
+      <MenuLaGloria />
+      <SeoPublic />
+    </>
+  );
 }

@@ -250,6 +250,7 @@ function Resumen({ rango }) {
     { label: "Enviaron por WhatsApp", valor: m.embudo.whatsapp },
   ];
   const vacio = <p className="py-10 text-center text-sm text-cacao/45">Sin datos aún.</p>;
+  const vps = m.sesiones ? m.visitas / m.sesiones : 0;
 
   return (
     <div className="space-y-5">
@@ -257,7 +258,7 @@ function Resumen({ rango }) {
         {kpis.map((k) => <Kpi key={k.id} {...k} spark={maxSerie > 0 ? serie : undefined} />)}
       </div>
       <div className="grid gap-5 lg:grid-cols-3">
-        <Card title="Visitas" subtitle={`Últimos ${dias} días`} className="lg:col-span-2">
+        <Card title="Visitas" subtitle={`Últimos ${dias} días · ${vps.toFixed(1)} visitas por sesión`} className="lg:col-span-2">
           {maxSerie > 0 ? <LineChart data={serie} /> : vacio}
         </Card>
         <Card title="Embudo hacia WhatsApp" subtitle="Vista → carrito → pedido">

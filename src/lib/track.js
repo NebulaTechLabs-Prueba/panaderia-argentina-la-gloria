@@ -34,11 +34,10 @@ export function track(tipo, { producto_id = null, meta = null } = {}) {
   }
 }
 
-// Una visita por sesión (para no inflar con recargas dentro de la misma pestaña).
+// Cada carga de pantalla cuenta como una visita (page view): abrir la home, ir
+// al menú o recargar. La sesión (sessionId, por pestaña) agrupa todas las visitas
+// de una misma tanda de navegación → así "Visitas" (cargas) y "Sesiones" (personas)
+// son métricas distintas y tiene sentido el promedio de visitas por sesión.
 export function trackVisita(path) {
-  try {
-    if (sessionStorage.getItem("la-gloria:pv")) return;
-    sessionStorage.setItem("la-gloria:pv", "1");
-  } catch {}
   track("page_view", { meta: { path } });
 }

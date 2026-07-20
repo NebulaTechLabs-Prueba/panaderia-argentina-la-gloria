@@ -113,22 +113,44 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
   };
 }
 
+// Serie diaria (vistas y sesiones) de una ventana previa, alineada a `dias` puntos
+// para poder superponerla como "período anterior".
+function seriePrevias(evPrev, dias, ahora) {
+  const vis = {}, ses = {};
+  for (const e of evPrev || []) {
+    const dia = (e.created_at || "").slice(0, 10);
+    if (e.tipo === "page_view") vis[dia] = (vis[dia] || 0) + 1;
+    if (e.session_id) { if (!ses[dia]) ses[dia] = new Set(); ses[dia].add(e.session_id); }
+  }
+  const seriePrevia = [], serieSesionesPrevia = [];
+  for (let i = dias - 1; i >= 0; i--) {
+    const d = new Date(ahora - (dias + i) * 86400000).toISOString().slice(0, 10);
+    seriePrevia.push(vis[d] || 0);
+    serieSesionesPrevia.push(ses[d] ? ses[d].size : 0);
+  }
+  return { seriePrevia, serieSesionesPrevia };
+}
+
 // Métricas reales de los últimos `dias` días (solo super-admin puede leer events).
+// Incluye la serie del período anterior (los `dias` previos) para comparar.
 export async function getMetricas(dias = 30) {
-  const desde = new Date(Date.now() - dias * 86400000).toISOString();
+  const ahora = Date.now();
+  const desde = new Date(ahora - dias * 86400000).toISOString();
+  const desdePrev = new Date(ahora - 2 * dias * 86400000).toISOString();
   try {
-    const [{ data: ev, error }, prods, { data: promos }] = await Promise.all([
+    const [{ data: ev, error }, { data: evPrev }, prods, { data: promos }] = await Promise.all([
       getSupabase().from("events").select("tipo, producto_id, session_id, meta, created_at").gte("created_at", desde).order("created_at").limit(50000),
+      getSupabase().from("events").select("tipo, session_id, created_at").gte("created_at", desdePrev).lt("created_at", desde).limit(50000),
       getProductos(),
       getSupabase().from("promos").select("id, nombre"),
     ]);
     if (error) throw error;
     const nombre = Object.fromEntries((prods || []).map((p) => [p.id, p.nombre]));
     const nombrePromo = Object.fromEntries((promos || []).map((p) => [p.id, p.nombre]));
-    return resumirEventos(ev || [], dias, nombre, nombrePromo);
+    return { ...resumirEventos(ev || [], dias, nombre, nombrePromo), ...seriePrevias(evPrev, dias, ahora) };
   } catch (e) {
     console.warn("getMetricas:", e?.message);
-    return resumirEventos([], dias, {}, {});
+    return { ...resumirEventos([], dias, {}, {}), seriePrevia: [], serieSesionesPrevia: [] };
   }
 }
 

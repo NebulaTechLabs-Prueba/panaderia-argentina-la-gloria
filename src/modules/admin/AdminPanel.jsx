@@ -199,11 +199,11 @@ export function AdminPanel() {
         <main className="p-5">
           {["trafico", "seo"].includes(sec) && (
             <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-              📊 Esta sección usa <b>datos de muestra</b>: necesita <b>Google Analytics</b> (tráfico, fuentes, geo) y <b>Search Console</b> (SEO), aún sin conectar. El Resumen, Conversiones y Consumidor ya son reales.
+              📊 <b>Parte</b> de esta sección usa <b>datos de muestra</b>: fuentes, dispositivos, geografía y tiempo/rebote necesitan <b>Google Analytics</b>, y el SEO necesita <b>Search Console</b> (aún sin conectar). Las <b>Vistas por día</b>, el Resumen, Conversiones y Consumidor ya son reales.
             </p>
           )}
           {sec === "resumen" && <Resumen rango={rango} />}
-          {sec === "trafico" && <Trafico />}
+          {sec === "trafico" && <Trafico rango={rango} />}
           {sec === "conversiones" && <Conversiones rango={rango} />}
           {sec === "consumidor" && <Consumidor rango={rango} />}
           {sec === "seo" && <Seo />}
@@ -278,7 +278,18 @@ function Resumen({ rango }) {
   );
 }
 
-function Trafico() {
+function Trafico({ rango }) {
+  const dias = parseInt(rango, 10) || 30;
+  const [m, setM] = useState(null);
+  useEffect(() => { setM(null); getMetricas(dias).then(setM); }, [dias]);
+
+  const serie = (m?.serie || []).map((s) => s.valor);
+  const labels = (m?.serie || []).map((s) => s.dia);
+  const previa = m?.seriePrevia || [];
+  const hayPrevia = previa.some((v) => v > 0);
+  const maxSerie = Math.max(...serie, 0);
+  const vacio = <p className="py-10 text-center text-sm text-cacao/45">Sin datos aún.</p>;
+
   return (
     <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -290,8 +301,17 @@ function Trafico() {
         <b>Tiempo promedio</b>: cuánto se queda la gente en el sitio. <b>Tasa de rebote</b>: % que entra y se va sin
         interactuar (sin mirar productos ni agregar). Más bajo es mejor.
       </p>
-      <Card title="Vistas por día" subtitle="Este período vs. anterior">
-        <LineChart data={M.serieVisitas} previa={M.serieVisitasPrev} color="#2f3a7e" />
+      <Card
+        title="Vistas por día"
+        subtitle={hayPrevia ? `Últimos ${dias} días · vs. los ${dias} días previos` : `Últimos ${dias} días`}
+      >
+        {!m ? (
+          <p className="text-sm text-cacao/50">Cargando métricas…</p>
+        ) : maxSerie > 0 ? (
+          <LineChart data={serie} previa={hayPrevia ? previa : undefined} labels={labels} unidad="vistas" />
+        ) : (
+          vacio
+        )}
       </Card>
       <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Fuentes" subtitle="De qué red o buscador llegan">

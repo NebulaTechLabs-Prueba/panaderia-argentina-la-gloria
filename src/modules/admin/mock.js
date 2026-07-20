@@ -6,7 +6,7 @@
 export const RANGOS = ["7 días", "30 días", "90 días"];
 
 export const kpis = [
-  { id: "visitas", label: "Visitas", value: "1.240", delta: 12.4, spark: [8, 10, 9, 12, 11, 14, 13, 16, 15, 18, 17, 20] },
+  { id: "visitas", label: "Vistas", value: "1.240", delta: 12.4, spark: [8, 10, 9, 12, 11, 14, 13, 16, 15, 18, 17, 20] },
   { id: "unicos", label: "Visitantes únicos", value: "892", delta: 8.1, spark: [6, 7, 7, 8, 9, 8, 10, 9, 11, 10, 12, 13] },
   { id: "whatsapp", label: "Pedidos por WhatsApp", value: "76", delta: 15.2, spark: [2, 3, 2, 4, 3, 5, 4, 6, 5, 6, 7, 8] },
   { id: "conv", label: "Tasa de conversión", value: "6,1%", delta: 2.3, spark: [4.8, 5.1, 5.0, 5.4, 5.3, 5.6, 5.5, 5.8, 5.9, 6.0, 6.0, 6.1] },

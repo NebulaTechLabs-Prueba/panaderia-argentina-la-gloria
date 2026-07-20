@@ -75,16 +75,37 @@ export function Kpi({ label, value, delta, spark }) {
   );
 }
 
-export function LineChart({ data, previa, color = "#2f3a7e", height = 220 }) {
+const DOW_C = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+const MES_C = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const fmtDiaLargo = (iso) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${DOW_C[new Date(y, m - 1, d).getDay()]} ${d} ${MES_C[m - 1]}`;
+};
+const fmtDiaCorto = (iso) => {
+  const [, m, d] = iso.split("-").map(Number);
+  return `${d}/${m}`;
+};
+
+export function LineChart({ data, previa, color = "#2f3a7e", height = 220, labels, unidad = "" }) {
   const hayPrevia = Array.isArray(previa) && previa.length === data.length;
   const pool = hayPrevia ? data.concat(previa) : data;
   const max = Math.max(...pool);
   const min = Math.min(...pool);
   const span = max - min || 1;
   const y = (v) => 100 - ((v - min) / span) * 88 - 6;
-  const toLine = (arr) => arr.map((v, i) => `${(i / (arr.length - 1)) * 100},${y(v)}`).join(" ");
+  const x = (i) => (data.length > 1 ? (i / (data.length - 1)) * 100 : 50);
+  const toLine = (arr) => arr.map((v, i) => `${x(i)},${y(v)}`).join(" ");
   const line = toLine(data);
   const area = `0,100 ${line} 100,100`;
+  // Puntos con día: tooltip por punto + eje X con ~6 fechas repartidas.
+  const hayDias = Array.isArray(labels) && labels.length === data.length && data.length > 0;
+  const nTicks = Math.min(6, data.length);
+  const ticks = hayDias
+    ? Array.from({ length: nTicks }, (_, k) => {
+        const i = nTicks > 1 ? Math.round((k / (nTicks - 1)) * (data.length - 1)) : 0;
+        return { i, txt: fmtDiaCorto(labels[i]) };
+      })
+    : [];
   return (
     <div>
       {hayPrevia && (
@@ -97,7 +118,7 @@ export function LineChart({ data, previa, color = "#2f3a7e", height = 220 }) {
           </span>
         </div>
       )}
-      <div style={{ height }}>
+      <div className="relative" style={{ height }}>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
           <defs>
             <linearGradient id="lc-fill" x1="0" y1="0" x2="0" y2="1">
@@ -131,7 +152,30 @@ export function LineChart({ data, previa, color = "#2f3a7e", height = 220 }) {
             vectorEffect="non-scaling-stroke"
           />
         </svg>
+        {hayDias &&
+          data.map((v, i) => (
+            <div
+              key={i}
+              title={`${fmtDiaLargo(labels[i])} · ${v}${unidad ? " " + unidad : ""}`}
+              className="group absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${x(i)}%`, top: `${y(v)}%` }}
+            >
+              <span
+                className="block h-2.5 w-2.5 rounded-full border-2 border-white shadow-sm transition group-hover:scale-150"
+                style={{ backgroundColor: color }}
+              />
+            </div>
+          ))}
       </div>
+      {hayDias && (
+        <div className="relative mt-1.5 h-4 text-[10px] text-cacao/45">
+          {ticks.map((t) => (
+            <span key={t.i} className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${x(t.i)}%` }}>
+              {t.txt}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

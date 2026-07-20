@@ -58,11 +58,15 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
   let visitas = 0, verP = 0, agg = 0, wa = 0, ingresos = 0, sumItems = 0;
   const vistos = {}, agregados = {}, promoClicks = {};
   const tamanos = { chicas: 0, medianas: 0, grandes: 0 };
-  const porDia = {};
+  const porDia = {}, porDiaSes = {};
   const dow = [0, 0, 0, 0, 0, 0, 0]; // getDay(): 0=Dom … 6=Sáb
   for (const e of ev) {
-    if (e.session_id) sesiones.add(e.session_id);
     const dia = (e.created_at || "").slice(0, 10);
+    if (e.session_id) {
+      sesiones.add(e.session_id);
+      if (!porDiaSes[dia]) porDiaSes[dia] = new Set();
+      porDiaSes[dia].add(e.session_id);
+    }
     if (e.tipo === "page_view") { visitas++; porDia[dia] = (porDia[dia] || 0) + 1; dow[new Date(e.created_at).getDay()]++; }
     else if (e.tipo === "ver_producto") { verP++; if (e.producto_id) vistos[e.producto_id] = (vistos[e.producto_id] || 0) + 1; }
     else if (e.tipo === "agregar_carrito") { agg++; if (e.session_id) sesArmaron.add(e.session_id); if (e.producto_id) agregados[e.producto_id] = (agregados[e.producto_id] || 0) + 1; }
@@ -81,13 +85,15 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
   const top = (obj, dic) =>
     Object.entries(obj).map(([id, valor]) => ({ id, label: (dic[id] || id), valor }))
       .sort((a, b) => b.valor - a.valor).slice(0, 6);
-  const serie = [];
+  const serie = [], serieSesiones = [];
   for (let i = dias - 1; i >= 0; i--) {
     const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
     serie.push({ dia: d, valor: porDia[d] || 0 });
+    serieSesiones.push({ dia: d, valor: porDiaSes[d] ? porDiaSes[d].size : 0 });
   }
   return {
     serie,
+    serieSesiones,
     sesiones: sesiones.size,
     visitas,
     whatsapp: wa,

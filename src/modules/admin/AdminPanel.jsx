@@ -238,9 +238,13 @@ function Resumen({ rango }) {
 
   const serie = (m.serie || []).map((s) => s.valor);
   const maxSerie = Math.max(...serie, 0);
+  const serieSes = (m.serieSesiones || []).map((s) => s.valor);
+  const labelsSes = (m.serieSesiones || []).map((s) => s.dia);
+  const maxSes = Math.max(...serieSes, 0);
+  const vps = m.sesiones ? m.visitas / m.sesiones : 0;
   const kpis = [
-    { id: "visitas", label: "Visitas", value: m.visitas.toLocaleString("es") },
-    { id: "sesiones", label: "Sesiones", value: m.sesiones.toLocaleString("es") },
+    { id: "vistas", label: "Vistas", value: m.visitas.toLocaleString("es"), spark: maxSerie > 0 ? serie : undefined },
+    { id: "sesiones", label: "Sesiones", value: m.sesiones.toLocaleString("es"), spark: maxSes > 0 ? serieSes : undefined },
     { id: "whatsapp", label: "Pedidos por WhatsApp", value: m.whatsapp.toLocaleString("es") },
     { id: "conv", label: "Conversión", value: `${m.conversion.toFixed(1)}%` },
   ];
@@ -250,16 +254,15 @@ function Resumen({ rango }) {
     { label: "Enviaron por WhatsApp", valor: m.embudo.whatsapp },
   ];
   const vacio = <p className="py-10 text-center text-sm text-cacao/45">Sin datos aún.</p>;
-  const vps = m.sesiones ? m.visitas / m.sesiones : 0;
 
   return (
     <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {kpis.map((k) => <Kpi key={k.id} {...k} spark={maxSerie > 0 ? serie : undefined} />)}
+        {kpis.map((k) => <Kpi key={k.id} {...k} />)}
       </div>
       <div className="grid gap-5 lg:grid-cols-3">
-        <Card title="Visitas" subtitle={`Últimos ${dias} días · ${vps.toFixed(1)} visitas por sesión`} className="lg:col-span-2">
-          {maxSerie > 0 ? <LineChart data={serie} /> : vacio}
+        <Card title="Sesiones por día" subtitle={`Últimos ${dias} días · ${vps.toFixed(1)} vistas por sesión`} className="lg:col-span-2">
+          {maxSes > 0 ? <LineChart data={serieSes} labels={labelsSes} unidad="sesiones" /> : vacio}
         </Card>
         <Card title="Embudo hacia WhatsApp" subtitle="Vista → carrito → pedido">
           <Funnel steps={embudo} />
@@ -287,7 +290,7 @@ function Trafico() {
         <b>Tiempo promedio</b>: cuánto se queda la gente en el sitio. <b>Tasa de rebote</b>: % que entra y se va sin
         interactuar (sin mirar productos ni agregar). Más bajo es mejor.
       </p>
-      <Card title="Visitas por día" subtitle="Este período vs. anterior">
+      <Card title="Vistas por día" subtitle="Este período vs. anterior">
         <LineChart data={M.serieVisitas} previa={M.serieVisitasPrev} color="#2f3a7e" />
       </Card>
       <div className="grid gap-5 lg:grid-cols-2">
@@ -415,7 +418,7 @@ function Consumidor({ rango }) {
         </Card>
       </div>
 
-      <Card title="Visitas por día de la semana" subtitle="Cuándo entran más al sitio">
+      <Card title="Vistas por día de la semana" subtitle="Cuándo entran más al sitio">
         {hayDow ? <Columnas data={m.porDiaSemana} color="#2f3a7e" /> : vacio}
       </Card>
 

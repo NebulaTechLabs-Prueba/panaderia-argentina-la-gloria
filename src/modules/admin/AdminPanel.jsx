@@ -261,7 +261,7 @@ function Resumen({ rango }) {
         {kpis.map((k) => <Kpi key={k.id} {...k} />)}
       </div>
       <div className="grid gap-5 lg:grid-cols-3">
-        <Card title="Sesiones por día" subtitle={`Últimos ${dias} días · ${vps.toFixed(1)} vistas por sesión`} className="lg:col-span-2">
+        <Card title="Sesiones por día" subtitle={`Personas por día · ${vps.toFixed(1)} vistas por sesión`} className="lg:col-span-2">
           {maxSes > 0 ? <LineChart data={serieSes} labels={labelsSes} unidad="sesiones" /> : vacio}
         </Card>
         <Card title="Embudo hacia WhatsApp" subtitle="Vista → carrito → pedido">
@@ -303,7 +303,7 @@ function Trafico({ rango }) {
       </p>
       <Card
         title="Vistas por día"
-        subtitle={hayPrevia ? `Últimos ${dias} días · vs. los ${dias} días previos` : `Últimos ${dias} días`}
+        subtitle={hayPrevia ? `Cargas totales · vs. los ${dias} días previos` : `Cargas totales · la comparación aparece al acumular historial`}
       >
         {!m ? (
           <p className="text-sm text-cacao/50">Cargando métricas…</p>
@@ -440,7 +440,7 @@ function Consumidor({ rango }) {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <Card title="Vistas por día de la semana" subtitle="Cuándo entran más al sitio">
+        <Card title="Por día de la semana" subtitle="Qué días hay más movimiento (Lun–Dom)">
           {hayDow ? <Columnas data={m.porDiaSemana} color="#2f3a7e" /> : vacio}
         </Card>
         <Card title="Franja horaria" subtitle="En qué momento del día interactúan más (hora de Virginia)">

@@ -423,12 +423,17 @@ export function MenuLaGloria() {
                       transition={{ duration: 0.28, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
+                      {cat.texto && (
+                        <p className="mt-3 max-w-2xl px-1 text-[15px] italic leading-snug text-cacao/60 sm:px-2">
+                          {cat.texto}
+                        </p>
+                      )}
                       <motion.ul
                         variants={contenedor}
                         initial="hidden"
                         whileInView="show"
                         viewport={{ once: true, margin: "-60px" }}
-                        className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"
+                        className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2"
                       >
                         {items.map((p) => (
                           <FilaProducto key={p.id} producto={p} categoria={cat} moneda={moneda} onAbrir={abrirDetalle} />

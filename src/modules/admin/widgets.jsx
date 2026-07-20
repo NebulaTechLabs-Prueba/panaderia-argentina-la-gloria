@@ -292,7 +292,8 @@ export function Columnas({ data, color = "#2f3a7e", height = 150 }) {
               title={`${d.label}: ${d.valor}`}
             />
           </div>
-          <span className="mt-1 text-[10px] text-cacao/50">{d.label}</span>
+          <span className="mt-1 text-center text-[10px] leading-tight text-cacao/60">{d.label}</span>
+          {d.hint && <span className="text-center text-[9px] leading-tight text-cacao/40">{d.hint}</span>}
         </div>
       ))}
     </div>

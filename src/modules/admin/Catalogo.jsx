@@ -419,7 +419,7 @@ export function Catalogo() {
                 <Campo label="Frase / slogan (subtítulo de la sección)">
                   <input value={form.data.slogan || ""} onChange={(e) => setCampo("slogan", e.target.value)} placeholder="Ej: Dulce de leche en todo lo que se pueda" className={INPUT} />
                 </Campo>
-                <Campo label="Texto cálido (tarjeta de la sección, opcional)">
+                <Campo label="Texto cálido (intro de la sección, opcional)">
                   <textarea rows={2} value={form.data.texto || ""} onChange={(e) => setCampo("texto", e.target.value)} placeholder="Ej: El cierre dulce que no puede faltar." className={INPUT} />
                 </Campo>
                 <Campo label="Color">

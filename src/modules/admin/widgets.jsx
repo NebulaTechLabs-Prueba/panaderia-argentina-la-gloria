@@ -185,7 +185,7 @@ export function BarList({ items, color = "#ff9900", unit = "" }) {
   return (
     <ul className="space-y-3">
       {items.map((it) => (
-        <li key={it.label}>
+        <li key={it.id ?? it.label}>
           <div className="mb-1 flex items-center justify-between text-sm">
             <span className="font-medium text-cacao/80">{it.label}</span>
             <span className="font-semibold text-cacao/60">

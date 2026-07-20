@@ -413,6 +413,7 @@ function Consumidor({ rango }) {
   ];
   const hayTamanos = tamanos.some((t) => t.valor > 0);
   const hayDow = m.porDiaSemana.some((d) => d.valor > 0);
+  const hayFranja = (m.porFranja || []).some((f) => f.valor > 0);
   const vacio = <p className="py-8 text-center text-sm text-cacao/45">Sin datos aún.</p>;
   return (
     <div className="space-y-5">
@@ -438,9 +439,14 @@ function Consumidor({ rango }) {
         </Card>
       </div>
 
-      <Card title="Vistas por día de la semana" subtitle="Cuándo entran más al sitio">
-        {hayDow ? <Columnas data={m.porDiaSemana} color="#2f3a7e" /> : vacio}
-      </Card>
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card title="Vistas por día de la semana" subtitle="Cuándo entran más al sitio">
+          {hayDow ? <Columnas data={m.porDiaSemana} color="#2f3a7e" /> : vacio}
+        </Card>
+        <Card title="Franja horaria" subtitle="En qué momento del día interactúan más (hora de Virginia)">
+          {hayFranja ? <Columnas data={m.porFranja} color="#ff9900" /> : vacio}
+        </Card>
+      </div>
 
       <Card title="Fechas clave (Argentina + EE. UU.)" subtitle="Feriados que pueden mover la demanda (referencia)">
         <div className="overflow-x-auto">

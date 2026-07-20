@@ -56,12 +56,19 @@ export async function getProductos() {
 function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
   const sesiones = new Set(), sesArmaron = new Set(), sesEnviaron = new Set();
   let visitas = 0, verP = 0, agg = 0, wa = 0, ingresos = 0, sumItems = 0;
-  const vistos = {}, agregados = {}, promoClicks = {};
+  const vistos = {}, agregados = {}, promoClicks = {}, promoNombres = {};
   const tamanos = { chicas: 0, medianas: 0, grandes: 0 };
   const porDia = {}, porDiaSes = {};
   const dow = [0, 0, 0, 0, 0, 0, 0]; // getDay(): 0=Dom … 6=Sáb
+  const franjas = { madrugada: 0, manana: 0, tarde: 0, noche: 0 };
+  // Hora local del negocio (Virginia, EE. UU.) para agrupar por franja del día.
+  const horaFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "2-digit", hourCycle: "h23" });
   for (const e of ev) {
     const dia = (e.created_at || "").slice(0, 10);
+    if (e.created_at) {
+      const h = Number(horaFmt.format(new Date(e.created_at)));
+      if (h < 6) franjas.madrugada++; else if (h < 12) franjas.manana++; else if (h < 18) franjas.tarde++; else franjas.noche++;
+    }
     if (e.session_id) {
       sesiones.add(e.session_id);
       if (!porDiaSes[dia]) porDiaSes[dia] = new Set();
@@ -80,7 +87,14 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
     } else if (e.tipo === "promo_click") {
       const pid = e.meta?.promo_id || "?";
       promoClicks[pid] = (promoClicks[pid] || 0) + 1;
+      if (e.meta?.promo) promoNombres[pid] = e.meta.promo;
     }
+  }
+  // Etiqueta de cada promo clickeada: el nombre vivo si existe; si se borró, el
+  // nombre que quedó guardado en el evento + "(eliminada)"; si ni eso, genérico.
+  const etiquetaPromo = {};
+  for (const pid of Object.keys(promoClicks)) {
+    etiquetaPromo[pid] = nombrePromo[pid] || (promoNombres[pid] ? `${promoNombres[pid]} (eliminada)` : "Promo eliminada");
   }
   const top = (obj, dic) =>
     Object.entries(obj).map(([id, valor]) => ({ id, label: (dic[id] || id), valor }))
@@ -101,13 +115,19 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
     embudo: { ver: verP, carrito: agg, whatsapp: wa },
     topVistos: top(vistos, nombre),
     topAgregados: top(agregados, nombre),
-    promoClicks: top(promoClicks, nombrePromo),
+    promoClicks: top(promoClicks, etiquetaPromo),
     ticket_centavos: wa ? Math.round(ingresos / wa) : 0,
     items_por_pedido: wa ? sumItems / wa : 0,
     carritos_armados: sesArmaron.size,
     carritos_enviaron: sesEnviaron.size,
     tamanos,
     porDiaSemana: [1, 2, 3, 4, 5, 6, 0].map((d, i) => ({ label: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"][i], valor: dow[d] })),
+    porFranja: [
+      { label: "Madrugada", hint: "0–6 h", valor: franjas.madrugada },
+      { label: "Mañana", hint: "6–12 h", valor: franjas.manana },
+      { label: "Tarde", hint: "12–18 h", valor: franjas.tarde },
+      { label: "Noche", hint: "18–24 h", valor: franjas.noche },
+    ],
     ingresos_centavos: ingresos,
     totalEventos: ev.length,
   };

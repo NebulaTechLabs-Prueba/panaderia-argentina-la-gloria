@@ -583,7 +583,7 @@ function RangoCampo({ titulo, val, set, color, onRemove }) {
 }
 
 // Tabla de comparación: columnas = períodos, filas = métricas o productos.
-function TablaComparativa({ columnas, filas, cellDelta }) {
+function TablaComparativa({ columnas, filas, cellDelta, estados }) {
   const fmt = (v, pct) => (v == null ? "—" : pct ? `${v.toFixed(1)}%` : v.toLocaleString("es"));
   return (
     <div className="overflow-x-auto">
@@ -595,6 +595,8 @@ function TablaComparativa({ columnas, filas, cellDelta }) {
               <th key={i} className="pb-2 pr-2 text-right font-semibold">
                 {c.nombre ? c.nombre : `P${i + 1}`}
                 <span className="block font-normal normal-case text-cacao/35">{ddmm(c.desde)}–{ddmm(c.hasta)}</span>
+                {estados?.[i] === "vacio" && <span className="block font-semibold normal-case text-amber-600">sin datos en el rango</span>}
+                {estados?.[i] === "invalido" && <span className="block font-semibold normal-case text-red-600">fechas inválidas</span>}
               </th>
             ))}
           </tr>
@@ -668,6 +670,9 @@ function Comparativa() {
     : modo === "producto" ? prodSel.map((id) => ({ label: productos.find((p) => p.id === id)?.nombre || id, valores: (datos || []).map((d) => (d ? d.porProducto?.[id]?.[metricaProd] || 0 : null)) }))
     : campSel.map((c) => ({ label: c, valores: (datos || []).map((d) => (d ? d.porCampana?.[c]?.[metricaCamp] || 0 : null)) }));
 
+  const estados = periodos.map((p, i) => (!periodoValido(p) ? "invalido" : !datos?.[i] ? "cargando" : datos[i].totalEventos === 0 ? "vacio" : "ok"));
+  const haySolape = periodos.some((p, i) => periodoValido(p) && periodos.some((q, j) => j > i && periodoValido(q) && p.desde <= q.hasta && q.desde <= p.hasta));
+
   return (
     <div className="space-y-5">
       <Card title="Comparar" subtitle="Elegí N períodos y qué querés comparar">
@@ -690,6 +695,11 @@ function Comparativa() {
           <span className="inline-flex items-center gap-1 text-xs text-cacao/50">
             {cargando ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Calculando…</> : "Se actualiza solo al cambiar las fechas"}
           </span>
+          {haySolape && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+              ⚠ Los períodos se solapan (comparás fechas repetidas)
+            </span>
+          )}
         </div>
 
         {modo === "producto" && (
@@ -769,7 +779,7 @@ function Comparativa() {
         ) : modo === "campana" && campSel.length === 0 ? (
           <p className="py-6 text-center text-sm text-cacao/45">Elegí una o más campañas arriba para compararlas entre los períodos.</p>
         ) : (
-          <TablaComparativa columnas={periodos} filas={filas} cellDelta={cellDelta} />
+          <TablaComparativa columnas={periodos} filas={filas} cellDelta={cellDelta} estados={estados} />
         )}
       </Card>
     </div>

@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Filter, Package, Wrench,
   MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays, LogOut,
   Download, Printer, Ticket, Settings, Megaphone, Save, Loader2, ArrowLeftRight,
+  Pencil, Trash2, Plus,
 } from "lucide-react";
 import { asset, adminBase } from "@/lib/config/constants";
 import { getSupabase } from "@/lib/supabase/client";
@@ -158,20 +159,7 @@ export function AdminPanel() {
           </div>
           <div className="ml-auto flex items-center gap-2 print:hidden sm:gap-3">
             {["resumen", "conversiones", "consumidor"].includes(sec) && (
-              <div className="hidden items-center gap-1 rounded-full bg-masa/70 p-1 sm:flex">
-                {M.RANGOS.map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRango(r)}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                      rango === r ? "bg-white text-cacao shadow-sm" : "text-cacao/60 hover:text-cacao"
-                    }`}
-                  >
-                    {r}
-                  </button>
-                ))}
-              </div>
+              <RangoSelector rango={rango} setRango={setRango} />
             )}
             <button
               type="button"
@@ -374,7 +362,101 @@ function Consumidor({ rango }) {
         </Card>
       </div>
 
-      <Card title="Fechas clave (Argentina + EE. UU.)" subtitle="Feriados que pueden mover la demanda (referencia)">
+      <FechasClave />
+    </div>
+  );
+}
+
+// ── Fechas clave (CRUD real en Supabase, tabla fechas_clave) ──
+const PAISES_FC = ["🇦🇷", "🇺🇸", "🇺🇸🇦🇷"];
+const IMPACTOS_FC = ["alto", "medio", "bajo"];
+const MESES_ABR = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+const INPUT_FC = "mt-1 w-full rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-sm font-normal text-cacao outline-none focus:border-marca";
+const FC_VACIA = { fecha: "", nombre: "", pais: "🇦🇷", impacto: "medio", nota: "" };
+const fmtFechaClave = (iso) => {
+  if (!iso) return "—";
+  const [, m, d] = iso.split("-").map(Number);
+  return `${d} ${MESES_ABR[(m || 1) - 1]}`;
+};
+const mesDiaFC = (iso) => {
+  const [, m, d] = (iso || "").split("-").map(Number);
+  return (m || 0) * 100 + (d || 0);
+};
+
+function FechasClave() {
+  const supabase = getSupabase();
+  const [lista, setLista] = useState(null);
+  const [edit, setEdit] = useState(null);
+  const [guardando, setGuardando] = useState(false);
+
+  const cargar = () => supabase.from("fechas_clave").select("*").then(({ data }) => setLista(data || []));
+  useEffect(() => { cargar(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function guardar(e) {
+    e.preventDefault();
+    if (!edit.fecha || !edit.nombre.trim()) return;
+    setGuardando(true);
+    const row = { fecha: edit.fecha, nombre: edit.nombre.trim(), pais: edit.pais, impacto: edit.impacto, nota: edit.nota?.trim() || null };
+    if (edit.id) await supabase.from("fechas_clave").update(row).eq("id", edit.id);
+    else await supabase.from("fechas_clave").insert(row);
+    setGuardando(false);
+    setEdit(null);
+    cargar();
+  }
+  async function borrar(id) {
+    if (!window.confirm("¿Eliminar esta fecha clave?")) return;
+    await supabase.from("fechas_clave").delete().eq("id", id);
+    cargar();
+  }
+
+  const ordenadas = (lista || []).slice().sort((a, b) => mesDiaFC(a.fecha) - mesDiaFC(b.fecha));
+
+  return (
+    <Card
+      title="Fechas clave (Argentina + EE. UU.)"
+      subtitle="Feriados que pueden mover la demanda — editables por el equipo"
+      action={
+        <button type="button" onClick={() => setEdit({ ...FC_VACIA })} className="inline-flex items-center gap-1 rounded-full bg-marca px-3 py-1.5 text-xs font-bold text-cream transition hover:brightness-110">
+          <Plus className="h-4 w-4" /> Agregar
+        </button>
+      }
+    >
+      {edit && (
+        <form onSubmit={guardar} className="mb-4 grid gap-2 rounded-xl bg-masa/40 p-3 sm:grid-cols-2">
+          <label className="text-xs font-semibold text-cacao/60">Fecha
+            <input type="date" required value={edit.fecha} onChange={(e) => setEdit({ ...edit, fecha: e.target.value })} className={INPUT_FC} />
+          </label>
+          <label className="text-xs font-semibold text-cacao/60">Nombre
+            <input required value={edit.nombre} onChange={(e) => setEdit({ ...edit, nombre: e.target.value })} placeholder="Ej: Día del Amigo" className={INPUT_FC} />
+          </label>
+          <label className="text-xs font-semibold text-cacao/60">País
+            <select value={edit.pais} onChange={(e) => setEdit({ ...edit, pais: e.target.value })} className={INPUT_FC}>
+              {PAISES_FC.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-cacao/60">Impacto
+            <select value={edit.impacto} onChange={(e) => setEdit({ ...edit, impacto: e.target.value })} className={INPUT_FC}>
+              {IMPACTOS_FC.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-cacao/60 sm:col-span-2">Por qué (nota)
+            <input value={edit.nota || ""} onChange={(e) => setEdit({ ...edit, nota: e.target.value })} placeholder="Ej: Muchas reuniones → pedidos grupales." className={INPUT_FC} />
+          </label>
+          <div className="flex items-center gap-2 sm:col-span-2">
+            <button type="submit" disabled={guardando} className="inline-flex items-center gap-1 rounded-full bg-marca px-4 py-2 text-xs font-bold text-cream transition hover:brightness-110 disabled:opacity-60">
+              {guardando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Guardar
+            </button>
+            <button type="button" onClick={() => setEdit(null)} className="rounded-full px-4 py-2 text-xs font-semibold text-cacao/60 hover:text-cacao">Cancelar</button>
+          </div>
+        </form>
+      )}
+
+      {!lista ? (
+        <p className="text-sm text-cacao/50">Cargando…</p>
+      ) : ordenadas.length === 0 ? (
+        <p className="py-6 text-center text-sm text-cacao/45">Todavía no hay fechas clave. Agregá la primera con el botón de arriba.</p>
+      ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -383,28 +465,73 @@ function Consumidor({ rango }) {
                 <th className="pb-2 pr-2 font-semibold">Fecha clave</th>
                 <th className="pb-2 pr-2 font-semibold">País</th>
                 <th className="pb-2 pr-2 font-semibold">Impacto</th>
-                <th className="pb-2 font-semibold">Por qué</th>
+                <th className="pb-2 pr-2 font-semibold">Por qué</th>
+                <th className="pb-2 font-semibold text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-cacao/5">
-              {M.feriados.map((f, i) => (
-                <tr key={`${f.fecha}-${i}`}>
-                  <td className="whitespace-nowrap py-2.5 pr-2 font-semibold text-marca">{f.fecha}</td>
+              {ordenadas.map((f) => (
+                <tr key={f.id}>
+                  <td className="whitespace-nowrap py-2.5 pr-2 font-semibold text-marca">{fmtFechaClave(f.fecha)}</td>
                   <td className="py-2.5 pr-2 font-medium text-cacao/85">{f.nombre}</td>
                   <td className="py-2.5 pr-2">{f.pais}</td>
-                  <td className="py-2.5 pr-2">
-                    <Impacto nivel={f.impacto} />
+                  <td className="py-2.5 pr-2"><Impacto nivel={f.impacto} /></td>
+                  <td className="py-2.5 pr-2 text-cacao/60">{f.nota}</td>
+                  <td className="py-2.5 text-right">
+                    <div className="flex justify-end gap-1">
+                      <button type="button" onClick={() => setEdit({ id: f.id, fecha: f.fecha, nombre: f.nombre, pais: f.pais, impacto: f.impacto, nota: f.nota || "" })} className="rounded p-1 text-cacao/40 transition hover:bg-masa/60 hover:text-marca" aria-label="Editar"><Pencil className="h-4 w-4" /></button>
+                      <button type="button" onClick={() => borrar(f.id)} className="rounded p-1 text-cacao/40 transition hover:bg-red-50 hover:text-red-600" aria-label="Eliminar"><Trash2 className="h-4 w-4" /></button>
+                    </div>
                   </td>
-                  <td className="py-2.5 text-cacao/60">{f.nota}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="mt-3 flex items-center gap-2 text-xs text-cacao/50">
-          <CalendarDays className="h-4 w-4" /> Calendario de referencia (curado) para anticipar picos de demanda.
-        </p>
-      </Card>
+      )}
+      <p className="mt-3 flex items-center gap-2 text-xs text-cacao/50">
+        <CalendarDays className="h-4 w-4" /> Calendario para anticipar picos de demanda. Lo administra el equipo.
+      </p>
+    </Card>
+  );
+}
+
+// Selector de rango con presets + valor personalizado (cualquier N de días).
+const RANGO_PRESETS = ["7 días", "30 días", "90 días"];
+function RangoSelector({ rango, setRango }) {
+  const esPreset = RANGO_PRESETS.includes(rango);
+  const [custom, setCustom] = useState(esPreset ? "" : String(parseInt(rango, 10) || ""));
+  const aplicar = () => {
+    const n = parseInt(custom, 10);
+    if (n >= 1 && n <= 365) setRango(`${n} días`);
+  };
+  return (
+    <div className="hidden items-center gap-1 rounded-full bg-masa/70 p-1 sm:flex">
+      {RANGO_PRESETS.map((r) => (
+        <button
+          key={r}
+          type="button"
+          onClick={() => { setRango(r); setCustom(""); }}
+          className={`rounded-full px-3 py-1 text-xs font-semibold transition ${rango === r ? "bg-white text-cacao shadow-sm" : "text-cacao/60 hover:text-cacao"}`}
+        >
+          {r}
+        </button>
+      ))}
+      <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 ${!esPreset ? "bg-white shadow-sm" : ""}`}>
+        <input
+          type="number"
+          min="1"
+          max="365"
+          value={custom}
+          onChange={(e) => setCustom(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); aplicar(); } }}
+          placeholder="N.º"
+          className="w-12 bg-transparent text-center text-xs font-semibold text-cacao outline-none"
+          aria-label="Cantidad de días personalizada"
+        />
+        <span className="text-xs text-cacao/50">días</span>
+        <button type="button" onClick={aplicar} className="rounded-full bg-marca px-2 py-0.5 text-[11px] font-bold text-cream transition hover:brightness-110">OK</button>
+      </div>
     </div>
   );
 }

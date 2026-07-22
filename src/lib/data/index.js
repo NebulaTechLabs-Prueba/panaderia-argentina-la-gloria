@@ -63,6 +63,8 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
   const franjas = { madrugada: 0, manana: 0, tarde: 0, noche: 0 };
   // Hora local del negocio (Virginia, EE. UU.) para agrupar por franja del día.
   const horaFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "2-digit", hourCycle: "h23" });
+  const campSes = {}, camp = {};
+  const verCamp = (c) => (camp[c] || (camp[c] = { visitas: 0, carritos: 0, pedidos: 0 }));
   for (const e of ev) {
     const dia = (e.created_at || "").slice(0, 10);
     if (e.created_at) {
@@ -74,9 +76,13 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
       if (!porDiaSes[dia]) porDiaSes[dia] = new Set();
       porDiaSes[dia].add(e.session_id);
     }
-    if (e.tipo === "page_view") { visitas++; porDia[dia] = (porDia[dia] || 0) + 1; dow[new Date(e.created_at).getDay()]++; }
+    if (e.tipo === "page_view") {
+      visitas++; porDia[dia] = (porDia[dia] || 0) + 1; dow[new Date(e.created_at).getDay()]++;
+      const c = e.meta?.utm_campaign;
+      if (c) { if (e.session_id && !campSes[e.session_id]) campSes[e.session_id] = c; verCamp(c).visitas++; }
+    }
     else if (e.tipo === "ver_producto") { verP++; if (e.producto_id) vistos[e.producto_id] = (vistos[e.producto_id] || 0) + 1; }
-    else if (e.tipo === "agregar_carrito") { agg++; if (e.session_id) sesArmaron.add(e.session_id); if (e.producto_id) agregados[e.producto_id] = (agregados[e.producto_id] || 0) + 1; }
+    else if (e.tipo === "agregar_carrito") { agg++; if (e.session_id) sesArmaron.add(e.session_id); if (e.producto_id) agregados[e.producto_id] = (agregados[e.producto_id] || 0) + 1; const c = campSes[e.session_id]; if (c) verCamp(c).carritos++; }
     else if (e.tipo === "enviar_whatsapp") {
       wa++;
       ingresos += Number(e.meta?.total_centavos || 0);
@@ -84,6 +90,7 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
       sumItems += it;
       if (it <= 2) tamanos.chicas++; else if (it <= 4) tamanos.medianas++; else tamanos.grandes++;
       if (e.session_id) sesEnviaron.add(e.session_id);
+      const c = campSes[e.session_id]; if (c) verCamp(c).pedidos++;
     } else if (e.tipo === "promo_click") {
       const pid = e.meta?.promo_id || "?";
       promoClicks[pid] = (promoClicks[pid] || 0) + 1;
@@ -105,9 +112,14 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
     serie.push({ dia: d, valor: porDia[d] || 0 });
     serieSesiones.push({ dia: d, valor: porDiaSes[d] ? porDiaSes[d].size : 0 });
   }
+  const campanas = Object.entries(camp)
+    .map(([nombre, v]) => ({ id: nombre, label: nombre, ...v }))
+    .sort((a, b) => b.visitas - a.visitas)
+    .slice(0, 12);
   return {
     serie,
     serieSesiones,
+    campanas,
     sesiones: sesiones.size,
     visitas,
     whatsapp: wa,
@@ -171,6 +183,39 @@ export async function getMetricas(dias = 30) {
   } catch (e) {
     console.warn("getMetricas:", e?.message);
     return { ...resumirEventos([], dias, {}, {}), seriePrevia: [], serieSesionesPrevia: [] };
+  }
+}
+
+// Totales escalares de un rango [desde, hasta) — para la sección Comparativa.
+function resumenEscalar(ev) {
+  const ses = new Set();
+  let vistas = 0, verP = 0, agg = 0, wa = 0, promo = 0, campV = 0;
+  for (const e of ev) {
+    if (e.session_id) ses.add(e.session_id);
+    if (e.tipo === "page_view") { vistas++; if (e.meta?.utm_campaign) campV++; }
+    else if (e.tipo === "ver_producto") verP++;
+    else if (e.tipo === "agregar_carrito") agg++;
+    else if (e.tipo === "enviar_whatsapp") wa++;
+    else if (e.tipo === "promo_click") promo++;
+  }
+  return {
+    vistas, sesiones: ses.size, interacciones: verP, carritos: agg,
+    pedidos: wa, conversion: ses.size ? (wa / ses.size) * 100 : 0,
+    promos: promo, campanas: campV, totalEventos: ev.length,
+  };
+}
+
+// Métricas de un rango de fechas arbitrario (ISO). Para comparar dos períodos.
+export async function getMetricasRango(desde, hasta) {
+  try {
+    const { data: ev, error } = await getSupabase()
+      .from("events").select("tipo, session_id, meta, created_at")
+      .gte("created_at", desde).lt("created_at", hasta).order("created_at").limit(50000);
+    if (error) throw error;
+    return resumenEscalar(ev || []);
+  } catch (e) {
+    console.warn("getMetricasRango:", e?.message);
+    return resumenEscalar([]);
   }
 }
 

@@ -38,6 +38,15 @@ export function track(tipo, { producto_id = null, meta = null } = {}) {
 // al menú o recargar. La sesión (sessionId, por pestaña) agrupa todas las visitas
 // de una misma tanda de navegación → así "Visitas" (cargas) y "Sesiones" (personas)
 // son métricas distintas y tiene sentido el promedio de visitas por sesión.
+// Además captura los parámetros UTM (?utm_campaign=…) para medir campañas.
 export function trackVisita(path) {
-  track("page_view", { meta: { path } });
+  const meta = { path };
+  try {
+    const q = new URLSearchParams(window.location.search);
+    for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]) {
+      const v = q.get(k);
+      if (v) meta[k] = v.slice(0, 60);
+    }
+  } catch {}
+  track("page_view", { meta });
 }

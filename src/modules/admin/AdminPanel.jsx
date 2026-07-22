@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, Filter, Package, Wrench,
   MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays, LogOut,
-  Download, Printer, Ticket, Settings, Megaphone, Save, Loader2,
+  Download, Printer, Ticket, Settings, Megaphone, Save, Loader2, ArrowLeftRight,
 } from "lucide-react";
 import { asset, adminBase } from "@/lib/config/constants";
 import { getSupabase } from "@/lib/supabase/client";
-import { getMetricas } from "@/lib/data";
+import { getMetricas, getMetricasRango } from "@/lib/data";
 import { Ajustes } from "./Ajustes";
 import { Catalogo } from "./Catalogo";
 import { Promociones } from "./Promociones";
@@ -22,6 +22,7 @@ const NAV = [
   { id: "resumen", label: "Resumen", icon: LayoutDashboard },
   { id: "conversiones", label: "Conversiones", icon: Filter },
   { id: "consumidor", label: "Consumidor", icon: ShoppingCart },
+  { id: "comparativa", label: "Comparativa", icon: ArrowLeftRight },
   { id: "campanas", label: "Campañas", icon: Megaphone },
   { id: "productos", label: "Productos", icon: Package },
   { id: "promociones", label: "Promociones", icon: Ticket },
@@ -199,6 +200,7 @@ export function AdminPanel() {
           {sec === "resumen" && <Resumen rango={rango} />}
           {sec === "conversiones" && <Conversiones rango={rango} />}
           {sec === "consumidor" && <Consumidor rango={rango} />}
+          {sec === "comparativa" && <Comparativa />}
           {sec === "campanas" && <Campanas />}
           {sec === "productos" && <Catalogo />}
           {sec === "promociones" && <Promociones />}
@@ -407,6 +409,114 @@ function Consumidor({ rango }) {
   );
 }
 
+// Compara dos períodos de tiempo (personalizables) en varias métricas.
+const COMP_METRICAS = [
+  { key: "vistas", label: "Vistas" },
+  { key: "sesiones", label: "Sesiones" },
+  { key: "interacciones", label: "Interacciones con productos" },
+  { key: "carritos", label: "Carritos armados" },
+  { key: "pedidos", label: "Pedidos (conversiones)" },
+  { key: "conversion", label: "Conversión", pct: true },
+  { key: "promos", label: "Clics en promociones" },
+  { key: "campanas", label: "Visitas con campaña (UTM)" },
+];
+const isoDia = (offset) => new Date(Date.now() - offset * 86400000).toISOString().slice(0, 10);
+const desdeISO = (s) => `${s}T00:00:00.000Z`;
+const hastaISO = (s) => new Date(Date.parse(`${s}T00:00:00.000Z`) + 86400000).toISOString();
+
+function RangoCampo({ titulo, val, set, color }) {
+  return (
+    <div className="rounded-xl bg-masa/40 p-3">
+      <p className="mb-2 flex items-center gap-2 text-sm font-bold text-cacao">
+        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} /> {titulo}
+      </p>
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <input type="date" value={val.desde} max={val.hasta} onChange={(e) => set({ ...val, desde: e.target.value })} className="rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-cacao outline-none focus:border-marca" />
+        <span className="text-cacao/40">a</span>
+        <input type="date" value={val.hasta} min={val.desde} onChange={(e) => set({ ...val, hasta: e.target.value })} className="rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-cacao outline-none focus:border-marca" />
+      </div>
+    </div>
+  );
+}
+
+function Comparativa() {
+  const [a, setA] = useState({ desde: isoDia(59), hasta: isoDia(30) });
+  const [b, setB] = useState({ desde: isoDia(29), hasta: isoDia(0) });
+  const [datos, setDatos] = useState(null);
+  const [cargando, setCargando] = useState(false);
+
+  const comparar = async () => {
+    setCargando(true);
+    const [ra, rb] = await Promise.all([
+      getMetricasRango(desdeISO(a.desde), hastaISO(a.hasta)),
+      getMetricasRango(desdeISO(b.desde), hastaISO(b.hasta)),
+    ]);
+    setDatos({ a: ra, b: rb });
+    setCargando(false);
+  };
+  useEffect(() => { comparar(); /* carga inicial */ // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fmt = (v, pct) => (pct ? `${(v || 0).toFixed(1)}%` : (v || 0).toLocaleString("es"));
+  const delta = (va, vb) => (va ? ((vb - va) / va) * 100 : vb ? 100 : 0);
+
+  return (
+    <div className="space-y-5">
+      <Card title="Comparar períodos" subtitle="Elegí dos rangos de fechas y mirá la diferencia">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <RangoCampo titulo="Período A" val={a} set={setA} color="#94a3b8" />
+          <RangoCampo titulo="Período B" val={b} set={setB} color="#2f3a7e" />
+        </div>
+        <button
+          type="button"
+          onClick={comparar}
+          disabled={cargando}
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-marca px-5 py-2.5 text-sm font-bold text-cream shadow-sm transition hover:brightness-110 disabled:opacity-60"
+        >
+          {cargando ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeftRight className="h-4 w-4" />}
+          Comparar
+        </button>
+      </Card>
+
+      <Card title="Resultado" subtitle="Período A → Período B">
+        {!datos ? (
+          <p className="text-sm text-cacao/50">Cargando…</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-cacao/10 text-left text-xs uppercase tracking-wide text-cacao/45">
+                  <th className="pb-2 font-semibold">Métrica</th>
+                  <th className="pb-2 text-right font-semibold">Período A</th>
+                  <th className="pb-2 text-right font-semibold">Período B</th>
+                  <th className="pb-2 text-right font-semibold">Variación</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-cacao/5">
+                {COMP_METRICAS.map((m) => {
+                  const va = datos.a[m.key], vb = datos.b[m.key];
+                  const d = delta(va, vb);
+                  const up = d >= 0;
+                  return (
+                    <tr key={m.key}>
+                      <td className="py-2.5 pr-2 font-medium text-cacao/80">{m.label}</td>
+                      <td className="py-2.5 text-right tabular-nums text-cacao/70">{fmt(va, m.pct)}</td>
+                      <td className="py-2.5 text-right tabular-nums font-semibold text-cacao">{fmt(vb, m.pct)}</td>
+                      <td className={`py-2.5 text-right tabular-nums font-semibold ${d === 0 ? "text-cacao/40" : up ? "text-green-600" : "text-red-600"}`}>
+                        {up ? "▲" : "▼"} {Math.abs(d).toFixed(0)}%
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
 function Campanas() {
   const supabase = getSupabase();
   const [pixel, setPixel] = useState("");
@@ -418,6 +528,9 @@ function Campanas() {
     supabase.from("business_settings").select("meta_pixel_id").eq("id", 1).single()
       .then(({ data }) => { setPixel(data?.meta_pixel_id || ""); setCargando(false); });
   }, [supabase]);
+
+  const [camp, setCamp] = useState(null);
+  useEffect(() => { getMetricas(90).then((m) => setCamp(m.campanas || [])); }, []);
 
   async function guardar(e) {
     e.preventDefault();
@@ -458,13 +571,43 @@ function Campanas() {
         )}
       </Card>
 
-      <Card title="Métricas por campaña" subtitle="Interacciones y tráfico que traen tus campañas">
-        <p className="text-sm text-cacao/55">
-          Además del píxel (que reporta dentro de Meta), vamos a medir <b>acá mismo</b> el tráfico y las interacciones de
-          cada campaña etiquetando los links con <code className="mx-1 rounded bg-masa/60 px-1">?utm_campaign=…</code>
-          (ej. un posteo con <code className="mx-1 rounded bg-masa/60 px-1">?utm_campaign=promo-2x1</code>). Así vas a poder
-          comparar qué campaña trajo más visitas, carritos y pedidos. Lo estamos activando.
+      <Card title="Métricas por campaña" subtitle="Últimos 90 días — medido por nosotros vía UTM">
+        <p className="mb-3 text-xs text-cacao/55">
+          Etiquetá los links de tus posteos/anuncios con <code className="mx-1 rounded bg-masa/60 px-1">?utm_campaign=nombre</code>
+          (ej. <code className="mx-1 rounded bg-masa/60 px-1">?utm_campaign=promo-2x1</code>) y cada campaña aparece acá con
+          su tráfico e interacciones, sin depender de Meta.
         </p>
+        {!camp ? (
+          <p className="text-sm text-cacao/50">Cargando…</p>
+        ) : camp.length === 0 ? (
+          <p className="py-6 text-center text-sm text-cacao/45">
+            Todavía no llegaron visitas con <code className="rounded bg-masa/60 px-1">?utm_campaign=…</code>. En cuanto
+            publiques un link etiquetado, vas a ver acá cada campaña.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-cacao/10 text-left text-xs uppercase tracking-wide text-cacao/45">
+                  <th className="pb-2 font-semibold">Campaña</th>
+                  <th className="pb-2 text-right font-semibold">Visitas</th>
+                  <th className="pb-2 text-right font-semibold">Carritos</th>
+                  <th className="pb-2 text-right font-semibold">Pedidos</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-cacao/5">
+                {camp.map((c) => (
+                  <tr key={c.id}>
+                    <td className="py-2.5 pr-2 font-medium text-cacao/80">{c.label}</td>
+                    <td className="py-2.5 text-right tabular-nums text-cacao/70">{c.visitas}</td>
+                    <td className="py-2.5 text-right tabular-nums text-cacao/70">{c.carritos}</td>
+                    <td className="py-2.5 text-right tabular-nums font-semibold text-marca">{c.pedidos}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
     </div>
   );

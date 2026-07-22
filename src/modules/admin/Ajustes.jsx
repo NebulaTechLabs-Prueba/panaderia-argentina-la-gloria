@@ -7,7 +7,7 @@ import { getSupabase } from "@/lib/supabase/client";
 const INPUT = "mt-1 w-full rounded-lg border border-cacao/15 bg-white px-3 py-2 text-sm text-cacao outline-none focus:border-marca";
 const DIAS = [["lun", "Lunes"], ["mar", "Martes"], ["mie", "Miércoles"], ["jue", "Jueves"], ["vie", "Viernes"], ["sab", "Sábado"], ["dom", "Domingo"]];
 // Columnas editables de business_settings.
-const COLS = ["id", "nombre_negocio", "whatsapp_numero", "tagline", "direccion", "maps_url", "mensaje_bienvenida", "mensaje_pedido_template", "instagram_url", "tiktok_url", "facebook_url", "horarios", "ga_measurement_id", "google_site_verification"];
+const COLS = ["id", "nombre_negocio", "whatsapp_numero", "tagline", "direccion", "maps_url", "mensaje_bienvenida", "mensaje_pedido_template", "instagram_url", "tiktok_url", "facebook_url", "horarios"];
 const pick = (o) => Object.fromEntries(COLS.filter((k) => k in o && o[k] !== undefined).map((k) => [k, o[k]]));
 
 // Horario guardado como texto ("07:00–16:00" | "Cerrado") ↔ estructura editable.
@@ -91,19 +91,6 @@ export function Ajustes() {
               );
             })}
           </div>
-        </Card>
-
-        <Card titulo="Integraciones (analítica y SEO)" full>
-          <p className="text-xs text-cacao/55">
-            Pegá acá los códigos de tus cuentas de Google para activar el tráfico real y la verificación de SEO.
-            Se activan solos (pueden tardar unos minutos). Si no tenés cuentas todavía, dejalo vacío.
-          </p>
-          <Campo label="Google Analytics — Measurement ID (G-XXXXXXXXXX)">
-            <input value={data.ga_measurement_id || ""} onChange={(e) => set("ga_measurement_id", e.target.value)} placeholder="G-XXXXXXXXXX" className={INPUT} />
-          </Campo>
-          <Campo label="Google Search Console — código de verificación (etiqueta “content”)">
-            <input value={data.google_site_verification || ""} onChange={(e) => set("google_site_verification", e.target.value)} placeholder="Ej: aBcD1234… (solo el valor content, no la etiqueta completa)" className={INPUT} />
-          </Campo>
         </Card>
 
         <Card titulo="Mensajes" full>

@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  LayoutDashboard, TrendingUp, Filter, Search, Package, Wrench,
+  LayoutDashboard, Filter, Package, Wrench,
   MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays, LogOut,
-  Download, Printer, Ticket, Settings,
+  Download, Printer, Ticket, Settings, Megaphone, Save, Loader2,
 } from "lucide-react";
 import { asset, adminBase } from "@/lib/config/constants";
 import { getSupabase } from "@/lib/supabase/client";
@@ -14,16 +14,15 @@ import { Ajustes } from "./Ajustes";
 import { Catalogo } from "./Catalogo";
 import { Promociones } from "./Promociones";
 import {
-  Card, Kpi, LineChart, BarList, Donut, Funnel, Columnas, Impacto, EstadoPill,
+  Card, Kpi, LineChart, BarList, Donut, Funnel, Columnas, Impacto,
 } from "./widgets";
 import * as M from "./mock";
 
 const NAV = [
   { id: "resumen", label: "Resumen", icon: LayoutDashboard },
-  { id: "trafico", label: "Tráfico", icon: TrendingUp },
   { id: "conversiones", label: "Conversiones", icon: Filter },
   { id: "consumidor", label: "Consumidor", icon: ShoppingCart },
-  { id: "seo", label: "SEO", icon: Search },
+  { id: "campanas", label: "Campañas", icon: Megaphone },
   { id: "productos", label: "Productos", icon: Package },
   { id: "promociones", label: "Promociones", icon: Ticket },
   { id: "ajustes", label: "Ajustes", icon: Settings },
@@ -157,7 +156,7 @@ export function AdminPanel() {
             <h1 className="truncate font-display text-lg font-bold">{actual?.label}</h1>
           </div>
           <div className="ml-auto flex items-center gap-2 print:hidden sm:gap-3">
-            {["resumen", "trafico", "conversiones", "consumidor", "seo"].includes(sec) && (
+            {["resumen", "conversiones", "consumidor"].includes(sec) && (
               <div className="hidden items-center gap-1 rounded-full bg-masa/70 p-1 sm:flex">
                 {M.RANGOS.map((r) => (
                   <button
@@ -197,16 +196,10 @@ export function AdminPanel() {
         </header>
 
         <main className="p-5">
-          {["trafico", "seo"].includes(sec) && (
-            <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-              📊 <b>Parte</b> de esta sección usa <b>datos de muestra</b>: fuentes, dispositivos, geografía y tiempo/rebote necesitan <b>Google Analytics</b>, y el SEO necesita <b>Search Console</b> (aún sin conectar). Las <b>Vistas por día</b>, el Resumen, Conversiones y Consumidor ya son reales.
-            </p>
-          )}
           {sec === "resumen" && <Resumen rango={rango} />}
-          {sec === "trafico" && <Trafico rango={rango} />}
           {sec === "conversiones" && <Conversiones rango={rango} />}
           {sec === "consumidor" && <Consumidor rango={rango} />}
-          {sec === "seo" && <Seo />}
+          {sec === "campanas" && <Campanas />}
           {sec === "productos" && <Catalogo />}
           {sec === "promociones" && <Promociones />}
           {sec === "ajustes" && <Ajustes />}
@@ -274,75 +267,6 @@ function Resumen({ rango }) {
           {m.topAgregados.length ? <BarList items={m.topAgregados} color="#2f3a7e" /> : vacio}
         </Card>
       </div>
-    </div>
-  );
-}
-
-function Trafico({ rango }) {
-  const dias = parseInt(rango, 10) || 30;
-  const [m, setM] = useState(null);
-  useEffect(() => { setM(null); getMetricas(dias).then(setM); }, [dias]);
-
-  const serie = (m?.serie || []).map((s) => s.valor);
-  const labels = (m?.serie || []).map((s) => s.dia);
-  const previa = m?.seriePrevia || [];
-  const hayPrevia = previa.some((v) => v > 0);
-  const maxSerie = Math.max(...serie, 0);
-  const vacio = <p className="py-10 text-center text-sm text-cacao/45">Sin datos aún.</p>;
-
-  return (
-    <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {M.traficoKpis.map((k) => (
-          <Kpi key={k.id} {...k} />
-        ))}
-      </div>
-      <p className="rounded-lg bg-marca/5 px-3 py-2 text-xs text-cacao/60 ring-1 ring-marca/10">
-        <b>Tiempo promedio</b>: cuánto se queda la gente en el sitio. <b>Tasa de rebote</b>: % que entra y se va sin
-        interactuar (sin mirar productos ni agregar). Más bajo es mejor.
-      </p>
-      <Card
-        title="Vistas por día"
-        subtitle={hayPrevia ? `Cargas totales · vs. los ${dias} días previos` : `Cargas totales · la comparación aparece al acumular historial`}
-      >
-        {!m ? (
-          <p className="text-sm text-cacao/50">Cargando métricas…</p>
-        ) : maxSerie > 0 ? (
-          <LineChart data={serie} previa={hayPrevia ? previa : undefined} labels={labels} unidad="vistas" />
-        ) : (
-          vacio
-        )}
-      </Card>
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Card title="Fuentes" subtitle="De qué red o buscador llegan">
-          <BarList items={M.fuentes} unit="%" />
-          <p className="mt-3 text-xs text-cacao/45">
-            Se detecta por el referente. Para separar bien cada red, etiquetá los links con UTMs
-            (ej. <code>?utm_source=instagram</code>).
-          </p>
-        </Card>
-        <Card title="Países" subtitle="De qué país entran">
-          <BarList items={M.paises} unit="%" color="#2f3a7e" />
-        </Card>
-        <Card title="Ciudades" subtitle="Dónde están los visitantes">
-          <BarList items={M.ciudades} color="#63b0dd" />
-        </Card>
-        <Card title="Estados (EE. UU.)" subtitle="Detalle geográfico del país principal">
-          <BarList items={M.estados} unit="%" color="#2f3a7e" />
-        </Card>
-        <Card title="Dispositivos"><Donut segments={M.dispositivos} /></Card>
-        <Card title="Nuevos vs. recurrentes" subtitle="Fidelización">
-          <Donut segments={M.nuevosRecurrentes} />
-        </Card>
-      </div>
-
-      <Card title="Campañas (UTM)" subtitle="Posteos y promos etiquetados — para medir qué acción trajo tráfico">
-        <BarList items={M.campanas} color="#E1306C" />
-        <p className="mt-3 text-xs text-cacao/45">
-          Cada link etiquetado (ej. <code>?utm_campaign=promo-2x1</code>) aparece acá con su tráfico. Ideal para
-          comparar posteos y saber cuál funcionó.
-        </p>
-      </Card>
     </div>
   );
 }
@@ -483,52 +407,65 @@ function Consumidor({ rango }) {
   );
 }
 
-function Seo() {
+function Campanas() {
+  const supabase = getSupabase();
+  const [pixel, setPixel] = useState("");
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    supabase.from("business_settings").select("meta_pixel_id").eq("id", 1).single()
+      .then(({ data }) => { setPixel(data?.meta_pixel_id || ""); setCargando(false); });
+  }, [supabase]);
+
+  async function guardar(e) {
+    e.preventDefault();
+    setGuardando(true);
+    setMsg("");
+    const { error } = await supabase.from("business_settings").update({ meta_pixel_id: pixel.trim() || null }).eq("id", 1);
+    setGuardando(false);
+    setMsg(error ? "No se pudo guardar: " + error.message : "Guardado ✓");
+  }
+
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {M.seoKpis.map((k) => (
-          <Kpi key={k.id} {...k} />
-        ))}
-      </div>
-      <div className="grid gap-5 lg:grid-cols-3">
-        <Card title="Palabras clave" subtitle="Search Console (datos de muestra)" className="lg:col-span-2">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-cacao/10 text-left text-xs uppercase tracking-wide text-cacao/45">
-                  <th className="pb-2 font-semibold">Consulta</th>
-                  <th className="pb-2 text-right font-semibold">Impr.</th>
-                  <th className="pb-2 text-right font-semibold">Clics</th>
-                  <th className="pb-2 text-right font-semibold">CTR</th>
-                  <th className="pb-2 text-right font-semibold">Pos.</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-cacao/5">
-                {M.keywords.map((k) => (
-                  <tr key={k.q}>
-                    <td className="py-2.5 pr-2 font-medium text-cacao/80">{k.q}</td>
-                    <td className="py-2.5 text-right tabular-nums text-cacao/70">{k.imp.toLocaleString("es")}</td>
-                    <td className="py-2.5 text-right tabular-nums text-cacao/70">{k.clics}</td>
-                    <td className="py-2.5 text-right tabular-nums text-cacao/70">{k.ctr}</td>
-                    <td className="py-2.5 text-right tabular-nums font-semibold text-marca">{k.pos}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-        <Card title="Salud SEO" subtitle="Checklist">
-          <ul className="space-y-2.5">
-            {M.seoChecklist.map((c) => (
-              <li key={c.label} className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-cacao/75">{c.label}</span>
-                <EstadoPill estado={c.estado} />
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
+      <Card title="Píxel de Meta (Facebook / Instagram)" subtitle="Instalá el seguimiento de tus campañas">
+        {cargando ? (
+          <p className="text-sm text-cacao/50">Cargando…</p>
+        ) : (
+          <form onSubmit={guardar} className="space-y-3">
+            <p className="text-sm text-cacao/60">
+              Pegá el <b>ID de tu píxel de Meta</b> (antes “píxel de Facebook”) y se instala solo en el sitio. A partir
+              de ahí, el <b>Administrador de Eventos de Meta</b> registra las visitas y acciones de la gente para medir
+              tus anuncios de Facebook e Instagram y armar audiencias de retargeting.
+            </p>
+            <label className="block">
+              <span className="block text-xs font-semibold uppercase tracking-wide text-cacao/45">ID del píxel de Meta</span>
+              <input value={pixel} onChange={(e) => setPixel(e.target.value)} placeholder="Ej: 1234567890123456" className="mt-1 w-full rounded-lg border border-cacao/15 bg-white px-3 py-2 text-sm text-cacao outline-none focus:border-marca" />
+            </label>
+            <div className="flex flex-wrap items-center gap-3">
+              <button type="submit" disabled={guardando} className="inline-flex items-center gap-2 rounded-full bg-marca px-5 py-2.5 text-sm font-bold text-cream shadow-sm transition hover:brightness-110 disabled:opacity-60">
+                {guardando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Guardar
+              </button>
+              {msg && <span className={`text-sm font-medium ${msg.startsWith("Guardado") ? "text-green-600" : "text-red-600"}`}>{msg}</span>}
+              <a href="https://business.facebook.com/events_manager" target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 text-sm font-semibold text-marca hover:underline">
+                Abrir Administrador de Eventos <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+          </form>
+        )}
+      </Card>
+
+      <Card title="Métricas por campaña" subtitle="Interacciones y tráfico que traen tus campañas">
+        <p className="text-sm text-cacao/55">
+          Además del píxel (que reporta dentro de Meta), vamos a medir <b>acá mismo</b> el tráfico y las interacciones de
+          cada campaña etiquetando los links con <code className="mx-1 rounded bg-masa/60 px-1">?utm_campaign=…</code>
+          (ej. un posteo con <code className="mx-1 rounded bg-masa/60 px-1">?utm_campaign=promo-2x1</code>). Así vas a poder
+          comparar qué campaña trajo más visitas, carritos y pedidos. Lo estamos activando.
+        </p>
+      </Card>
     </div>
   );
 }

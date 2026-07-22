@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogIn, Loader2 } from "lucide-react";
+import { LogIn, Loader2, Eye, EyeOff } from "lucide-react";
 import { asset, adminBase } from "@/lib/config/constants";
 import { getSupabase } from "@/lib/supabase/client";
 
@@ -16,6 +16,7 @@ export function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
+  const [verPass, setVerPass] = useState(false);
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
 
@@ -47,7 +48,17 @@ export function Login() {
 
         <div className="mt-6 space-y-3">
           <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@email.com" className={INPUT} autoComplete="username" />
-          <input type="password" required value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Contraseña" className={INPUT} autoComplete="current-password" />
+          <div className="relative">
+            <input type={verPass ? "text" : "password"} required value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Contraseña" className={`${INPUT} pr-10`} autoComplete="current-password" />
+            <button
+              type="button"
+              onClick={() => setVerPass((v) => !v)}
+              aria-label={verPass ? "Ocultar contraseña" : "Ver contraseña"}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-cacao/40 transition hover:text-cacao/70"
+            >
+              {verPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
 
         {error && (

@@ -547,11 +547,17 @@ const desdeISO = (s) => `${s}T00:00:00.000Z`;
 const hastaISO = (s) => new Date(Date.parse(`${s}T00:00:00.000Z`) + 86400000).toISOString();
 const PERIODO_COLORS = ["#94a3b8", "#2f3a7e", "#ff9900", "#63b0dd", "#16a34a", "#db2777"];
 const ddmm = (iso) => { const p = (iso || "").split("-"); return p.length === 3 ? `${p[2]}/${p[1]}` : iso; };
-const periodoValido = (p) => {
-  if (!p?.desde || !p?.hasta || p.desde > p.hasta) return false;
+// Fecha real de calendario: además del formato, chequea que exista (el round-trip
+// descarta 31/06, 30/02, etc., que JS "corrige" al mes siguiente).
+const fechaReal = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && new Date(s + "T00:00:00Z").toISOString().slice(0, 10) === s;
+const errorPeriodo = (p) => {
+  if (!fechaReal(p?.desde) || !fechaReal(p?.hasta)) return "Fechas incompletas o inexistentes (revisá el día y el mes).";
   const y1 = +p.desde.slice(0, 4), y2 = +p.hasta.slice(0, 4);
-  return y1 >= 2020 && y1 <= 2100 && y2 >= 2020 && y2 <= 2100;
+  if (y1 < 2020 || y1 > 2100 || y2 < 2020 || y2 > 2100) return "El año debe estar entre 2020 y 2100.";
+  if (p.desde > p.hasta) return "La fecha final no puede ser anterior a la inicial.";
+  return null;
 };
+const periodoValido = (p) => !errorPeriodo(p);
 
 function RangoCampo({ titulo, val, set, color, onRemove }) {
   return (
@@ -575,8 +581,8 @@ function RangoCampo({ titulo, val, set, color, onRemove }) {
         <span className="text-cacao/40">a</span>
         <input type="date" min={val.desde || "2020-01-01"} max="2100-12-31" value={val.hasta} onChange={(e) => set({ ...val, hasta: e.target.value })} className="rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-cacao outline-none focus:border-marca" />
       </div>
-      {!periodoValido(val) && (val.desde || val.hasta) && (
-        <p className="mt-1.5 text-xs font-medium text-red-600">Revisá las fechas: la final no puede ser anterior a la inicial.</p>
+      {errorPeriodo(val) && (val.desde || val.hasta) && (
+        <p className="mt-1.5 text-xs font-medium text-red-600">{errorPeriodo(val)}</p>
       )}
     </div>
   );

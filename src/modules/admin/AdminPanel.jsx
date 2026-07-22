@@ -556,6 +556,12 @@ function RangoCampo({ titulo, val, set, color, onRemove }) {
           </button>
         )}
       </p>
+      <input
+        value={val.nombre || ""}
+        onChange={(e) => set({ ...val, nombre: e.target.value })}
+        placeholder="Nombre (opcional): ej. Navidad"
+        className="mb-2 w-full rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-sm text-cacao outline-none focus:border-marca"
+      />
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <input type="date" value={val.desde} max={val.hasta} onChange={(e) => set({ ...val, desde: e.target.value })} className="rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-cacao outline-none focus:border-marca" />
         <span className="text-cacao/40">a</span>
@@ -576,7 +582,7 @@ function TablaComparativa({ columnas, filas, cellDelta }) {
             <th className="pb-2 pr-2 font-semibold">Concepto</th>
             {columnas.map((c, i) => (
               <th key={i} className="pb-2 pr-2 text-right font-semibold">
-                P{i + 1}
+                {c.nombre ? c.nombre : `P${i + 1}`}
                 <span className="block font-normal normal-case text-cacao/35">{ddmm(c.desde)}–{ddmm(c.hasta)}</span>
               </th>
             ))}
@@ -603,31 +609,36 @@ function TablaComparativa({ columnas, filas, cellDelta }) {
 function Comparativa() {
   const [modo, setModo] = useState("general");
   const [periodos, setPeriodos] = useState([
-    { desde: isoDia(59), hasta: isoDia(30) },
-    { desde: isoDia(29), hasta: isoDia(0) },
+    { nombre: "", desde: isoDia(59), hasta: isoDia(30) },
+    { nombre: "", desde: isoDia(29), hasta: isoDia(0) },
   ]);
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [productos, setProductos] = useState([]);
   const [prodSel, setProdSel] = useState([]);
+  const [campSel, setCampSel] = useState([]);
   const [metricaProd, setMetricaProd] = useState("vistas");
+  const [metricaCamp, setMetricaCamp] = useState("visitas");
   const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => { getProductos().then((ps) => setProductos((ps || []).map((p) => ({ id: p.id, nombre: p.nombre })))); }, []);
 
-  const comparar = async () => {
+  // Recalcula solo cuando cambian las fechas o la cantidad de períodos.
+  const periodosKey = periodos.map((p) => `${p.desde}|${p.hasta}`).join(",");
+  useEffect(() => {
+    let cancel = false;
     setCargando(true);
-    const res = await Promise.all(periodos.map((p) => getMetricasRango(desdeISO(p.desde), hastaISO(p.hasta))));
-    setDatos(res);
-    setCargando(false);
-  };
-  useEffect(() => { comparar(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    Promise.all(periodos.map((p) => getMetricasRango(desdeISO(p.desde), hastaISO(p.hasta))))
+      .then((res) => { if (!cancel) { setDatos(res); setCargando(false); } });
+    return () => { cancel = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodosKey]);
 
   const setPeriodo = (i, val) => setPeriodos((ps) => ps.map((p, idx) => (idx === i ? val : p)));
-  const addPeriodo = () => setPeriodos((ps) => [...ps, { desde: isoDia(29), hasta: isoDia(0) }]);
+  const addPeriodo = () => setPeriodos((ps) => [...ps, { nombre: "", desde: isoDia(29), hasta: isoDia(0) }]);
   const rmPeriodo = (i) => setPeriodos((ps) => ps.filter((_, idx) => idx !== i));
   const toggleProd = (id) => setProdSel((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  const toggleCamp = (c) => setCampSel((s) => (s.includes(c) ? s.filter((x) => x !== c) : [...s, c]));
 
   const cellDelta = (base, v, i) => {
     if (i === 0) return null;
@@ -640,15 +651,17 @@ function Comparativa() {
   };
 
   const prodsFiltrados = busqueda ? productos.filter((p) => p.nombre.toLowerCase().includes(busqueda.toLowerCase())) : productos;
-  const filas = modo === "general"
-    ? COMP_METRICAS.map((m) => ({ label: m.label, pct: m.pct, valores: (datos || []).map((d) => d[m.key]) }))
-    : prodSel.map((id) => ({ label: productos.find((p) => p.id === id)?.nombre || id, valores: (datos || []).map((d) => d.porProducto?.[id]?.[metricaProd] || 0) }));
+  const campanasDisponibles = datos ? [...new Set(datos.flatMap((d) => Object.keys(d.porCampana || {})))].sort() : [];
+  const filas =
+    modo === "general" ? COMP_METRICAS.map((m) => ({ label: m.label, pct: m.pct, valores: (datos || []).map((d) => d[m.key]) }))
+    : modo === "producto" ? prodSel.map((id) => ({ label: productos.find((p) => p.id === id)?.nombre || id, valores: (datos || []).map((d) => d.porProducto?.[id]?.[metricaProd] || 0) }))
+    : campSel.map((c) => ({ label: c, valores: (datos || []).map((d) => d.porCampana?.[c]?.[metricaCamp] || 0) }));
 
   return (
     <div className="space-y-5">
       <Card title="Comparar" subtitle="Elegí N períodos y qué querés comparar">
-        <div className="mb-4 inline-flex rounded-full bg-masa/60 p-1 text-sm">
-          {[["general", "Métricas generales"], ["producto", "Por producto"]].map(([k, l]) => (
+        <div className="mb-4 inline-flex flex-wrap rounded-full bg-masa/60 p-1 text-sm">
+          {[["general", "Métricas generales"], ["producto", "Por producto"], ["campana", "Por campaña"]].map(([k, l]) => (
             <button key={k} type="button" onClick={() => setModo(k)} className={`rounded-full px-3 py-1 font-semibold transition ${modo === k ? "bg-white text-cacao shadow-sm" : "text-cacao/60"}`}>{l}</button>
           ))}
         </div>
@@ -659,14 +672,13 @@ function Comparativa() {
           ))}
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-3">
           <button type="button" onClick={addPeriodo} className="inline-flex items-center gap-1 rounded-full border border-cacao/20 px-3 py-1.5 text-xs font-semibold text-cacao/70 transition hover:border-marca hover:text-marca">
             <Plus className="h-4 w-4" /> Agregar período
           </button>
-          <button type="button" onClick={comparar} disabled={cargando} className="inline-flex items-center gap-2 rounded-full bg-marca px-5 py-2 text-sm font-bold text-cream shadow-sm transition hover:brightness-110 disabled:opacity-60">
-            {cargando ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeftRight className="h-4 w-4" />}
-            Comparar
-          </button>
+          <span className="inline-flex items-center gap-1 text-xs text-cacao/50">
+            {cargando ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Calculando…</> : "Se actualiza solo al cambiar las fechas"}
+          </span>
         </div>
 
         {modo === "producto" && (
@@ -700,13 +712,51 @@ function Comparativa() {
             </div>
           </div>
         )}
+
+        {modo === "campana" && (
+          campanasDisponibles.length === 0 ? (
+            <p className="mt-4 rounded-xl bg-masa/40 p-3 text-sm text-cacao/55">
+              Todavía no hay campañas con tráfico (links con <code className="rounded bg-white px-1">?utm_campaign=…</code>) en los períodos elegidos.
+            </p>
+          ) : (
+            <div className="mt-4 rounded-xl bg-masa/40 p-3">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+                <span className="text-sm font-bold text-cacao">Campañas a comparar</span>
+                <div className="inline-flex rounded-full bg-white p-1 text-xs shadow-sm">
+                  {[["visitas", "Visitas"], ["carritos", "Carritos"], ["pedidos", "Pedidos"]].map(([k, l]) => (
+                    <button key={k} type="button" onClick={() => setMetricaCamp(k)} className={`rounded-full px-2.5 py-1 font-semibold transition ${metricaCamp === k ? "bg-marca text-cream" : "text-cacao/60"}`}>{l}</button>
+                  ))}
+                </div>
+              </div>
+              {campSel.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {campSel.map((c) => (
+                    <span key={c} className="inline-flex items-center gap-1 rounded-full bg-marca/10 px-2.5 py-1 text-xs font-semibold text-marca">
+                      {c}<button type="button" onClick={() => toggleCamp(c)} className="transition hover:text-red-600"><X className="h-3 w-3" /></button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="max-h-44 overflow-y-auto rounded-lg bg-white p-1">
+                {campanasDisponibles.map((c) => (
+                  <label key={c} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-masa/40">
+                    <input type="checkbox" checked={campSel.includes(c)} onChange={() => toggleCamp(c)} />
+                    <span className="text-cacao/80">{c}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )
+        )}
       </Card>
 
-      <Card title="Resultado" subtitle={modo === "producto" ? (metricaProd === "vistas" ? "Veces visto por producto" : "Agregados al carrito por producto") : "Métricas generales por período"}>
+      <Card title="Resultado" subtitle={modo === "producto" ? "Por producto entre períodos" : modo === "campana" ? "Por campaña entre períodos" : "Métricas generales por período"}>
         {!datos ? (
           <p className="text-sm text-cacao/50">Cargando…</p>
         ) : modo === "producto" && prodSel.length === 0 ? (
           <p className="py-6 text-center text-sm text-cacao/45">Elegí uno o más productos arriba para compararlos entre los períodos.</p>
+        ) : modo === "campana" && campSel.length === 0 ? (
+          <p className="py-6 text-center text-sm text-cacao/45">Elegí una o más campañas arriba para compararlas entre los períodos.</p>
         ) : (
           <TablaComparativa columnas={periodos} filas={filas} cellDelta={cellDelta} />
         )}
@@ -716,64 +766,16 @@ function Comparativa() {
 }
 
 function Campanas() {
-  const supabase = getSupabase();
-  const [pixel, setPixel] = useState("");
-  const [cargando, setCargando] = useState(true);
-  const [guardando, setGuardando] = useState(false);
-  const [msg, setMsg] = useState("");
-
-  useEffect(() => {
-    supabase.from("business_settings").select("meta_pixel_id").eq("id", 1).single()
-      .then(({ data }) => { setPixel(data?.meta_pixel_id || ""); setCargando(false); });
-  }, [supabase]);
-
   const [camp, setCamp] = useState(null);
   useEffect(() => { getMetricas(90).then((m) => setCamp(m.campanas || [])); }, []);
 
-  async function guardar(e) {
-    e.preventDefault();
-    setGuardando(true);
-    setMsg("");
-    const { error } = await supabase.from("business_settings").update({ meta_pixel_id: pixel.trim() || null }).eq("id", 1);
-    setGuardando(false);
-    setMsg(error ? "No se pudo guardar: " + error.message : "Guardado ✓");
-  }
-
   return (
     <div className="space-y-5">
-      <Card title="Píxel de Meta (Facebook / Instagram)" subtitle="Instalá el seguimiento de tus campañas">
-        {cargando ? (
-          <p className="text-sm text-cacao/50">Cargando…</p>
-        ) : (
-          <form onSubmit={guardar} className="space-y-3">
-            <p className="text-sm text-cacao/60">
-              Pegá el <b>ID de tu píxel de Meta</b> (antes “píxel de Facebook”) y se instala solo en el sitio. A partir
-              de ahí, el <b>Administrador de Eventos de Meta</b> registra las visitas y acciones de la gente para medir
-              tus anuncios de Facebook e Instagram y armar audiencias de retargeting.
-            </p>
-            <label className="block">
-              <span className="block text-xs font-semibold uppercase tracking-wide text-cacao/45">ID del píxel de Meta</span>
-              <input value={pixel} onChange={(e) => setPixel(e.target.value)} placeholder="Ej: 1234567890123456" className="mt-1 w-full rounded-lg border border-cacao/15 bg-white px-3 py-2 text-sm text-cacao outline-none focus:border-marca" />
-            </label>
-            <div className="flex flex-wrap items-center gap-3">
-              <button type="submit" disabled={guardando} className="inline-flex items-center gap-2 rounded-full bg-marca px-5 py-2.5 text-sm font-bold text-cream shadow-sm transition hover:brightness-110 disabled:opacity-60">
-                {guardando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Guardar
-              </button>
-              {msg && <span className={`text-sm font-medium ${msg.startsWith("Guardado") ? "text-green-600" : "text-red-600"}`}>{msg}</span>}
-              <a href="https://business.facebook.com/events_manager" target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 text-sm font-semibold text-marca hover:underline">
-                Abrir Administrador de Eventos <ExternalLink className="h-4 w-4" />
-              </a>
-            </div>
-          </form>
-        )}
-      </Card>
-
       <Card title="Métricas por campaña" subtitle="Últimos 90 días — medido por nosotros vía UTM">
         <p className="mb-3 text-xs text-cacao/55">
           Etiquetá los links de tus posteos/anuncios con <code className="mx-1 rounded bg-masa/60 px-1">?utm_campaign=nombre</code>
           (ej. <code className="mx-1 rounded bg-masa/60 px-1">?utm_campaign=promo-2x1</code>) y cada campaña aparece acá con
-          su tráfico e interacciones, sin depender de Meta.
+          su tráfico e interacciones, sin depender de Meta. El píxel se instala en <b>Herramientas</b>.
         </p>
         {!camp ? (
           <p className="text-sm text-cacao/50">Cargando…</p>
@@ -811,49 +813,86 @@ function Campanas() {
   );
 }
 
+function PixelMeta() {
+  const supabase = getSupabase();
+  const [pixel, setPixel] = useState("");
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    supabase.from("business_settings").select("meta_pixel_id").eq("id", 1).single()
+      .then(({ data }) => { setPixel(data?.meta_pixel_id || ""); setCargando(false); });
+  }, [supabase]);
+
+  async function guardar(e) {
+    e.preventDefault();
+    setGuardando(true);
+    setMsg("");
+    const { error } = await supabase.from("business_settings").update({ meta_pixel_id: pixel.trim() || null }).eq("id", 1);
+    setGuardando(false);
+    setMsg(error ? "No se pudo guardar: " + error.message : "Guardado ✓");
+  }
+
+  return (
+    <Card title="Píxel de Meta (Facebook / Instagram)" subtitle="Instalá el seguimiento de tus campañas">
+      {cargando ? (
+        <p className="text-sm text-cacao/50">Cargando…</p>
+      ) : (
+        <form onSubmit={guardar} className="space-y-3">
+          <p className="text-sm text-cacao/60">
+            Pegá el <b>ID de tu píxel de Meta</b> (antes “píxel de Facebook”) y se instala solo en el sitio. A partir
+            de ahí, el <b>Administrador de Eventos de Meta</b> registra las visitas y acciones de la gente para medir
+            tus anuncios de Facebook e Instagram y armar audiencias de retargeting.
+          </p>
+          <label className="block">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-cacao/45">ID del píxel de Meta</span>
+            <input value={pixel} onChange={(e) => setPixel(e.target.value)} placeholder="Ej: 1234567890123456" className="mt-1 w-full rounded-lg border border-cacao/15 bg-white px-3 py-2 text-sm text-cacao outline-none focus:border-marca" />
+          </label>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="submit" disabled={guardando} className="inline-flex items-center gap-2 rounded-full bg-marca px-5 py-2.5 text-sm font-bold text-cream shadow-sm transition hover:brightness-110 disabled:opacity-60">
+              {guardando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Guardar
+            </button>
+            {msg && <span className={`text-sm font-medium ${msg.startsWith("Guardado") ? "text-green-600" : "text-red-600"}`}>{msg}</span>}
+            <a href="https://business.facebook.com/events_manager" target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 text-sm font-semibold text-marca hover:underline">
+              Abrir Administrador de Eventos <ExternalLink className="h-4 w-4" />
+            </a>
+          </div>
+        </form>
+      )}
+    </Card>
+  );
+}
+
 function Herramientas() {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <div className="rounded-2xl bg-marca/10 p-5 ring-1 ring-marca/20 lg:col-span-2">
+    <div className="space-y-5">
+      <div className="rounded-2xl bg-marca/10 p-5 ring-1 ring-marca/20">
         <h3 className="font-display font-bold text-cacao">Datos del negocio</h3>
         <p className="mt-1 text-sm text-cacao/60">
-          La dirección, el link de Maps, horarios, redes y mensajes ahora se editan en la
-          sección <b>Ajustes</b> (se guardan en Supabase y se reflejan en el sitio).
+          La dirección, el link de Maps, horarios, redes, mensajes y los rangos de la analítica se editan en <b>Ajustes</b>.
+          Las métricas de cada campaña se ven en <b>Campañas</b>.
         </p>
       </div>
-      {M.herramientas.map((h) => (
-        <div key={h.nombre} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-cacao/5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="font-display font-bold text-cacao">{h.nombre}</h3>
-              <p className="text-sm text-cacao/55">{h.para}</p>
-            </div>
-            <span className="flex items-center gap-1 rounded-full bg-masa/70 px-2.5 py-1 text-xs font-semibold text-cacao/60">
-              <Circle className="h-2 w-2 fill-current text-amber-500" /> {h.estado}
-            </span>
-          </div>
-          <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-cacao/45">
-            {h.campo}
-          </label>
-          <input
-            disabled
-            placeholder={h.placeholder}
-            className="mt-1 w-full rounded-lg border border-cacao/10 bg-masa/30 px-3 py-2 text-sm text-cacao/60 placeholder:text-cacao/35"
-          />
-          <p className="mt-3 text-xs leading-relaxed text-cacao/55">{h.nota}</p>
+
+      <PixelMeta />
+
+      <Card title="Conversions API de Meta" subtitle="Medición server-side (complementa el píxel)">
+        <p className="text-sm text-cacao/60">
+          La Conversions API envía los eventos desde el <b>servidor</b> (no solo desde el navegador), lo que mejora la
+          medición de tus anuncios y el retargeting. Meta deduplica los eventos del píxel y de la API para no contar doble.
+        </p>
+        <div className="mt-3 flex items-center gap-2 rounded-lg bg-masa/50 p-3 text-sm">
+          <Circle className="h-2.5 w-2.5 fill-current text-amber-500" />
+          <span className="text-cacao/70"><b>Estado:</b> inactiva — falta cargar el token de acceso en el servidor.</span>
         </div>
-      ))}
-      <div className="rounded-2xl border border-dashed border-cacao/20 p-5 text-sm text-cacao/55 lg:col-span-2">
-        <p className="flex items-center gap-2 font-semibold text-cacao/70">
-          <ExternalLink className="h-4 w-4" /> Qué falta para ver métricas reales
+        <p className="mt-3 text-xs leading-relaxed text-cacao/55">
+          Para activarla: en el Administrador de Eventos de Meta → tu píxel → <b>Conversions API → Generar token de
+          acceso</b>. Ese token es secreto: se carga como variable de entorno en el servidor (Vercel), no en este panel.
+          Avisá cuando lo tengas y se conecta.
         </p>
-        <p className="mt-2">
-          Los productos, promociones y ajustes ya se gestionan desde este panel y se reflejan en el sitio al
-          instante. Para que la analítica deje de ser de muestra falta activar el seguimiento del sitio: Google
-          Analytics para el tráfico y el registro de eventos (ver producto → agregar al carrito → enviar por
-          WhatsApp) para el embudo, más Search Console para el SEO.
-        </p>
-      </div>
+      </Card>
     </div>
   );
 }

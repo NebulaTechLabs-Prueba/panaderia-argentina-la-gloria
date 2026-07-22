@@ -6,11 +6,11 @@ import {
   LayoutDashboard, Filter, Package, Wrench,
   MessageCircle, ExternalLink, Circle, Menu, ShoppingCart, CalendarDays, LogOut,
   Download, Printer, Ticket, Settings, Megaphone, Save, Loader2, ArrowLeftRight,
-  Pencil, Trash2, Plus,
+  Pencil, Trash2, Plus, X,
 } from "lucide-react";
 import { asset, adminBase } from "@/lib/config/constants";
 import { getSupabase } from "@/lib/supabase/client";
-import { getMetricas, getMetricasRango } from "@/lib/data";
+import { getMetricas, getMetricasRango, getProductos } from "@/lib/data";
 import { Ajustes } from "./Ajustes";
 import { Catalogo } from "./Catalogo";
 import { Promociones } from "./Promociones";
@@ -38,6 +38,7 @@ export function AdminPanel() {
   const [rango, setRango] = useState("30 días");
   const [menu, setMenu] = useState(false);
   const [email, setEmail] = useState("");
+  const [rangosOpc, setRangosOpc] = useState([7, 30, 90]);
   const actual = NAV.find((n) => n.id === sec);
 
   // Guard real: sin sesión de Supabase, al login.
@@ -53,6 +54,15 @@ export function AdminPanel() {
     });
     return () => sub.subscription.unsubscribe();
   }, [router]);
+
+  // Opciones del selector de rango, configuradas en Ajustes.
+  useEffect(() => {
+    getSupabase().from("business_settings").select("rangos_dias").eq("id", 1).single().then(({ data }) => {
+      const arr = Array.isArray(data?.rangos_dias) && data.rangos_dias.length ? data.rangos_dias : [7, 30, 90];
+      setRangosOpc(arr);
+      setRango((prev) => (arr.includes(parseInt(prev, 10)) ? prev : `${arr.includes(30) ? 30 : arr[0]} días`));
+    });
+  }, []);
 
   const cerrarSesion = async () => {
     await getSupabase().auth.signOut();
@@ -159,7 +169,7 @@ export function AdminPanel() {
           </div>
           <div className="ml-auto flex items-center gap-2 print:hidden sm:gap-3">
             {["resumen", "conversiones", "consumidor"].includes(sec) && (
-              <RangoSelector rango={rango} setRango={setRango} />
+              <RangoSelector opciones={rangosOpc} rango={rango} setRango={setRango} />
             )}
             <button
               type="button"
@@ -496,42 +506,24 @@ function FechasClave() {
   );
 }
 
-// Selector de rango con presets + valor personalizado (cualquier N de días).
-const RANGO_PRESETS = ["7 días", "30 días", "90 días"];
-function RangoSelector({ rango, setRango }) {
-  const esPreset = RANGO_PRESETS.includes(rango);
-  const [custom, setCustom] = useState(esPreset ? "" : String(parseInt(rango, 10) || ""));
-  const aplicar = () => {
-    const n = parseInt(custom, 10);
-    if (n >= 1 && n <= 365) setRango(`${n} días`);
-  };
+// Selector de rango: muestra solo las opciones configuradas en Ajustes.
+function RangoSelector({ opciones, rango, setRango }) {
+  if (!opciones?.length) return null;
   return (
     <div className="hidden items-center gap-1 rounded-full bg-masa/70 p-1 sm:flex">
-      {RANGO_PRESETS.map((r) => (
-        <button
-          key={r}
-          type="button"
-          onClick={() => { setRango(r); setCustom(""); }}
-          className={`rounded-full px-3 py-1 text-xs font-semibold transition ${rango === r ? "bg-white text-cacao shadow-sm" : "text-cacao/60 hover:text-cacao"}`}
-        >
-          {r}
-        </button>
-      ))}
-      <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 ${!esPreset ? "bg-white shadow-sm" : ""}`}>
-        <input
-          type="number"
-          min="1"
-          max="365"
-          value={custom}
-          onChange={(e) => setCustom(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); aplicar(); } }}
-          placeholder="N.º"
-          className="w-12 bg-transparent text-center text-xs font-semibold text-cacao outline-none"
-          aria-label="Cantidad de días personalizada"
-        />
-        <span className="text-xs text-cacao/50">días</span>
-        <button type="button" onClick={aplicar} className="rounded-full bg-marca px-2 py-0.5 text-[11px] font-bold text-cream transition hover:brightness-110">OK</button>
-      </div>
+      {opciones.map((n) => {
+        const r = `${n} días`;
+        return (
+          <button
+            key={n}
+            type="button"
+            onClick={() => setRango(r)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${rango === r ? "bg-white text-cacao shadow-sm" : "text-cacao/60 hover:text-cacao"}`}
+          >
+            {r}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -550,12 +542,19 @@ const COMP_METRICAS = [
 const isoDia = (offset) => new Date(Date.now() - offset * 86400000).toISOString().slice(0, 10);
 const desdeISO = (s) => `${s}T00:00:00.000Z`;
 const hastaISO = (s) => new Date(Date.parse(`${s}T00:00:00.000Z`) + 86400000).toISOString();
+const PERIODO_COLORS = ["#94a3b8", "#2f3a7e", "#ff9900", "#63b0dd", "#16a34a", "#db2777"];
+const ddmm = (iso) => { const p = (iso || "").split("-"); return p.length === 3 ? `${p[2]}/${p[1]}` : iso; };
 
-function RangoCampo({ titulo, val, set, color }) {
+function RangoCampo({ titulo, val, set, color, onRemove }) {
   return (
     <div className="rounded-xl bg-masa/40 p-3">
       <p className="mb-2 flex items-center gap-2 text-sm font-bold text-cacao">
         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} /> {titulo}
+        {onRemove && (
+          <button type="button" onClick={onRemove} className="ml-auto text-cacao/40 transition hover:text-red-600" aria-label="Quitar período">
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </p>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <input type="date" value={val.desde} max={val.hasta} onChange={(e) => set({ ...val, desde: e.target.value })} className="rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-cacao outline-none focus:border-marca" />
@@ -566,78 +565,150 @@ function RangoCampo({ titulo, val, set, color }) {
   );
 }
 
+// Tabla de comparación: columnas = períodos, filas = métricas o productos.
+function TablaComparativa({ columnas, filas, cellDelta }) {
+  const fmt = (v, pct) => (pct ? `${(v || 0).toFixed(1)}%` : (v || 0).toLocaleString("es"));
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-cacao/10 text-left text-xs uppercase tracking-wide text-cacao/45">
+            <th className="pb-2 pr-2 font-semibold">Concepto</th>
+            {columnas.map((c, i) => (
+              <th key={i} className="pb-2 pr-2 text-right font-semibold">
+                P{i + 1}
+                <span className="block font-normal normal-case text-cacao/35">{ddmm(c.desde)}–{ddmm(c.hasta)}</span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-cacao/5">
+          {filas.map((f) => (
+            <tr key={f.label}>
+              <td className="py-2.5 pr-2 font-medium text-cacao/80">{f.label}</td>
+              {f.valores.map((v, i) => (
+                <td key={i} className="py-2.5 pr-2 text-right tabular-nums">
+                  <span className="font-semibold text-cacao">{fmt(v, f.pct)}</span>
+                  {cellDelta(f.valores[0], v, i)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function Comparativa() {
-  const [a, setA] = useState({ desde: isoDia(59), hasta: isoDia(30) });
-  const [b, setB] = useState({ desde: isoDia(29), hasta: isoDia(0) });
+  const [modo, setModo] = useState("general");
+  const [periodos, setPeriodos] = useState([
+    { desde: isoDia(59), hasta: isoDia(30) },
+    { desde: isoDia(29), hasta: isoDia(0) },
+  ]);
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(false);
+  const [productos, setProductos] = useState([]);
+  const [prodSel, setProdSel] = useState([]);
+  const [metricaProd, setMetricaProd] = useState("vistas");
+  const [busqueda, setBusqueda] = useState("");
+
+  useEffect(() => { getProductos().then((ps) => setProductos((ps || []).map((p) => ({ id: p.id, nombre: p.nombre })))); }, []);
 
   const comparar = async () => {
     setCargando(true);
-    const [ra, rb] = await Promise.all([
-      getMetricasRango(desdeISO(a.desde), hastaISO(a.hasta)),
-      getMetricasRango(desdeISO(b.desde), hastaISO(b.hasta)),
-    ]);
-    setDatos({ a: ra, b: rb });
+    const res = await Promise.all(periodos.map((p) => getMetricasRango(desdeISO(p.desde), hastaISO(p.hasta))));
+    setDatos(res);
     setCargando(false);
   };
-  useEffect(() => { comparar(); /* carga inicial */ // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { comparar(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fmt = (v, pct) => (pct ? `${(v || 0).toFixed(1)}%` : (v || 0).toLocaleString("es"));
-  const delta = (va, vb) => (va ? ((vb - va) / va) * 100 : vb ? 100 : 0);
+  const setPeriodo = (i, val) => setPeriodos((ps) => ps.map((p, idx) => (idx === i ? val : p)));
+  const addPeriodo = () => setPeriodos((ps) => [...ps, { desde: isoDia(29), hasta: isoDia(0) }]);
+  const rmPeriodo = (i) => setPeriodos((ps) => ps.filter((_, idx) => idx !== i));
+  const toggleProd = (id) => setProdSel((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+
+  const cellDelta = (base, v, i) => {
+    if (i === 0) return null;
+    const d = base ? ((v - base) / base) * 100 : v ? 100 : 0;
+    return (
+      <span className={`ml-1 text-[10px] font-semibold ${d === 0 ? "text-cacao/30" : d > 0 ? "text-green-600" : "text-red-600"}`}>
+        {d >= 0 ? "▲" : "▼"}{Math.abs(d).toFixed(0)}%
+      </span>
+    );
+  };
+
+  const prodsFiltrados = busqueda ? productos.filter((p) => p.nombre.toLowerCase().includes(busqueda.toLowerCase())) : productos;
+  const filas = modo === "general"
+    ? COMP_METRICAS.map((m) => ({ label: m.label, pct: m.pct, valores: (datos || []).map((d) => d[m.key]) }))
+    : prodSel.map((id) => ({ label: productos.find((p) => p.id === id)?.nombre || id, valores: (datos || []).map((d) => d.porProducto?.[id]?.[metricaProd] || 0) }));
 
   return (
     <div className="space-y-5">
-      <Card title="Comparar períodos" subtitle="Elegí dos rangos de fechas y mirá la diferencia">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <RangoCampo titulo="Período A" val={a} set={setA} color="#94a3b8" />
-          <RangoCampo titulo="Período B" val={b} set={setB} color="#2f3a7e" />
+      <Card title="Comparar" subtitle="Elegí N períodos y qué querés comparar">
+        <div className="mb-4 inline-flex rounded-full bg-masa/60 p-1 text-sm">
+          {[["general", "Métricas generales"], ["producto", "Por producto"]].map(([k, l]) => (
+            <button key={k} type="button" onClick={() => setModo(k)} className={`rounded-full px-3 py-1 font-semibold transition ${modo === k ? "bg-white text-cacao shadow-sm" : "text-cacao/60"}`}>{l}</button>
+          ))}
         </div>
-        <button
-          type="button"
-          onClick={comparar}
-          disabled={cargando}
-          className="mt-3 inline-flex items-center gap-2 rounded-full bg-marca px-5 py-2.5 text-sm font-bold text-cream shadow-sm transition hover:brightness-110 disabled:opacity-60"
-        >
-          {cargando ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeftRight className="h-4 w-4" />}
-          Comparar
-        </button>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {periodos.map((p, i) => (
+            <RangoCampo key={i} titulo={`Período ${i + 1}`} val={p} set={(v) => setPeriodo(i, v)} color={PERIODO_COLORS[i % PERIODO_COLORS.length]} onRemove={periodos.length > 2 ? () => rmPeriodo(i) : undefined} />
+          ))}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button type="button" onClick={addPeriodo} className="inline-flex items-center gap-1 rounded-full border border-cacao/20 px-3 py-1.5 text-xs font-semibold text-cacao/70 transition hover:border-marca hover:text-marca">
+            <Plus className="h-4 w-4" /> Agregar período
+          </button>
+          <button type="button" onClick={comparar} disabled={cargando} className="inline-flex items-center gap-2 rounded-full bg-marca px-5 py-2 text-sm font-bold text-cream shadow-sm transition hover:brightness-110 disabled:opacity-60">
+            {cargando ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeftRight className="h-4 w-4" />}
+            Comparar
+          </button>
+        </div>
+
+        {modo === "producto" && (
+          <div className="mt-4 rounded-xl bg-masa/40 p-3">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-sm font-bold text-cacao">Productos a comparar</span>
+              <div className="inline-flex rounded-full bg-white p-1 text-xs shadow-sm">
+                {[["vistas", "Veces visto"], ["agregados", "Agregados al carrito"]].map(([k, l]) => (
+                  <button key={k} type="button" onClick={() => setMetricaProd(k)} className={`rounded-full px-2.5 py-1 font-semibold transition ${metricaProd === k ? "bg-marca text-cream" : "text-cacao/60"}`}>{l}</button>
+                ))}
+              </div>
+            </div>
+            {prodSel.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {prodSel.map((id) => (
+                  <span key={id} className="inline-flex items-center gap-1 rounded-full bg-marca/10 px-2.5 py-1 text-xs font-semibold text-marca">
+                    {productos.find((p) => p.id === id)?.nombre || id}
+                    <button type="button" onClick={() => toggleProd(id)} className="transition hover:text-red-600"><X className="h-3 w-3" /></button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar producto…" className="mb-2 w-full rounded-lg border border-cacao/15 bg-white px-3 py-1.5 text-sm text-cacao outline-none focus:border-marca" />
+            <div className="max-h-44 overflow-y-auto rounded-lg bg-white p-1">
+              {prodsFiltrados.map((p) => (
+                <label key={p.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-masa/40">
+                  <input type="checkbox" checked={prodSel.includes(p.id)} onChange={() => toggleProd(p.id)} />
+                  <span className="text-cacao/80">{p.nombre}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
       </Card>
 
-      <Card title="Resultado" subtitle="Período A → Período B">
+      <Card title="Resultado" subtitle={modo === "producto" ? (metricaProd === "vistas" ? "Veces visto por producto" : "Agregados al carrito por producto") : "Métricas generales por período"}>
         {!datos ? (
           <p className="text-sm text-cacao/50">Cargando…</p>
+        ) : modo === "producto" && prodSel.length === 0 ? (
+          <p className="py-6 text-center text-sm text-cacao/45">Elegí uno o más productos arriba para compararlos entre los períodos.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-cacao/10 text-left text-xs uppercase tracking-wide text-cacao/45">
-                  <th className="pb-2 font-semibold">Métrica</th>
-                  <th className="pb-2 text-right font-semibold">Período A</th>
-                  <th className="pb-2 text-right font-semibold">Período B</th>
-                  <th className="pb-2 text-right font-semibold">Variación</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-cacao/5">
-                {COMP_METRICAS.map((m) => {
-                  const va = datos.a[m.key], vb = datos.b[m.key];
-                  const d = delta(va, vb);
-                  const up = d >= 0;
-                  return (
-                    <tr key={m.key}>
-                      <td className="py-2.5 pr-2 font-medium text-cacao/80">{m.label}</td>
-                      <td className="py-2.5 text-right tabular-nums text-cacao/70">{fmt(va, m.pct)}</td>
-                      <td className="py-2.5 text-right tabular-nums font-semibold text-cacao">{fmt(vb, m.pct)}</td>
-                      <td className={`py-2.5 text-right tabular-nums font-semibold ${d === 0 ? "text-cacao/40" : up ? "text-green-600" : "text-red-600"}`}>
-                        {up ? "▲" : "▼"} {Math.abs(d).toFixed(0)}%
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <TablaComparativa columnas={periodos} filas={filas} cellDelta={cellDelta} />
         )}
       </Card>
     </div>

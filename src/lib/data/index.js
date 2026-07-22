@@ -187,29 +187,32 @@ export async function getMetricas(dias = 30) {
 }
 
 // Totales escalares de un rango [desde, hasta) — para la sección Comparativa.
+// Incluye `porProducto` (vistas y agregados por producto) para comparar ítems.
 function resumenEscalar(ev) {
   const ses = new Set();
   let vistas = 0, verP = 0, agg = 0, wa = 0, promo = 0, campV = 0;
+  const porProducto = {};
+  const verProd = (id) => (porProducto[id] || (porProducto[id] = { vistas: 0, agregados: 0 }));
   for (const e of ev) {
     if (e.session_id) ses.add(e.session_id);
     if (e.tipo === "page_view") { vistas++; if (e.meta?.utm_campaign) campV++; }
-    else if (e.tipo === "ver_producto") verP++;
-    else if (e.tipo === "agregar_carrito") agg++;
+    else if (e.tipo === "ver_producto") { verP++; if (e.producto_id) verProd(e.producto_id).vistas++; }
+    else if (e.tipo === "agregar_carrito") { agg++; if (e.producto_id) verProd(e.producto_id).agregados++; }
     else if (e.tipo === "enviar_whatsapp") wa++;
     else if (e.tipo === "promo_click") promo++;
   }
   return {
     vistas, sesiones: ses.size, interacciones: verP, carritos: agg,
     pedidos: wa, conversion: ses.size ? (wa / ses.size) * 100 : 0,
-    promos: promo, campanas: campV, totalEventos: ev.length,
+    promos: promo, campanas: campV, porProducto, totalEventos: ev.length,
   };
 }
 
-// Métricas de un rango de fechas arbitrario (ISO). Para comparar dos períodos.
+// Métricas de un rango de fechas arbitrario (ISO). Para comparar períodos.
 export async function getMetricasRango(desde, hasta) {
   try {
     const { data: ev, error } = await getSupabase()
-      .from("events").select("tipo, session_id, meta, created_at")
+      .from("events").select("tipo, session_id, producto_id, meta, created_at")
       .gte("created_at", desde).lt("created_at", hasta).order("created_at").limit(50000);
     if (error) throw error;
     return resumenEscalar(ev || []);

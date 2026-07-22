@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, X, Plus } from "lucide-react";
 import { getSupabase } from "@/lib/supabase/client";
 
 const INPUT = "mt-1 w-full rounded-lg border border-cacao/15 bg-white px-3 py-2 text-sm text-cacao outline-none focus:border-marca";
 const DIAS = [["lun", "Lunes"], ["mar", "Martes"], ["mie", "Miércoles"], ["jue", "Jueves"], ["vie", "Viernes"], ["sab", "Sábado"], ["dom", "Domingo"]];
 // Columnas editables de business_settings.
-const COLS = ["id", "nombre_negocio", "whatsapp_numero", "tagline", "direccion", "maps_url", "mensaje_bienvenida", "mensaje_pedido_template", "instagram_url", "tiktok_url", "facebook_url", "horarios"];
+const COLS = ["id", "nombre_negocio", "whatsapp_numero", "tagline", "direccion", "maps_url", "mensaje_bienvenida", "mensaje_pedido_template", "instagram_url", "tiktok_url", "facebook_url", "horarios", "rangos_dias"];
 const pick = (o) => Object.fromEntries(COLS.filter((k) => k in o && o[k] !== undefined).map((k) => [k, o[k]]));
 
 // Horario guardado como texto ("07:00–16:00" | "Cerrado") ↔ estructura editable.
@@ -25,6 +25,7 @@ export function Ajustes() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState("");
+  const [nuevoRango, setNuevoRango] = useState("");
 
   useEffect(() => {
     supabase.from("business_settings").select("*").eq("id", 1).single().then(({ data }) => {
@@ -35,6 +36,14 @@ export function Ajustes() {
 
   const set = (k, v) => setData((d) => ({ ...d, [k]: v }));
   const setHora = (dia, v) => setData((d) => ({ ...d, horarios: { ...(d.horarios || {}), [dia]: v } }));
+  const addRango = () => {
+    const n = parseInt(nuevoRango, 10);
+    if (n >= 1 && n <= 365) {
+      set("rangos_dias", Array.from(new Set([...(data.rangos_dias || []), n])).sort((a, b) => a - b));
+      setNuevoRango("");
+    }
+  };
+  const removeRango = (n) => set("rangos_dias", (data.rangos_dias || []).filter((x) => x !== n));
 
   async function guardar(e) {
     e.preventDefault();
@@ -90,6 +99,34 @@ export function Ajustes() {
                 </div>
               );
             })}
+          </div>
+        </Card>
+
+        <Card titulo="Rangos de tiempo (selector de analítica)" full>
+          <p className="text-xs text-cacao/55">
+            Elegí qué opciones de días aparecen en el selector de las secciones de analítica (Resumen, Conversiones, Consumidor).
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {(data.rangos_dias || []).map((n) => (
+              <span key={n} className="inline-flex items-center gap-1 rounded-full bg-masa/70 px-3 py-1 text-sm font-semibold text-cacao">
+                {n} días
+                <button type="button" onClick={() => removeRango(n)} className="text-cacao/40 transition hover:text-red-600" aria-label={`Quitar ${n} días`}>
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))}
+            <div className="inline-flex items-center gap-1 rounded-full border border-dashed border-cacao/25 px-2 py-1">
+              <input
+                type="number" min="1" max="365" value={nuevoRango}
+                onChange={(e) => setNuevoRango(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addRango(); } }}
+                placeholder="N.º" className="w-14 bg-transparent text-center text-sm text-cacao outline-none"
+              />
+              <span className="text-xs text-cacao/50">días</span>
+              <button type="button" onClick={addRango} className="inline-flex items-center gap-1 rounded-full bg-marca px-2.5 py-1 text-xs font-bold text-cream transition hover:brightness-110">
+                <Plus className="h-3.5 w-3.5" /> Agregar
+              </button>
+            </div>
           </div>
         </Card>
 

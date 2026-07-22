@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState } from "react";
 import { CART_STORAGE_KEY } from "@/lib/config/constants";
 import { totalCentavos } from "@/lib/money/formatCentavos";
-import { calcularRegalos, getPromos } from "@/lib/promos";
+import { calcularRegalos, calcularDescuento, getPromos } from "@/lib/promos";
 import { getProductos } from "@/lib/data";
 import { track } from "@/lib/track";
 import { playDing } from "@/lib/sound/ding";
@@ -120,11 +120,16 @@ export function CarritoProvider({ children }) {
 
   const value = useMemo(() => {
     const cantidadTotal = state.items.reduce((acc, i) => acc + i.cantidad, 0);
+    const sub = totalCentavos(state.items);
+    const { descuentoCentavos, aplicados } = calcularDescuento(state.items, promos);
     return {
       items: state.items,
       regalos: calcularRegalos(state.items, promos, nombrePorId),
+      descuentoCentavos,
+      descuentos: aplicados,
       cantidadTotal,
-      totalCentavos: totalCentavos(state.items),
+      totalCentavos: sub,
+      totalConDescuento: Math.max(0, sub - descuentoCentavos),
       estaVacio: state.items.length === 0,
       agregar: (producto, cantidad) => {
         // Al agregar el PRIMER producto, el carrito se abre solo.

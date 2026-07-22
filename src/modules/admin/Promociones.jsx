@@ -51,6 +51,69 @@ function Filas({ filas, productos, onChange }) {
   );
 }
 
+// Editor del premio: productos gratis (Filas) o descuento (monto/porcentaje,
+// sobre todo el carrito o productos específicos).
+function PremioEditor({ premio, productos, onChange }) {
+  const esDesc = premio && !Array.isArray(premio);
+  const prem = esDesc ? premio : null;
+  const BTN = "rounded-full px-2.5 py-1 text-xs font-semibold transition";
+  return (
+    <div className="rounded-xl bg-green-50 p-3">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-bold uppercase tracking-wide text-green-700">Premio</p>
+        <div className="flex gap-1 rounded-full bg-white p-0.5 ring-1 ring-cacao/10">
+          <button type="button" onClick={() => onChange([{ producto_id: "", cantidad: 1 }])} className={`${BTN} ${!esDesc ? "bg-marca text-cream" : "text-cacao/60"}`}>Productos gratis</button>
+          <button type="button" onClick={() => onChange({ tipo: "descuento", modo: "porcentaje", valor_pct: 10, valor_centavos: 0, alcance: "total", productos: [] })} className={`${BTN} ${esDesc ? "bg-marca text-cream" : "text-cacao/60"}`}>Descuento</button>
+        </div>
+      </div>
+
+      {!esDesc ? (
+        <Filas filas={premio} productos={productos} onChange={onChange} />
+      ) : (
+        <div className="space-y-2">
+          <div className="flex gap-1">
+            {[["porcentaje", "Porcentaje (%)"], ["monto", "Monto fijo (USD)"]].map(([v, l]) => (
+              <button key={v} type="button" onClick={() => onChange({ ...prem, modo: v })} className={`${BTN} ring-1 ring-cacao/10 ${prem.modo === v ? "bg-marca text-cream" : "bg-white text-cacao/60"}`}>{l}</button>
+            ))}
+          </div>
+          {prem.modo === "porcentaje" ? (
+            <label className="block">
+              <span className="mb-1 block text-xs text-cacao/50">Porcentaje de descuento (%)</span>
+              <input type="number" min="1" max="100" value={prem.valor_pct || 0} onChange={(e) => onChange({ ...prem, valor_pct: Number(e.target.value) || 0 })} className={INPUT} />
+            </label>
+          ) : (
+            <label className="block">
+              <span className="mb-1 block text-xs text-cacao/50">Monto de descuento (USD)</span>
+              <input type="number" min="0" step="0.5" value={(prem.valor_centavos || 0) / 100} onChange={(e) => onChange({ ...prem, valor_centavos: Math.round((Number(e.target.value) || 0) * 100) })} className={INPUT} />
+            </label>
+          )}
+          <div>
+            <span className="mb-1 block text-xs text-cacao/50">¿A qué se aplica?</span>
+            <div className="flex gap-1">
+              {[["total", "Todo el carrito"], ["productos", "Productos específicos"]].map(([v, l]) => (
+                <button key={v} type="button" onClick={() => onChange({ ...prem, alcance: v })} className={`${BTN} ring-1 ring-cacao/10 ${(prem.alcance || "total") === v ? "bg-marca text-cream" : "bg-white text-cacao/60"}`}>{l}</button>
+              ))}
+            </div>
+          </div>
+          {prem.alcance === "productos" && (
+            <div className="max-h-40 overflow-y-auto rounded-lg bg-white p-1 ring-1 ring-cacao/10">
+              {productos.map((p) => {
+                const sel = (prem.productos || []).includes(p.id);
+                return (
+                  <label key={p.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-masa/40">
+                    <input type="checkbox" checked={sel} onChange={() => onChange({ ...prem, productos: sel ? prem.productos.filter((x) => x !== p.id) : [...(prem.productos || []), p.id] })} />
+                    <span className="text-cacao/80">{p.nombre}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Promociones condicionales (Supabase). Se aplican de verdad en el carrito.
 export function Promociones() {
   const [promos, setPromos] = useState([]);
@@ -76,8 +139,15 @@ export function Promociones() {
     const list = (c.productos || []).filter((r) => r.producto_id);
     return list.length ? list.map((r) => `${r.cantidad}× ${nombreProd(r.producto_id)}`).join(" + ") : "—";
   };
-  const resumenPremio = (p) =>
-    (p.premio || []).filter((r) => r.producto_id).map((r) => `${r.cantidad}× ${nombreProd(r.producto_id)}`).join(" + ") || "—";
+  const resumenPremio = (p) => {
+    const prem = p.premio;
+    if (prem && !Array.isArray(prem) && prem.tipo === "descuento") {
+      const val = prem.modo === "porcentaje" ? `${prem.valor_pct || 0}%` : formatCentavos(prem.valor_centavos || 0);
+      const donde = prem.alcance === "productos" ? `en ${(prem.productos || []).length} producto(s)` : "en todo el carrito";
+      return `${val} de descuento ${donde}`;
+    }
+    return (prem || []).filter((r) => r.producto_id).map((r) => `${r.cantidad}× ${nombreProd(r.producto_id)}`).join(" + ") || "—";
+  };
 
   const toggle = async (p) => {
     const { error } = await guardarPromo(pick({ ...p, activa: !p.activa }, PROMO_COLS));
@@ -136,7 +206,7 @@ export function Promociones() {
             <div className="mt-3 rounded-lg bg-masa/40 px-3 py-2 text-sm text-cacao/80">
               <span className="text-cacao/60">Si comprás:</span> {resumenCond(p)}
               <br />
-              <span className="text-cacao/60">Se lleva gratis:</span>{" "}
+              <span className="text-cacao/60">{Array.isArray(p.premio) ? "Se lleva gratis:" : "Descuento:"}</span>{" "}
               <b className="text-green-700">{resumenPremio(p)}</b>
             </div>
             {(p.vigencia?.desde || p.vigencia?.hasta) && (
@@ -213,11 +283,8 @@ export function Promociones() {
                 )}
               </div>
 
-              {/* Premio */}
-              <div className="rounded-xl bg-green-50 p-3">
-                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-green-700">Premio (lo que se lleva gratis)</p>
-                <Filas filas={form.data.premio} productos={productos} onChange={(premio) => upd({ premio })} />
-              </div>
+              {/* Premio: productos gratis o descuento */}
+              <PremioEditor premio={form.data.premio} productos={productos} onChange={(premio) => upd({ premio })} />
 
               {/* Vigencia */}
               <div className="rounded-xl bg-masa/30 p-3">

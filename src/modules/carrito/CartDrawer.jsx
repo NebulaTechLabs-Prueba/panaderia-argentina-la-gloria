@@ -15,8 +15,8 @@ import { playEnviar, playVaciar, playMas, playMenos, playQuitar, playCerrar } fr
 // Estado (abierto/minimizado) controlado desde el contexto del carrito.
 export function CartDrawer() {
   const {
-    items, regalos, totalCentavos, estaVacio, fijarCantidad, quitar, vaciar,
-    drawerAbierto, cerrarCarrito,
+    items, regalos, descuentoCentavos, descuentos, totalCentavos, totalConDescuento,
+    estaVacio, fijarCantidad, quitar, vaciar, drawerAbierto, cerrarCarrito,
   } = useCarrito();
   const ajustes = useNegocio();
   const moneda = useMoneda();
@@ -28,12 +28,12 @@ export function CartDrawer() {
     playEnviar(); // sonido de confirmación (distinto al de agregar)
     track("enviar_whatsapp", {
       meta: {
-        total_centavos: totalCentavos,
+        total_centavos: totalConDescuento,
         items: items.length,
         productos: items.map((i) => ({ id: String(i.id).split("::")[0], cant: i.cantidad })),
       },
     });
-    const mensaje = buildMensajePedido(items, ajustes, { personas, regalos });
+    const mensaje = buildMensajePedido(items, ajustes, { personas, regalos, descuentoCentavos });
     const url = buildWhatsappUrl(ajustes.whatsapp_numero, mensaje);
     window.open(url, "_blank", "noopener,noreferrer");
   }
@@ -164,6 +164,22 @@ export function CartDrawer() {
               </div>
             )}
 
+            {!estaVacio && descuentos?.length > 0 && (
+              <div className="border-t border-green-600/15 bg-green-50 px-5 py-3">
+                <p className="mb-1 text-xs font-bold uppercase tracking-wide text-green-700">🏷️ Descuento aplicado</p>
+                {descuentos.map((d, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm">
+                    <span className="text-cacao/80">
+                      {d.promo}
+                      {d.modo === "porcentaje" ? ` (${d.valor_pct}%)` : ""}
+                      {d.alcance === "productos" ? " · productos seleccionados" : ""}
+                    </span>
+                    <span className="font-bold text-green-600">−{formatCentavos(d.centavos, moneda)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {!estaVacio && (
               <footer className="space-y-3 border-t border-corteza/20 px-5 py-4">
                 <div className="flex items-center justify-between">
@@ -178,11 +194,16 @@ export function CartDrawer() {
                     Vaciar
                   </button>
                   <div className="text-right">
+                    {descuentoCentavos > 0 && (
+                      <span className="block text-sm text-cacao/40 line-through">
+                        {formatCentavos(totalCentavos, moneda)}
+                      </span>
+                    )}
                     <span className="block text-xs uppercase tracking-wide text-cacao/50">
                       Total
                     </span>
                     <span className="font-display text-2xl font-bold text-cacao">
-                      {formatCentavos(totalCentavos, moneda)}
+                      {formatCentavos(descuentoCentavos > 0 ? totalConDescuento : totalCentavos, moneda)}
                     </span>
                   </div>
                 </div>

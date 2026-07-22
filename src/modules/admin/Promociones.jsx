@@ -7,6 +7,9 @@ import { getProductos } from "@/lib/data";
 import { getPromos, guardarPromo, eliminarPromo, promoVigente } from "@/lib/promos";
 
 const INPUT = "w-full rounded-lg border border-cacao/15 bg-white px-3 py-2 text-sm text-cacao outline-none focus:border-marca";
+// getDay(): 0=Dom … 6=Sáb. Orden de visualización Lun→Dom.
+const DIAS_SEMANA = [[1, "Lun"], [2, "Mar"], [3, "Mié"], [4, "Jue"], [5, "Vie"], [6, "Sáb"], [0, "Dom"]];
+const DIA_ABR = { 0: "Dom", 1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie", 6: "Sáb" };
 const PROMO_COLS = ["id", "nombre", "descripcion", "activa", "vigencia", "condicion", "premio", "orden"];
 const pick = (o, cols) => Object.fromEntries(cols.filter((k) => k in o && o[k] !== undefined).map((k) => [k, o[k]]));
 
@@ -217,6 +220,14 @@ export function Promociones() {
                 )}
               </p>
             )}
+            {p.vigencia?.dias?.length > 0 && (
+              <p className="mt-1 flex items-center gap-1.5 text-xs text-cacao/55">
+                🔁 Solo{" "}
+                <b className="text-cacao/70">
+                  {p.vigencia.dias.slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map((d) => DIA_ABR[d]).join(", ")}
+                </b>
+              </p>
+            )}
             <div className="mt-3 flex justify-end gap-1">
               <button type="button" onClick={() => setForm({ esNuevo: false, data: JSON.parse(JSON.stringify(p)) })} className="grid h-8 w-8 place-items-center rounded-lg text-cacao/60 hover:bg-masa/70 hover:text-marca" aria-label="Editar">
                 <Pencil className="h-4 w-4" />
@@ -302,6 +313,31 @@ export function Promociones() {
                 <p className="mt-1 text-[11px] text-cacao/45">
                   Vacío = sin límite. Promo de 1 día (ej. lanzamiento): poné la misma fecha en Desde y Hasta.
                 </p>
+              </div>
+
+              {/* Días de la semana (recurrencia) */}
+              <div className="rounded-xl bg-masa/30 p-3">
+                <p className="mb-1 text-xs font-bold uppercase tracking-wide text-cacao/50">Días de la semana (opcional)</p>
+                <p className="mb-2 text-[11px] text-cacao/45">
+                  Vacío = todos los días. Si elegís días, la promo se activa sola <b>solo esos días</b> (ej. Jueves de Pizza).
+                  Se combina con la vigencia por fechas: ambas deben cumplirse.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {DIAS_SEMANA.map(([n, l]) => {
+                    const dias = form.data.vigencia?.dias || [];
+                    const sel = dias.includes(n);
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => upd({ vigencia: { ...form.data.vigencia, dias: sel ? dias.filter((d) => d !== n) : [...dias, n] } })}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold transition ${sel ? "bg-marca text-cream" : "bg-white text-cacao/60 ring-1 ring-cacao/10"}`}
+                      >
+                        {l}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 

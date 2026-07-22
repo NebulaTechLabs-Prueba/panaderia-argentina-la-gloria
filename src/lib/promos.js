@@ -22,14 +22,26 @@ export function normalizar(p) {
   return { ...p, activa: p.activa ?? true, condicion, premio, vigencia: p.vigencia ?? null };
 }
 
-// ¿La promo está vigente ahora? (activa + dentro de la ventana de fechas, si tiene).
+// Día de la semana (0=Dom … 6=Sáb) en la hora del negocio (Virginia, EE. UU.).
+function diaSemanaNegocio() {
+  try {
+    const wd = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short" }).format(new Date());
+    return { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[wd] ?? new Date().getDay();
+  } catch {
+    return new Date().getDay();
+  }
+}
+
+// ¿La promo está vigente ahora? activa + dentro de la ventana de fechas (si tiene)
+// + hoy es uno de los días elegidos (si tiene). `dias` vacío = todos los días.
+// (las fechas y los días son independientes: ambas condiciones deben cumplirse).
 export function promoVigente(promo) {
   if (!promo.activa) return false;
-  const v = promo.vigencia;
-  if (!v || (!v.desde && !v.hasta)) return true;
+  const v = promo.vigencia || {};
   const now = new Date();
   if (v.desde && now < new Date(v.desde + "T00:00:00")) return false;
   if (v.hasta && now > new Date(v.hasta + "T23:59:59")) return false;
+  if (Array.isArray(v.dias) && v.dias.length && !v.dias.includes(diaSemanaNegocio())) return false;
   return true;
 }
 

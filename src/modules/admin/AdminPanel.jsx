@@ -11,6 +11,7 @@ import {
 import { asset, adminBase } from "@/lib/config/constants";
 import { getSupabase } from "@/lib/supabase/client";
 import { getMetricas, getMetricasRango, getProductos } from "@/lib/data";
+import { RelojDual } from "@/components/RelojDual";
 import { Ajustes } from "./Ajustes";
 import { Catalogo } from "./Catalogo";
 import { Promociones } from "./Promociones";
@@ -168,6 +169,7 @@ export function AdminPanel() {
             <h1 className="truncate font-display text-lg font-bold">{actual?.label}</h1>
           </div>
           <div className="ml-auto flex items-center gap-2 print:hidden sm:gap-3">
+            <RelojDual className="mr-1 border-r border-cacao/10 pr-3" />
             {["resumen", "conversiones", "consumidor"].includes(sec) && (
               <RangoSelector opciones={rangosOpc} rango={rango} setRango={setRango} />
             )}

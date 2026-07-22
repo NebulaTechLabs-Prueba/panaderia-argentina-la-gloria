@@ -16,7 +16,6 @@ import { ProductImage } from "./ProductImage";
 import { IconoCategoria } from "./IconoCategoria";
 import { header as headerColor } from "./catColors";
 import { CartButton } from "@/modules/carrito/CartButton";
-import { RelojDual } from "@/components/RelojDual";
 import { CartDrawer } from "@/modules/carrito/CartDrawer";
 import { ProductModal } from "./ProductModal";
 import { LogoLaGloria } from "@/components/ui/LogoLaGloria";
@@ -355,31 +354,28 @@ export function MenuLaGloria() {
       {/* Navegación por categorías (fija al hacer scroll) */}
       {!cargando && catsConItems.length > 0 && (
         <nav className="sticky top-0 z-30 border-b border-cacao/10 bg-cream/95 backdrop-blur">
-          <div className="mx-auto flex max-w-4xl items-center gap-3 px-5">
-            <div className="relative min-w-0 flex-1">
-              <div ref={navRef} className="flex gap-2 overflow-x-auto py-2.5 scrollbar-none">
-                {catsConItems.map((c) => {
-                  const on = activa === c.id;
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      data-cat={c.id}
-                      onClick={() => irACategoria(c.id)}
-                      className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
-                        on ? "bg-marca text-cream shadow" : "bg-white/80 text-cacao/70 ring-1 ring-cacao/10 hover:text-cacao"
-                      }`}
-                    >
-                      {c.nombre}
-                    </button>
-                  );
-                })}
-              </div>
-              {/* fade en los laterales para difuminar el corte del scroll */}
-              <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-linear-to-r from-cream to-transparent" />
-              <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-cream to-transparent" />
+          <div className="relative mx-auto max-w-4xl">
+            <div ref={navRef} className="flex gap-2 overflow-x-auto px-5 py-2.5 scrollbar-none">
+              {catsConItems.map((c) => {
+                const on = activa === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    data-cat={c.id}
+                    onClick={() => irACategoria(c.id)}
+                    className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
+                      on ? "bg-marca text-cream shadow" : "bg-white/80 text-cacao/70 ring-1 ring-cacao/10 hover:text-cacao"
+                    }`}
+                  >
+                    {c.nombre}
+                  </button>
+                );
+              })}
             </div>
-            <RelojDual className="border-l border-cacao/10 pl-3" />
+            {/* fade en los laterales para difuminar el corte del scroll */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-linear-to-r from-cream to-transparent" />
+            <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-linear-to-l from-cream to-transparent" />
           </div>
         </nav>
       )}

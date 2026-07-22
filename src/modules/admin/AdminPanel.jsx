@@ -547,6 +547,11 @@ const desdeISO = (s) => `${s}T00:00:00.000Z`;
 const hastaISO = (s) => new Date(Date.parse(`${s}T00:00:00.000Z`) + 86400000).toISOString();
 const PERIODO_COLORS = ["#94a3b8", "#2f3a7e", "#ff9900", "#63b0dd", "#16a34a", "#db2777"];
 const ddmm = (iso) => { const p = (iso || "").split("-"); return p.length === 3 ? `${p[2]}/${p[1]}` : iso; };
+const periodoValido = (p) => {
+  if (!p?.desde || !p?.hasta || p.desde > p.hasta) return false;
+  const y1 = +p.desde.slice(0, 4), y2 = +p.hasta.slice(0, 4);
+  return y1 >= 2020 && y1 <= 2100 && y2 >= 2020 && y2 <= 2100;
+};
 
 function RangoCampo({ titulo, val, set, color, onRemove }) {
   return (
@@ -566,17 +571,20 @@ function RangoCampo({ titulo, val, set, color, onRemove }) {
         className="mb-2 w-full rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-sm text-cacao outline-none focus:border-marca"
       />
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <input type="date" value={val.desde} max={val.hasta} onChange={(e) => set({ ...val, desde: e.target.value })} className="rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-cacao outline-none focus:border-marca" />
+        <input type="date" min="2020-01-01" max={val.hasta || "2100-12-31"} value={val.desde} onChange={(e) => set({ ...val, desde: e.target.value })} className="rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-cacao outline-none focus:border-marca" />
         <span className="text-cacao/40">a</span>
-        <input type="date" value={val.hasta} min={val.desde} onChange={(e) => set({ ...val, hasta: e.target.value })} className="rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-cacao outline-none focus:border-marca" />
+        <input type="date" min={val.desde || "2020-01-01"} max="2100-12-31" value={val.hasta} onChange={(e) => set({ ...val, hasta: e.target.value })} className="rounded-lg border border-cacao/15 bg-white px-2 py-1.5 text-cacao outline-none focus:border-marca" />
       </div>
+      {!periodoValido(val) && (val.desde || val.hasta) && (
+        <p className="mt-1.5 text-xs font-medium text-red-600">Revisá las fechas: la final no puede ser anterior a la inicial.</p>
+      )}
     </div>
   );
 }
 
 // Tabla de comparación: columnas = períodos, filas = métricas o productos.
 function TablaComparativa({ columnas, filas, cellDelta }) {
-  const fmt = (v, pct) => (pct ? `${(v || 0).toFixed(1)}%` : (v || 0).toLocaleString("es"));
+  const fmt = (v, pct) => (v == null ? "—" : pct ? `${v.toFixed(1)}%` : v.toLocaleString("es"));
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -631,7 +639,7 @@ function Comparativa() {
   useEffect(() => {
     let cancel = false;
     setCargando(true);
-    Promise.all(periodos.map((p) => getMetricasRango(desdeISO(p.desde), hastaISO(p.hasta))))
+    Promise.all(periodos.map((p) => (periodoValido(p) ? getMetricasRango(desdeISO(p.desde), hastaISO(p.hasta)) : Promise.resolve(null))))
       .then((res) => { if (!cancel) { setDatos(res); setCargando(false); } });
     return () => { cancel = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -644,7 +652,7 @@ function Comparativa() {
   const toggleCamp = (c) => setCampSel((s) => (s.includes(c) ? s.filter((x) => x !== c) : [...s, c]));
 
   const cellDelta = (base, v, i) => {
-    if (i === 0) return null;
+    if (i === 0 || base == null || v == null) return null;
     const d = base ? ((v - base) / base) * 100 : v ? 100 : 0;
     return (
       <span className={`ml-1 text-[10px] font-semibold ${d === 0 ? "text-cacao/30" : d > 0 ? "text-green-600" : "text-red-600"}`}>
@@ -654,11 +662,11 @@ function Comparativa() {
   };
 
   const prodsFiltrados = busqueda ? productos.filter((p) => p.nombre.toLowerCase().includes(busqueda.toLowerCase())) : productos;
-  const campanasDisponibles = datos ? [...new Set(datos.flatMap((d) => Object.keys(d.porCampana || {})))].sort() : [];
+  const campanasDisponibles = datos ? [...new Set(datos.flatMap((d) => Object.keys(d?.porCampana || {})))].sort() : [];
   const filas =
-    modo === "general" ? COMP_METRICAS.map((m) => ({ label: m.label, pct: m.pct, valores: (datos || []).map((d) => d[m.key]) }))
-    : modo === "producto" ? prodSel.map((id) => ({ label: productos.find((p) => p.id === id)?.nombre || id, valores: (datos || []).map((d) => d.porProducto?.[id]?.[metricaProd] || 0) }))
-    : campSel.map((c) => ({ label: c, valores: (datos || []).map((d) => d.porCampana?.[c]?.[metricaCamp] || 0) }));
+    modo === "general" ? COMP_METRICAS.map((m) => ({ label: m.label, pct: m.pct, valores: (datos || []).map((d) => (d ? d[m.key] : null)) }))
+    : modo === "producto" ? prodSel.map((id) => ({ label: productos.find((p) => p.id === id)?.nombre || id, valores: (datos || []).map((d) => (d ? d.porProducto?.[id]?.[metricaProd] || 0 : null)) }))
+    : campSel.map((c) => ({ label: c, valores: (datos || []).map((d) => (d ? d.porCampana?.[c]?.[metricaCamp] || 0 : null)) }));
 
   return (
     <div className="space-y-5">

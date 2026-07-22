@@ -63,8 +63,8 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
   const franjas = { madrugada: 0, manana: 0, tarde: 0, noche: 0 };
   // Hora local del negocio (Virginia, EE. UU.) para agrupar por franja del día.
   const horaFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "2-digit", hourCycle: "h23" });
-  const campSes = {}, camp = {};
-  const verCamp = (c) => (camp[c] || (camp[c] = { visitas: 0, carritos: 0, pedidos: 0 }));
+  const camp = {};
+  const oCamp = (c) => (camp[c] || (camp[c] = { ses: new Set(), carritos: 0, pedidos: 0 }));
   for (const e of ev) {
     const dia = (e.created_at || "").slice(0, 10);
     if (e.created_at) {
@@ -76,13 +76,19 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
       if (!porDiaSes[dia]) porDiaSes[dia] = new Set();
       porDiaSes[dia].add(e.session_id);
     }
+    // Atribución de campaña por evento (el UTM viene estampado en cada evento).
+    const cCamp = e.meta?.utm_campaign;
+    if (cCamp) {
+      const oc = oCamp(cCamp);
+      if (e.session_id) oc.ses.add(e.session_id);
+      if (e.tipo === "agregar_carrito") oc.carritos++;
+      else if (e.tipo === "enviar_whatsapp") oc.pedidos++;
+    }
     if (e.tipo === "page_view") {
       visitas++; porDia[dia] = (porDia[dia] || 0) + 1; dow[new Date(e.created_at).getDay()]++;
-      const c = e.meta?.utm_campaign;
-      if (c) { if (e.session_id && !campSes[e.session_id]) campSes[e.session_id] = c; verCamp(c).visitas++; }
     }
     else if (e.tipo === "ver_producto") { verP++; if (e.producto_id) vistos[e.producto_id] = (vistos[e.producto_id] || 0) + 1; }
-    else if (e.tipo === "agregar_carrito") { agg++; if (e.session_id) sesArmaron.add(e.session_id); if (e.producto_id) agregados[e.producto_id] = (agregados[e.producto_id] || 0) + 1; const c = campSes[e.session_id]; if (c) verCamp(c).carritos++; }
+    else if (e.tipo === "agregar_carrito") { agg++; if (e.session_id) sesArmaron.add(e.session_id); if (e.producto_id) agregados[e.producto_id] = (agregados[e.producto_id] || 0) + 1; }
     else if (e.tipo === "enviar_whatsapp") {
       wa++;
       ingresos += Number(e.meta?.total_centavos || 0);
@@ -90,7 +96,6 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
       sumItems += it;
       if (it <= 2) tamanos.chicas++; else if (it <= 4) tamanos.medianas++; else tamanos.grandes++;
       if (e.session_id) sesEnviaron.add(e.session_id);
-      const c = campSes[e.session_id]; if (c) verCamp(c).pedidos++;
     } else if (e.tipo === "promo_click") {
       const pid = e.meta?.promo_id || "?";
       promoClicks[pid] = (promoClicks[pid] || 0) + 1;
@@ -113,7 +118,7 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
     serieSesiones.push({ dia: d, valor: porDiaSes[d] ? porDiaSes[d].size : 0 });
   }
   const campanas = Object.entries(camp)
-    .map(([nombre, v]) => ({ id: nombre, label: nombre, ...v }))
+    .map(([nombre, v]) => ({ id: nombre, label: nombre, visitas: v.ses.size, carritos: v.carritos, pedidos: v.pedidos }))
     .sort((a, b) => b.visitas - a.visitas)
     .slice(0, 12);
   return {
@@ -193,20 +198,25 @@ function resumenEscalar(ev) {
   let vistas = 0, verP = 0, agg = 0, wa = 0, promo = 0, campV = 0;
   const porProducto = {};
   const verProd = (id) => (porProducto[id] || (porProducto[id] = { vistas: 0, agregados: 0 }));
-  const campSes = {}, porCampana = {};
-  const verCamp = (c) => (porCampana[c] || (porCampana[c] = { visitas: 0, carritos: 0, pedidos: 0 }));
+  const camp = {};
+  const oCamp = (c) => (camp[c] || (camp[c] = { ses: new Set(), carritos: 0, pedidos: 0 }));
   for (const e of ev) {
     if (e.session_id) ses.add(e.session_id);
-    if (e.tipo === "page_view") {
-      vistas++;
-      const c = e.meta?.utm_campaign;
-      if (c) { campV++; if (e.session_id && !campSes[e.session_id]) campSes[e.session_id] = c; verCamp(c).visitas++; }
+    const cCamp = e.meta?.utm_campaign;
+    if (cCamp) {
+      const oc = oCamp(cCamp);
+      if (e.session_id) oc.ses.add(e.session_id);
+      if (e.tipo === "agregar_carrito") oc.carritos++;
+      else if (e.tipo === "enviar_whatsapp") oc.pedidos++;
     }
+    if (e.tipo === "page_view") { vistas++; if (cCamp) campV++; }
     else if (e.tipo === "ver_producto") { verP++; if (e.producto_id) verProd(e.producto_id).vistas++; }
-    else if (e.tipo === "agregar_carrito") { agg++; if (e.producto_id) verProd(e.producto_id).agregados++; const c = campSes[e.session_id]; if (c) verCamp(c).carritos++; }
-    else if (e.tipo === "enviar_whatsapp") { wa++; const c = campSes[e.session_id]; if (c) verCamp(c).pedidos++; }
+    else if (e.tipo === "agregar_carrito") { agg++; if (e.producto_id) verProd(e.producto_id).agregados++; }
+    else if (e.tipo === "enviar_whatsapp") wa++;
     else if (e.tipo === "promo_click") promo++;
   }
+  const porCampana = {};
+  for (const c in camp) porCampana[c] = { visitas: camp[c].ses.size, carritos: camp[c].carritos, pedidos: camp[c].pedidos };
   return {
     vistas, sesiones: ses.size, interacciones: verP, carritos: agg,
     pedidos: wa, conversion: ses.size ? (wa / ses.size) * 100 : 0,

@@ -20,11 +20,35 @@ function sessionId() {
   }
 }
 
+// Atribución de campaña por sesión (first-touch): si la visita llega con UTM,
+// se guarda para toda la tanda (sessionStorage) y se estampa en TODOS los eventos
+// (ver producto, carrito, WhatsApp) → así cada dato queda ligado a la campaña que
+// lo provocó, sin depender de re-cálculos por ventana de tiempo.
+function campaniaSesion() {
+  if (typeof window === "undefined") return null;
+  try {
+    const KEY = "la-gloria:utm";
+    const q = new URLSearchParams(window.location.search);
+    const utm = {};
+    for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]) {
+      const v = q.get(k);
+      if (v) utm[k] = v.slice(0, 60);
+    }
+    if (utm.utm_campaign && !sessionStorage.getItem(KEY)) sessionStorage.setItem(KEY, JSON.stringify(utm));
+    const stored = sessionStorage.getItem(KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function track(tipo, { producto_id = null, meta = null } = {}) {
   try {
+    const utm = campaniaSesion();
+    const metaFull = utm ? { ...(meta || {}), ...utm } : meta;
     getSupabase()
       .from("events")
-      .insert({ tipo, producto_id, meta, session_id: sessionId() })
+      .insert({ tipo, producto_id, meta: metaFull, session_id: sessionId() })
       .then(
         () => {},
         () => {}
@@ -38,15 +62,7 @@ export function track(tipo, { producto_id = null, meta = null } = {}) {
 // al menú o recargar. La sesión (sessionId, por pestaña) agrupa todas las visitas
 // de una misma tanda de navegación → así "Visitas" (cargas) y "Sesiones" (personas)
 // son métricas distintas y tiene sentido el promedio de visitas por sesión.
-// Además captura los parámetros UTM (?utm_campaign=…) para medir campañas.
+// El UTM de la campaña lo agrega `track()` (a todos los eventos de la sesión).
 export function trackVisita(path) {
-  const meta = { path };
-  try {
-    const q = new URLSearchParams(window.location.search);
-    for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]) {
-      const v = q.get(k);
-      if (v) meta[k] = v.slice(0, 60);
-    }
-  } catch {}
-  track("page_view", { meta });
+  track("page_view", { meta: { path } });
 }

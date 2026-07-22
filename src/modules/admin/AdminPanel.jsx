@@ -361,6 +361,9 @@ function Consumidor({ rango }) {
         <Card title="Más vistos">
           {m.topVistos.length ? <BarList items={m.topVistos} color="#63b0dd" /> : vacio}
         </Card>
+        <Card title="Más pedidos (unidades)" subtitle="Lo que más se pidió por WhatsApp" className="lg:col-span-2">
+          {m.topPedidos?.length ? <BarList items={m.topPedidos} color="#16a34a" /> : vacio}
+        </Card>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -686,7 +689,7 @@ function Comparativa() {
             <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
               <span className="text-sm font-bold text-cacao">Productos a comparar</span>
               <div className="inline-flex rounded-full bg-white p-1 text-xs shadow-sm">
-                {[["vistas", "Veces visto"], ["agregados", "Agregados al carrito"]].map(([k, l]) => (
+                {[["vistas", "Veces visto"], ["agregados", "Agregados al carrito"], ["unidades", "Unidades pedidas"]].map(([k, l]) => (
                   <button key={k} type="button" onClick={() => setMetricaProd(k)} className={`rounded-full px-2.5 py-1 font-semibold transition ${metricaProd === k ? "bg-marca text-cream" : "text-cacao/60"}`}>{l}</button>
                 ))}
               </div>

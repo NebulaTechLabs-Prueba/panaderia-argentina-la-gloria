@@ -56,7 +56,7 @@ export async function getProductos() {
 function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
   const sesiones = new Set(), sesArmaron = new Set(), sesEnviaron = new Set();
   let visitas = 0, verP = 0, agg = 0, wa = 0, ingresos = 0, sumItems = 0;
-  const vistos = {}, agregados = {}, promoClicks = {}, promoNombres = {};
+  const vistos = {}, agregados = {}, pedidosProd = {}, promoClicks = {}, promoNombres = {};
   const tamanos = { chicas: 0, medianas: 0, grandes: 0 };
   const porDia = {}, porDiaSes = {};
   const dow = [0, 0, 0, 0, 0, 0, 0]; // getDay(): 0=Dom … 6=Sáb
@@ -96,6 +96,7 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
       sumItems += it;
       if (it <= 2) tamanos.chicas++; else if (it <= 4) tamanos.medianas++; else tamanos.grandes++;
       if (e.session_id) sesEnviaron.add(e.session_id);
+      for (const p of (e.meta?.productos || [])) { if (p?.id) pedidosProd[p.id] = (pedidosProd[p.id] || 0) + (Number(p.cant) || 0); }
     } else if (e.tipo === "promo_click") {
       const pid = e.meta?.promo_id || "?";
       promoClicks[pid] = (promoClicks[pid] || 0) + 1;
@@ -132,6 +133,7 @@ function resumirEventos(ev, dias, nombre, nombrePromo = {}) {
     embudo: { ver: verP, carrito: agg, whatsapp: wa },
     topVistos: top(vistos, nombre),
     topAgregados: top(agregados, nombre),
+    topPedidos: top(pedidosProd, nombre),
     promoClicks: top(promoClicks, etiquetaPromo),
     ticket_centavos: wa ? Math.round(ingresos / wa) : 0,
     items_por_pedido: wa ? sumItems / wa : 0,
@@ -197,7 +199,7 @@ function resumenEscalar(ev) {
   const ses = new Set();
   let vistas = 0, verP = 0, agg = 0, wa = 0, promo = 0, campV = 0;
   const porProducto = {};
-  const verProd = (id) => (porProducto[id] || (porProducto[id] = { vistas: 0, agregados: 0 }));
+  const verProd = (id) => (porProducto[id] || (porProducto[id] = { vistas: 0, agregados: 0, unidades: 0 }));
   const camp = {};
   const oCamp = (c) => (camp[c] || (camp[c] = { ses: new Set(), carritos: 0, pedidos: 0 }));
   for (const e of ev) {
@@ -212,7 +214,7 @@ function resumenEscalar(ev) {
     if (e.tipo === "page_view") { vistas++; if (cCamp) campV++; }
     else if (e.tipo === "ver_producto") { verP++; if (e.producto_id) verProd(e.producto_id).vistas++; }
     else if (e.tipo === "agregar_carrito") { agg++; if (e.producto_id) verProd(e.producto_id).agregados++; }
-    else if (e.tipo === "enviar_whatsapp") wa++;
+    else if (e.tipo === "enviar_whatsapp") { wa++; for (const p of (e.meta?.productos || [])) { if (p?.id) verProd(p.id).unidades += Number(p.cant) || 0; } }
     else if (e.tipo === "promo_click") promo++;
   }
   const porCampana = {};

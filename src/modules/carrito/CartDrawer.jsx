@@ -26,7 +26,13 @@ export function CartDrawer() {
   function enviarPorWhatsapp() {
     if (estaVacio || !ajustes) return;
     playEnviar(); // sonido de confirmación (distinto al de agregar)
-    track("enviar_whatsapp", { meta: { total_centavos: totalCentavos, items: items.length } });
+    track("enviar_whatsapp", {
+      meta: {
+        total_centavos: totalCentavos,
+        items: items.length,
+        productos: items.map((i) => ({ id: String(i.id).split("::")[0], cant: i.cantidad })),
+      },
+    });
     const mensaje = buildMensajePedido(items, ajustes, { personas, regalos });
     const url = buildWhatsappUrl(ajustes.whatsapp_numero, mensaje);
     window.open(url, "_blank", "noopener,noreferrer");
